@@ -93,7 +93,6 @@ dist
 
 # vuepress v2.x temp and cache directory
 .temp
-.cache
 
 # Sveltekit cache directory
 .svelte-kit/
@@ -137,3 +136,10 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+/.vscode/
+/extra scripts/a_format_javascript.js
+/extra scripts/2FA genarator.js
+/auth.json
+/Oauth.js
+/input.txt
+/a_format json.json
