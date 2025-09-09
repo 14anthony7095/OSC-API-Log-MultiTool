@@ -51,6 +51,9 @@ var messageQueue = []
 
 function hookSelector(grpID, embedMessage) {
     switch (grpID) {
+        case 'grp_10bb5d71-aa5e-43d8-9dd2-3c8cebe17152':
+            hook_Self.send(embedMessage).catch((err) => { console.log(err) })
+            break;
         case 'grp_e483cc04-a610-471f-90eb-ec4eda8420be':
             hook_NoV.send(embedMessage).catch((err) => { console.log(err) })
             break;
@@ -157,6 +160,18 @@ Region: ${instanceRegion}`)
 exports.groupInstanceCreate = groupInstanceCreate;
 // instanceCreate(`2025-02-02T15:18:17.000Z`,process.env["VRC_ACC_NAME_1"],'https://cdn.discordapp.com/avatars/111238505824342016/754f691b9711ae9e568f0000338c8446.webp?size=128',`wrld_64c391dc-d1bd-448e-a869-95f10f506eaa`,`12345`,`Group+`,`US West`)
 
+function groupInstanceCreateWASNT18PLUS(worldID = '', instanceID = '', worldName = '', worldImage = '') {
+    let embed = new MessageBuilder()
+        .setTitle(`Someone didn't set Instance to be 18+ AgeGated!`)
+        .addField(`Instance Info`, `
+World: ${worldName}
+WorldID: [${worldID}](https://vrchat.com/home/world/${worldID}/info)
+ID: ${instanceID}`)
+        .setImage(worldImage)
+        .setColor(hex.Orange)
+    hookSelector(groupID, embed)
+}
+exports.groupInstanceCreateWASNT18PLUS = groupInstanceCreateWASNT18PLUS;
 
 function groupInstanceClose(groupID, logtime, actorName, actorImageURL, worldID, instanceID, instanceType, instanceRegion, worldName, worldImage, worldPlatformSupport = [false, false, false]) {
     var wpsTex = ''

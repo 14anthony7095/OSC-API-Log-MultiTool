@@ -13,7 +13,7 @@ function PiShock(intensity=1,duration=1,deviceNum=1) {
         body: JSON.stringify({
             Username: process.env["VRC_ACC_NAME_1"],
             Apikey: process.env["PISHOCK_APIKEY"],
-            Code: code[deviceNum],
+            Code: deviceCodes[deviceNum],
             Name: '14aOSC',
             Op: 0,
             Duration: duration,

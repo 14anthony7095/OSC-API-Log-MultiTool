@@ -31,7 +31,8 @@ const { undiscoveredEvent,
     groupInviteCancel,
     groupUserBan,
     groupUserUnban,
-    groupUpdate } = require('./interace_WebHook.js')
+    groupUpdate,
+    groupInstanceCreateWASNT18PLUS } = require('./interace_WebHook.js')
 const fs = require('fs');
 const { cmdEmitter } = require('./input.js');
 const { oscEmitter, oscChatBox } = require('./Interface_osc_v1.js');
@@ -159,6 +160,25 @@ async function main() {
 
 }
 
+var markededSomnaGroupInstances = []
+async function scanSomnaGroupInstances() {
+    console.log(`${loglv().log}${selflog} [Somna] Checking for instances`)
+    let res = await vrchat.getGroupInstances({ 'path': { 'groupId': 'grp_10bb5d71-aa5e-43d8-9dd2-3c8cebe17152' } })
+    if (res.data.length > 0) {
+        console.log(`${loglv().log}${selflog} [Somna] 0/${res.data.length}: Found ${res.data.length} instances`)
+        res.data.forEach((grpins, index, arr) => {
+            if (grpins.instanceId.includes('~ageGate')) {
+                console.log(`${loglv().log}${selflog} [Somna] ${index + 1}/${arr.length}: AgeGated #${grpins.instanceId.split('~')[0]} - ${grpins.world.id}`)
+            } else {
+                console.log(`${loglv().log}${selflog} [Somna] ${index + 1}/${arr.length}: Not Gated #${grpins.instanceId.split('~')[0]} - ${grpins.world.id} - Sending message to WebHook`)
+                if( !markededSomnaGroupInstances.includes(grpins.instanceId) ) {
+                    markededSomnaGroupInstances.push(grpins.instanceId)
+                    groupInstanceCreateWASNT18PLUS(grpins.world.id, grpins.instanceId, grpins.world.name, grpins.world.imageUrl)
+                }
+            }
+        })
+    }
+}
 
 function getGroupRepsForInstance() {
     var repGroups = {}
@@ -212,7 +232,7 @@ async function addLabWorldsToLocalQueue() {
             console.log(`${loglv().log}${selflog} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
             index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
         })
-        fs.appendFile(worldQueueTxt, `\r\n`+worldlist, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
+        fs.appendFile(worldQueueTxt, `\r\n` + worldlist, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
     })
 }
 
@@ -313,7 +333,7 @@ function inviteLocalQueue() {
         console.log(`${loglv().log}${selflog} ${localQueueList.length} worlds to explore. [${extimelow} to ${extimehig} Hours]`)
 
         let { data: checkCap } = await vrchat.getWorld({ 'path': { 'worldId': world_id } })
-        if( checkCap == undefined ){
+        if (checkCap == undefined) {
             console.log(`${loglv().hey}${selflog} World failed to fetch. Try again..`);
             oscChatBox(`World fetch failed.\vTry another.`, 5);
             fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
@@ -322,7 +342,7 @@ function inviteLocalQueue() {
                 }
             })
             return
-        }else if (checkCap.capacity < getPlayersInInstance().length && getInstanceGroupID() == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+        } else if (checkCap.capacity < getPlayersInInstance().length && getInstanceGroupID() == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
             console.log(`${loglv().hey}${selflog} World can not fit everyone. Retry..`);
             oscChatBox(`World can't fit everyone.\vTry again.`, 5);
             return
@@ -369,7 +389,7 @@ function setUserStatus(status) {
 function getVisitsCount() {
     return new Promise(async (resolve, reject) => {
         let { data: visitsCount } = await vrchat.getCurrentOnlineUsers()
-        resolve(visitsCount)
+        resolve(visitsCount == undefined ? 0 : visitsCount)
     })
 }
 exports.getVisitsCount = getVisitsCount;
@@ -495,6 +515,8 @@ async function scanGroupAuditLogs() {
     await scanaudit(logOutput_8year, targetGroupLogID_8year);
     await scanaudit(logOutput_9year, targetGroupLogID_9year);
     await scanaudit(logOutput_10year, targetGroupLogID_10year);
+
+    scanSomnaGroupInstances()
 }
 
 async function requestAllOnlineFriends() {

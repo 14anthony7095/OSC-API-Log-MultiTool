@@ -24,10 +24,10 @@ function start() {
 	isActive = true
 	console.log(`${loglv().log}${selfLog} Starting..`)
 	
-	getVisitsCount().then(count=>{ workload(count, count) }).catch((err)=>{ workload(0, 'Lost Connection') })
+	getVisitsCount().then(count=>{ workload(count) }).catch((err)=>{ workload(0, 'Lost Connection') })
 	
 	counterTimer = setInterval(() => {
-		getVisitsCount().then(count=>{ workload(count, count) }).catch((err)=>{ workload(0, 'Lost Connection') })
+		getVisitsCount().then(count=>{ workload(count) }).catch((err)=>{ workload(0, 'Lost Connection') })
 	}, 10000)
 }
 start()

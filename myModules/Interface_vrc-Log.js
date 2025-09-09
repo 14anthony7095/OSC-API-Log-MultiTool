@@ -256,9 +256,8 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 	if (line.includes(`[VRCX] VideoPlay(PopcornPalace) `)) { eventPopcornPalace(line.split('[VRCX] VideoPlay(PopcornPalace) ')[1]) }
 
 	// Terrors of Nowhere
-	/*
-	if( line.includes(`[DEATH][14anthony7095]`) ){ PiShockAll(30,1) }
 	if (worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd') {
+		// if (line.includes(`[DEATH][14anthony7095]`)) { PiShockAll(30, 1) }
 		if (line.includes(`Round type is`)) {
 			tonRoundType = line.split('Round type is ')[1]
 			console.log(`${loglv().log}${selfLog} [TON] Round type is ${tonRoundType}`)
@@ -268,13 +267,11 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 			console.log(`${loglv().log}${selfLog} [TON] Impostor is ${tonSusPlayer}`)
 			oscChatBox(`~Impostor is ${tonSusPlayer}`)
 		}
-		if (tonRoundType == 'Fog' && line.includes(`14anthony7095 landed a stun against`)) {
-			tonStunned = line.split('14anthony7095 landed a stun against ')[1]
-			console.log(`${loglv().log}${selfLog} [TON] landed stun on ${tonStunned}`)
-			oscChatBox(`~Fog Terror is ${tonStunned}`)
+		if (line.includes(`Verified Round End`)) {
+			console.log(`${loglv().log}${selfLog} [TON] Intermission.. Ready to start next round.`)
+			oscChatBox(`~Ready to start next round`)
 		}
 	}
-	*/
 
 	// Portal Manager
 	if (line.includes(`[PortalManager]`)) {
