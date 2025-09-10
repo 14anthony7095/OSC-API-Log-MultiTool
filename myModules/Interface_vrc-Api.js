@@ -162,15 +162,17 @@ async function main() {
 
 var markededSomnaGroupInstances = []
 async function scanSomnaGroupInstances() {
-    console.log(`${loglv().log}${selflog} [Somna] Checking for instances`)
+    console.log(`${loglv().log}${selflog} [Somnophilia] Checking for instances`)
     let res = await vrchat.getGroupInstances({ 'path': { 'groupId': 'grp_10bb5d71-aa5e-43d8-9dd2-3c8cebe17152' } })
-    if (res.data.length > 0) {
-        console.log(`${loglv().log}${selflog} [Somna] 0/${res.data.length}: Found ${res.data.length} instances`)
+    if (res.data == undefined ) {
+        console.log(res)
+    }else if (res.data.length > 0) {
+        console.log(`${loglv().log}${selflog} [Somnophilia] 0/${res.data.length}: Found ${res.data.length} instances`)
         res.data.forEach((grpins, index, arr) => {
             if (grpins.instanceId.includes('~ageGate')) {
-                console.log(`${loglv().log}${selflog} [Somna] ${index + 1}/${arr.length}: AgeGated #${grpins.instanceId.split('~')[0]} - ${grpins.world.id}`)
+                console.log(`${loglv().log}${selflog} [Somnophilia] ${index + 1}/${arr.length}: AgeGated #${grpins.instanceId.split('~')[0]} - ${grpins.world.id}`)
             } else {
-                console.log(`${loglv().log}${selflog} [Somna] ${index + 1}/${arr.length}: Not Gated #${grpins.instanceId.split('~')[0]} - ${grpins.world.id} - Sending message to WebHook`)
+                console.log(`${loglv().hey}${selflog} [Somnophilia] ${index + 1}/${arr.length}: Not Gated #${grpins.instanceId.split('~')[0]} - ${grpins.world.id} - Sending message to WebHook`)
                 if( !markededSomnaGroupInstances.includes(grpins.instanceId) ) {
                     markededSomnaGroupInstances.push(grpins.instanceId)
                     groupInstanceCreateWASNT18PLUS(grpins.world.id, grpins.instanceId, grpins.world.name, grpins.world.imageUrl)

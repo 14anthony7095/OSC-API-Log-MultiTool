@@ -384,6 +384,7 @@ function eventPopcornPalace(json) {
 
 function applyGroupLogo(gID) {
 	/*
+0111 - El Alba
 0110 - VRDance
 0101 - VRC Reach
 0100 - The Lunar Howl
@@ -393,6 +394,13 @@ function applyGroupLogo(gID) {
 0000 - CORE Default
 	*/
 	switch (gID) {
+		case 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad':
+			// El Alba
+			// 0111 - 7
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 1)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 1)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 1)
+			break;
 		case 'grp_d960be54-cfc2-44cb-863d-6d624d8975c1':
 			// VR Dance
 			// 0110 - 6
@@ -449,6 +457,10 @@ function eventGameClose() {
 	clearTimeout(worldHopTimeout)
 	clearTimeout(worldHopTimeoutHour)
 	console.log(`${loglv().hey}${selfLog} VRChat has Closed.`)
+	if( worldID_Closed == true && lastSetUserStatus == 'Instance is closed' ){
+		logEmitter.emit('setstatus','')
+	}
+	worldID_Closed = false
 	// if (lastSetUserStatus.includes('Furality')) { lastSetUserStatus = ''; logEmitter.emit('setstatus', '') }
 }
 
@@ -538,6 +550,7 @@ function eventJoinWorld() {
 
 function eventInstanceClosed() {
 	if (worldID != 'wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5' && groupID != 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+		lastSetUserStatus = 'Instance is closed'
 		logEmitter.emit('setstatus', 'Instance is closed')
 	} else if (groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 		logEmitter.emit('nextworld')

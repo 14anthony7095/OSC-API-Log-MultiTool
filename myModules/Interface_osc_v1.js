@@ -374,7 +374,7 @@ udpPort.on("ready", function () {
 
 	if (isFullLaunch == true) {
 		require('./Interface_vrc-Api.js')
-		require('./Interface_websocket-server.js')
+		// require('./Interface_websocket-server.js')
 
 		require('./osc_PingSystem.js') // OSC
 		require('./osc_Chessboard-logic.js') // OSC
