@@ -458,10 +458,10 @@ function eventGameClose() {
 	clearTimeout(worldHopTimeoutHour)
 	console.log(`${loglv().hey}${selfLog} VRChat has Closed.`)
 	if( worldID_Closed == true && lastSetUserStatus == 'Instance is closed' ){
+		lastSetUserStatus = ''
 		logEmitter.emit('setstatus','')
 	}
 	worldID_Closed = false
-	// if (lastSetUserStatus.includes('Furality')) { lastSetUserStatus = ''; logEmitter.emit('setstatus', '') }
 }
 
 var vrcpropcount = { "cubes": 0, "wands": 0, "blasters": 0 }
@@ -500,32 +500,6 @@ function eventHeadingToWorld(logOutputLine) {
 		groupID = /grp_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
 		console.log(`${loglv().debug}${selfLog} Group ID ${groupID}`)
 	} else { groupID = 'none' }
-
-	// World Check -- 14aHome V5
-	// if (worldID == `wrld_769c587a-46e8-47f3-b124-ac39c67e0de3`) { }
-
-	// Group Check -- Furality
-	/*
-		if (groupID == 'grp_210dbc09-c3da-4ebb-b641-73c99ce2619b') {
-			let statusPrep = `at Furality`
-			switch (worldID) {
-				case `wrld_7cd9bc43-94a7-476c-96d8-4dc75983e152`: statusPrep += `: Lobby`; break;
-				case `wrld_0b5de5e7-d4d4-46c6-93c2-2354731d1cb2`: statusPrep += `: Meetup`; break;
-				case `wrld_ed46f15c-f111-412a-ab23-462b1cb7b0c7`: statusPrep += `: Event Stage`; break;
-				case `wrld_8974ee14-1c24-49f5-b2eb-9f52b0662d5a`: statusPrep += `: Club F.Y.N.N.`; break;
-				case `wrld_90d58e58-9173-419e-8ff4-1df862507426`: statusPrep += `: Dealer's Den`; break;
-				case `wrld_ab93c6a0-d158-4e07-88fe-f8f222018faa`: statusPrep += `: Gaming / Fishing`; break;
-				case `wrld_be619393-04ac-48c9-bdfa-73f23e7b54e6`: statusPrep += `: Fireworks Show`; break;
-				default: statusPrep += `: Gaming`; break;
-			}
-			lastSetUserStatus = statusPrep
-			logEmitter.emit('setstatus', statusPrep)
-		} else if (lastSetUserStatus.includes('Furality')) {
-			lastSetUserStatus = ''
-			logEmitter.emit('setstatus', '')
-		}
-	*/
-
 }
 
 function eventJoinWorld() {
