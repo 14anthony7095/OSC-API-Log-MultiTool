@@ -167,6 +167,8 @@ function genaratePortalLibrary() {
                     console.log(`[${Math.round(thumbnailCount / totalCount * 100)}%] Looking up world details for ${wID}`)
                     let { data: worldData } = await vrchat.getWorld({ 'path': { 'worldId': wID } })
 
+                    if( worldData == undefined ){ console.log(`[WARNING] world 404 Error - ${wID}`) }
+                    
                     try {
                         thumbnailCount++
 

@@ -383,6 +383,7 @@ udpPort.on("ready", function () {
 		require('./osc_HeartRate.js') // OSC
 		require('./osc_AutoClicker.js') // OSC
 		require('./osc_Av3-menu-helper.js') // OSC
+		// require('./osc_32display.js') // OSC
 		require('./sys_taskKill.js') // OSC , LOG
 		require('./osc_vrcPopulation.js') // OSC , API (directly)
 
