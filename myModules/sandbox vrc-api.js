@@ -50,9 +50,8 @@ async function main() {
     // let notifRes = await vrchat.getNotification({ 'path':{ 'notificationId':'not_cf3adb23-de16-4c3a-a57c-ab7a9aa32aeb' } }); console.log(notifRes)
 
 
-    let {data: avatarData} = await vrchat.getAvatar({ 'path':{ 'avatarId':'avtr_0c97e918-23d0-4934-b364-5fd28fb10236' } })
-
-    console.log( avatarData.performance.standalonewindows )
+    // let {data: avatarData} = await vrchat.getAvatar({ 'path':{ 'avatarId':'avtr_0c97e918-23d0-4934-b364-5fd28fb10236' } })
+    // console.log( avatarData.performance.standalonewindows )
 
 
 }
@@ -68,9 +67,9 @@ async function manualCall() {
 
 
 
-    fetch(vrcapihttp + "calendar/grp_5748540d-1466-4b0b-a771-b7cac5dc0ca3/event",
+    fetch(vrcapihttp + "props/prop_79789b58-e020-4b2e-aa25-ba21a1938eec",
         {
-            method: 'POST',
+            method: 'GET',
             headers: {
                 'Cookie': "auth=" + auth.token,
                 "Content-Type": "application/json"

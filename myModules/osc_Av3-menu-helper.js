@@ -14,8 +14,7 @@ var menuY = 0
 var doAutoJump = false
 oscEmitter.on('osc', (address, value) => {
 
-	if( address == '/avatar/parameters/menu/directionalH' ){ menuX = value }
-	if( address == '/avatar/parameters/menu/directionalV' ){ menuY = value }
+	
 	if( address == '/avatar/parameters/osc/doAutoJump' ){ doAutoJump = value }
 	if( address == '/avatar/parameters/Grounded' && doAutoJump == true ){
 		if( value == true ){
@@ -23,10 +22,12 @@ oscEmitter.on('osc', (address, value) => {
 		}
 	}else{ value == false }
 	
-	// if( address == '/avatar/parameters/menu/directionalX' || address == '/avatar/parameters/menu/directionalV' ){ 
-		// oscSend('/avatar/parameters/osc/menuDirection', Math.atan2(menuY,menuX) * ( 180 / Math.PI ) )
-		// console.log(`Angle ${Math.atan2(menuY,menuX) * ( 180 / Math.PI )}`)
-	// }
+	if( address == '/avatar/parameters/menu/directionalH' ){ menuX = value }
+	if( address == '/avatar/parameters/menu/directionalV' ){ menuY = value }
+	if( address == '/avatar/parameters/menu/directionalX' || address == '/avatar/parameters/menu/directionalV' ){ 
+		oscSend('/avatar/parameters/osc/menuDirection', Math.atan2(menuY,menuX) * ( 180 / Math.PI ) )
+		console.log(`Angle ${Math.atan2(menuY,menuX) * ( 180 / Math.PI )}`)
+	}
 	
 })
 

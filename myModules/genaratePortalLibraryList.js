@@ -6,13 +6,12 @@
 -------------------------------------
 */
 // Libraries
-const { loglv } = require("./config.js");
 const { VRChat } = require("vrchat");
 const fs = require('fs');
 require('dotenv').config()
 
 let selflog = `\x1b[0m[\x1b[33mVRC_API\x1b[0m]`
-console.log(`${loglv().log}${selflog} Loaded`)
+console.log(`${selflog} Loaded`)
 
 const vrchat = new VRChat({
     application: {
@@ -32,7 +31,7 @@ const vrchat = new VRChat({
 
 async function main() {
     const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
-    console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
+    console.log(`${selflog} Logged in as: ${currentUser.displayName}`);
 
     // manualCall()
 
@@ -51,6 +50,16 @@ async function main() {
 
     genaratePortalLibrary()
 
+}
+
+function updateProgress(current, total) {
+    var progressBarTextGraphic = `[`
+    let percent = Math.round(current / total * 100)
+    let invPercent = 100 - percent
+    for (let index = 0; index < percent; index++) { progressBarTextGraphic += `█` }
+    for (let index = 0; index < invPercent; index++) { progressBarTextGraphic += `░` }
+    progressBarTextGraphic += `]`
+    console.log(progressBarTextGraphic+' '+percent+'%')
 }
 
 console.log(`[0%] Downloading first thumbnail`)
@@ -90,7 +99,7 @@ function genaratePortalLibrary() {
     fs.readFile('./worldThumbnails/worldDatabase.json', 'utf8', async (err, data) => {
         console.log(`[0%] Loaded world database file`)
         let worldJson = JSON.parse(data)
-        Object.keys(worldJson).forEach(key=>{ totalCount = totalCount + worldJson[key].length })
+        Object.keys(worldJson).forEach(key => { totalCount = totalCount + worldJson[key].length })
         await scan(worldJson.myworlds, 1)
         await scan(worldJson.games_activity, 2)
         await scan(worldJson.private_worlds, 3)
@@ -144,7 +153,8 @@ function genaratePortalLibrary() {
         })
 
         thumbnailCount++
-        console.log(`[${Math.round(thumbnailCount / totalCount * 100)}%] Downloading final thumbnail`)
+        updateProgress(thumbnailCount, totalCount)
+        console.log(`Downloading final thumbnail`)
         require('https').get('https://i.imgur.com/vphs047.png', (res) => {
             let tnctxt = `${thumbnailCount}`.padStart(5, '0')
             res.pipe(fs.createWriteStream('./worldThumbnails/dl/' + tnctxt + '.png'))
@@ -156,7 +166,8 @@ function genaratePortalLibrary() {
     })
 
     function scan(worldIDarr, worldList) {
-        console.log(`[${Math.round(thumbnailCount / totalCount * 100)}%] Scanning list ${worldList}`)
+        updateProgress(thumbnailCount, totalCount)
+        console.log(`Scanning list ${worldList}`)
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 resolve(true)
@@ -164,11 +175,12 @@ function genaratePortalLibrary() {
 
             worldIDarr.forEach((wID, index, arr) => {
                 setTimeout(async () => {
-                    console.log(`[${Math.round(thumbnailCount / totalCount * 100)}%] Looking up world details for ${wID}`)
+                    updateProgress(thumbnailCount, totalCount)
+                    console.log(`Looking up world details for ${wID}`)
                     let { data: worldData } = await vrchat.getWorld({ 'path': { 'worldId': wID } })
 
-                    if( worldData == undefined ){ console.log(`[WARNING] world 404 Error - ${wID}`) }
-                    
+                    if (worldData == undefined) { console.log(`[WARNING] world 404 Error - ${wID}`) }
+
                     try {
                         thumbnailCount++
 
@@ -198,12 +210,14 @@ function genaratePortalLibrary() {
                             default: break;
                         }
 
-                        console.log(`[${Math.round(thumbnailCount / totalCount * 100)}%] Downloading thumbnail for ${worldData.name}`)
+                        updateProgress(thumbnailCount, totalCount)
+                        console.log(`Downloading thumbnail for ${worldData.name}`)
                         require('https').get(worldData.thumbnailImageUrl, { 'headers': { 'User-Agent': "NodeJS/14anthony7095" } }, (res) => {
                             // console.log(res)
                             require('https').get(res.headers.location, (res2) => {
                                 let tnctxt = `${thumbnailCount}`.padStart(5, '0')
-                                console.log(`[${Math.round(thumbnailCount / totalCount * 100)}%] Saved as ${tnctxt}.png`)
+                                updateProgress(thumbnailCount, totalCount)
+                                console.log(`Saved as ${tnctxt}.png`)
                                 res2.pipe(fs.createWriteStream('./worldThumbnails/dl/' + tnctxt + '.png'))
                             })
                         })
@@ -211,7 +225,8 @@ function genaratePortalLibrary() {
                     } catch (error) {
                         console.log(error)
                         totalCount--
-                        console.log(`[${Math.round(thumbnailCount / totalCount * 100)}%] Downloading placeholder thumbnail for ${wID}`)
+                        updateProgress(thumbnailCount, totalCount)
+                        console.log(`Downloading placeholder thumbnail for ${wID}`)
                         require('https').get('https://i.imgur.com/vphs047.png', (res) => {
                             let tnctxt = `${thumbnailCount}`.padStart(5, '0')
                             res.pipe(fs.createWriteStream('./worldThumbnails/dl/' + tnctxt + '.png'))

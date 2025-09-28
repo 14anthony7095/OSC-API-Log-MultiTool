@@ -93,8 +93,12 @@ function start() {
 	else if (isttvRunning == true) {
 		rejoinChannel()
 	}
-	oscSend('/avatar/parameters/ttvIsTalking', 1 == 0)
+	oscSend('/avatar/parameters/ttvIsTalking', false)
+	oscSend('/avatar/parameters/ToN_IsStarted', false)
 	OSCDataBurst(8, parseFloat(1), parseFloat(1), parseFloat(1))
+	oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156) )
+	oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901) )
+	oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137) )
 }
 
 
@@ -110,6 +114,7 @@ function switchChannel(newChannel) {
 		})
 		clearingBuffer = true
 		chatBuffer = []
+		oscSend('/avatar/parameters/ToN_IsStarted', false)
 		msgVerbose = 3
 
 		client.join(newChannel).then((data) => {
@@ -117,8 +122,11 @@ function switchChannel(newChannel) {
 			clearingBuffer = false
 			isActive = true
 			isttvRunning = true
-			oscSend('/avatar/parameters/ttvIsTalking', 1 == 0)
+			oscSend('/avatar/parameters/ttvIsTalking', false)
 			OSCDataBurst(8, parseFloat(1), parseFloat(1), parseFloat(1))
+			oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156) )
+			oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901) )
+			oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137) )
 		}).catch(err => {
 			console.log(`${loglv().warn}${selfLog}`, err)
 		})
@@ -170,8 +178,12 @@ function rejoinChannel() {
 
 		isActive = true
 		isttvRunning = true
-		oscSend('/avatar/parameters/ttvIsTalking', 1 == 0)
+		oscSend('/avatar/parameters/ttvIsTalking', false)
+		oscSend('/avatar/parameters/ToN_IsStarted', false)
 		OSCDataBurst(8, parseFloat(1), parseFloat(1), parseFloat(1))
+		oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156) )
+		oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901) )
+		oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137) )
 
 	}
 }
@@ -205,7 +217,11 @@ function saySpeak() {
 	}
 
 	OSCDataBurst(8, parseFloat(chatBuffer[0].color.split(',')[0]), parseFloat(chatBuffer[0].color.split(',')[1]), parseFloat(chatBuffer[0].color.split(',')[2]))
+	oscSend('/avatar/parameters/ToN_ColorR', parseFloat(chatBuffer[0].color.split(',')[0]) )
+	oscSend('/avatar/parameters/ToN_ColorG', parseFloat(chatBuffer[0].color.split(',')[1]) )
+	oscSend('/avatar/parameters/ToN_ColorB', parseFloat(chatBuffer[0].color.split(',')[2]) )
 
+	oscSend('/avatar/parameters/ToN_IsStarted', true)
 	oscSend('/avatar/parameters/ttvIsTalking', true)
 	oscSend('/avatar/parameters/ttvCheerTier', parseFloat(chatBuffer[0].isCheer))
 	say.speak(chatBuffer[0].say, 'Microsoft David Desktop', 1.0, (err) => {
@@ -217,6 +233,9 @@ function saySpeak() {
 		if (msgVerbose == 3) { console.log(`${loglv().debug}${selfLog} Messages Left in Buffer: ${chatBuffer.length}`) }
 		oscSend('/avatar/parameters/ttvIsTalking', false)
 		OSCDataBurst(8, parseFloat(1), parseFloat(1), parseFloat(1))
+		oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156) )
+		oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901) )
+		oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137) )
 
 		oscSend('/avatar/parameters/ttvCheerTier', false)
 		setTimeout(() => {
@@ -225,12 +244,17 @@ function saySpeak() {
 				console.log(`${loglv().hey}${selfLog} Messages buffer is too full, switching to Latest Messages mode`)
 				clearingBuffer = true
 				chatBuffer = []
+				oscSend('/avatar/parameters/ToN_IsStarted', false)
+				oscChatBox('')
 				if (msgVerbose >= 3) { msgVerbose = 2 }
 				setTimeout(() => { clearingBuffer = false }, 1000);
 			} else if (chatBuffer.length > 0 && clearingBuffer == false) {
 				saySpeak()
 			} else {
-				if (useChatBox == true) { oscChatTyping(0) }
+				if (useChatBox == true) {
+					oscChatBox('')
+					oscChatTyping(0)
+				}
 			}
 		}, 1000)
 	})

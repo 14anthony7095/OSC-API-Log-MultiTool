@@ -216,6 +216,7 @@ var seenVideoURLs = [] // For current instance only
 var worldHopTimeout;
 var worldHopTimeoutHour;
 var tonRoundType = ''
+var worldQueueTxt = './datasets/worldQueue.txt'
 var worldID = ``
 var worldID_Closed = false
 oscSend('/avatar/parameters/log/instance_closed', false)
@@ -249,9 +250,12 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 
 	if (line.includes(`VRCApplication: HandleApplicationQuit`)) { eventGameClose() }
 
-	if (line.includes(`[VRCProps] Prop prop_829ba6f6-b837-49d9-b9a9-056b82103b58`)) { eventCubePropSpawned() }
-	if (line.includes(`[VRCProps] Prop prop_89be973f-9e1a-4260-8deb-211e32da8196`)) { eventWandPropSpawned() }
-	if (line.includes(`[VRCProps] Prop prop_5c54ccdb-cafb-461b-b07f-91d189fc7b72`)) { eventBlasterPropSpawned() }
+	if (line.includes(`[VRCItems] Item prop_829ba6f6-b837-49d9-b9a9-056b82103b58`)) { eventCubePropSpawned() }
+	if (line.includes(`[VRCItems] Item prop_89be973f-9e1a-4260-8deb-211e32da8196`)) { eventWandPropSpawned() }
+	if (line.includes(`[VRCItems] Item prop_5c54ccdb-cafb-461b-b07f-91d189fc7b72`)) { eventBlasterPropSpawned() }
+	if (line.includes(`[VRCItems] Item prop_79789b58-e020-4b2e-aa25-ba21a1938eec`)) { eventPenLightPropSpawned() }
+	if (line.includes(`[VRCItems] Item prop_49fec698-f0cb-475c-9bc3-8f24e1bcc4eb`)) { eventCampFirePropSpawned() }
+	if (line.includes(`[VRCItems] Item prop_fb4e6b9e-ddd2-464c-8e44-cdba7f77eb5d`)) { eventMarshmallowPropSpawned() }
 
 	if (line.includes(`[VRCX] VideoPlay(PopcornPalace) `)) { eventPopcornPalace(line.split('[VRCX] VideoPlay(PopcornPalace) ')[1]) }
 
@@ -265,11 +269,11 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 		if (line.includes(`Sus player =`)) {
 			tonSusPlayer = line.split('Sus player = ')[1]
 			console.log(`${loglv().log}${selfLog} [TON] Impostor is ${tonSusPlayer}`)
-			oscChatBox(`~Impostor is ${tonSusPlayer}`)
+			oscChatBox(`~Impostor is ${tonSusPlayer}`, 5)
 		}
 		if (line.includes(`Verified Round End`)) {
 			console.log(`${loglv().log}${selfLog} [TON] Intermission.. Ready to start next round.`)
-			oscChatBox(`~Ready to start next round`)
+			oscChatBox(`~Ready to start next round`, 5)
 		}
 	}
 
@@ -386,7 +390,7 @@ function applyGroupLogo(gID) {
 	/*
 0111 - El Alba
 0110 - VRDance
-0101 - VRC Reach
+0101 - Ravetopia
 0100 - The Lunar Howl
 0011 - Nanachis of VRChat
 0010 - Nanachi's hollow inn
@@ -408,8 +412,8 @@ function applyGroupLogo(gID) {
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 1)
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 1)
 			break;
-		case `grp_fd1e2422-38b8-4230-9886-85378537681b`:
-			// VRC Reach
+		case `grp_7b4fe32e-8310-4ed5-9757-17116f915786`:
+			// Ravetopia
 			// 0101 - 5
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 1)
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 0)
@@ -457,35 +461,81 @@ function eventGameClose() {
 	clearTimeout(worldHopTimeout)
 	clearTimeout(worldHopTimeoutHour)
 	console.log(`${loglv().hey}${selfLog} VRChat has Closed.`)
-	if( worldID_Closed == true && lastSetUserStatus == 'Instance is closed' ){
+	logEmitter.emit('stopworld', '')
+	if (worldID_Closed == true && lastSetUserStatus == 'Instance is closed') {
 		lastSetUserStatus = ''
-		logEmitter.emit('setstatus','')
+		logEmitter.emit('setstatus', '')
 	}
 	worldID_Closed = false
 }
 
-var vrcpropcount = { "cubes": 0, "wands": 0, "blasters": 0 }
+var vrcpropcount = { "cubes": 0, "wands": 0, "blasters": 0, "penlight": 0, "campfire": 0, "marshmallow": 0 }
 fs.readFile('./datasets/propcounts.json', 'utf8', (err, data) => { vrcpropcount = JSON.parse(data) })
 function eventCubePropSpawned() {
 	vrcpropcount["cubes"]++
-	fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => {
-		if (err) { console.log(err); return }
-	})
-	console.log(`${loglv().log}${selfLog} Total cubes: ${vrcpropcount.cubes} / Total wands: ${vrcpropcount.wands} / Total blasters: ${vrcpropcount.blasters}`)
+	fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => { if (err) { console.log(err); return } })
+	console.log(`${loglv().log}${selfLog} Item spawned
+Cubes: ${vrcpropcount["cubes"] - 1} -> ${vrcpropcount["cubes"]}
+Wands: ${vrcpropcount["wands"]}
+Blasters: ${vrcpropcount["blasters"]}
+Penlights: ${vrcpropcount["penlight"]}
+Campfires: ${vrcpropcount["campfire"]}
+Marshmallow: ${vrcpropcount["marshmallow"]}`)
 }
 function eventWandPropSpawned() {
 	vrcpropcount["wands"]++
-	fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => {
-		if (err) { console.log(err); return }
-	})
-	console.log(`${loglv().log}${selfLog} Total cubes: ${vrcpropcount.cubes} / Total wands: ${vrcpropcount.wands} / Total blasters: ${vrcpropcount.blasters}`)
+	fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => { if (err) { console.log(err); return } })
+	console.log(`${loglv().log}${selfLog} Item spawned
+Cubes: ${vrcpropcount["cubes"]}
+Wands: ${vrcpropcount["wands"] - 1} -> ${vrcpropcount["wands"]}
+Blasters: ${vrcpropcount["blasters"]}
+Penlights: ${vrcpropcount["penlight"]}
+Campfires: ${vrcpropcount["campfire"]}
+Marshmallow: ${vrcpropcount["marshmallow"]}`)
 }
 function eventBlasterPropSpawned() {
 	vrcpropcount["blasters"]++
-	fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => {
-		if (err) { console.log(err); return }
-	})
-	console.log(`${loglv().log}${selfLog} Total cubes: ${vrcpropcount.cubes} / Total wands: ${vrcpropcount.wands} / Total blasters: ${vrcpropcount.blasters}`)
+	fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => { if (err) { console.log(err); return } })
+	console.log(`${loglv().log}${selfLog} Item spawned
+Cubes: ${vrcpropcount["cubes"]}
+Wands: ${vrcpropcount["wands"]}
+Blasters: ${vrcpropcount["blasters"] - 1} -> ${vrcpropcount["blasters"]}
+Penlights: ${vrcpropcount["penlight"]}
+Campfires: ${vrcpropcount["campfire"]}
+Marshmallow: ${vrcpropcount["marshmallow"]}`)
+}
+function eventPenLightPropSpawned() {
+	vrcpropcount["penlight"]++
+	fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => { if (err) { console.log(err); return } })
+	console.log(`${loglv().log}${selfLog} Item spawned
+Cubes: ${vrcpropcount["cubes"]}
+Wands: ${vrcpropcount["wands"]}
+Blasters: ${vrcpropcount["blasters"]}
+Penlights: ${vrcpropcount["penlight"] - 1} -> ${vrcpropcount["penlight"]}
+Campfires: ${vrcpropcount["campfire"]}
+Marshmallow: ${vrcpropcount["marshmallow"]}`)
+}
+function eventCampFirePropSpawned() {
+	vrcpropcount["campfire"]++
+	fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => { if (err) { console.log(err); return } })
+	console.log(`${loglv().log}${selfLog} Item spawned
+Cubes: ${vrcpropcount["cubes"]}
+Wands: ${vrcpropcount["wands"]}
+Blasters: ${vrcpropcount["blasters"]}
+Penlights: ${vrcpropcount["penlight"]}
+Campfires: ${vrcpropcount["campfire"] - 1} -> ${vrcpropcount["campfire"]}
+Marshmallow: ${vrcpropcount["marshmallow"]}`)
+}
+function eventMarshmallowPropSpawned() {
+	vrcpropcount["marshmallow"]++
+	fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => { if (err) { console.log(err); return } })
+	console.log(`${loglv().log}${selfLog} Item spawned
+Cubes: ${vrcpropcount["cubes"]}
+Wands: ${vrcpropcount["wands"]}
+Blasters: ${vrcpropcount["blasters"]}
+Penlights: ${vrcpropcount["penlight"]}
+Campfires: ${vrcpropcount["campfire"]}
+Marshmallow: ${vrcpropcount["marshmallow"] - 1} -> ${vrcpropcount["marshmallow"]}`)
 }
 
 var lastSetUserStatus = ''
@@ -519,7 +569,11 @@ function eventJoinWorld() {
 	playersInInstance = []
 	playersInstanceObject = []
 
-	logEmitter.emit('eventJoinWorld', worldID)
+	fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
+		if (data.includes(worldID)) {
+			fs.writeFile(worldQueueTxt, data.replace(`${worldID}\r\n`, ''), (err) => { if (err) { console.log(err) } })
+		}
+	})
 }
 
 function eventInstanceClosed() {
@@ -530,7 +584,7 @@ function eventInstanceClosed() {
 		logEmitter.emit('nextworld')
 	}
 	worldID_Closed = true
-	oscSend('/avatar/parameters/log/instance_closed', 1 == 1)
+	oscSend('/avatar/parameters/log/instance_closed', true)
 }
 
 function eventReceivedNotification(line) {
@@ -547,7 +601,7 @@ function eventReceivedNotification(line) {
 					let remainingTime = line.split('will be reset in ')[1].split(' due')[0]
 					logEmitter.emit('setstatus', `Instance Reset in ${remainingTime}`)
 					worldID_Closed = true
-					oscSend('/avatar/parameters/log/instance_closed', 1 == 1)
+					oscSend('/avatar/parameters/log/instance_closed', true)
 				}
 			}
 			break;
@@ -746,7 +800,7 @@ function videoUrlResolver(videourl) {
 	}
 
 	//	---	Hyperbeam URL Resolver	---
-	if (videourl.includes('hyperbeam.com') && groupID == 'grp_ce0e2343-485b-45b9-97f5-241d169c7d6f') {
+	if (videourl.includes('hyperbeam.com') && playersInInstance.includes('Chriin')) {
 		if (ttvFetchFrom == 1) { switchChannel('sirlarr') }
 		if (urlType != 'twitch') {
 			console.log(`${loglv().log}${selfLog} Video URL Type set to "Twitch"`)

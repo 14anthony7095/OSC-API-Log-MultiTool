@@ -145,7 +145,7 @@ function groupInstanceCreate(groupID = '', logtime, actorName = '', actorImageUR
     if (worldPlatformSupport[2] == true) { wpsTex += '<:platformiOSonly:1395167188414890015>' }
     if (worldPlatformSupport == [false, false, false]) { wpsTex = 'none <:NOooo:992068007251685396>' }
     let embed = new MessageBuilder()
-        .setTitle(`Group ${instanceType} instance created by ${actorName.replace(/([~_*#])/g, `\$1`)}.`).setThumbnail(actorImageURL)
+        .setTitle(`Group ${instanceType} instance created by ${actorName.replace(/(~|_|\*|#)/g, `\$1`)}.`).setThumbnail(actorImageURL)
         .addField(`Instance Info`, `
 World: ${worldName}
 Platform: ${wpsTex}
@@ -180,7 +180,7 @@ function groupInstanceClose(groupID, logtime, actorName, actorImageURL, worldID,
     if (worldPlatformSupport[2] == true) { wpsTex += '<:platformiOSonly:1395167188414890015>' }
     if (worldPlatformSupport == [false, false, false]) { wpsTex = 'none <:NOooo:992068007251685396>' }
     let embed = new MessageBuilder()
-        .setTitle(`Group ${instanceType} instance closed by ${actorName.replace(/([~_*#])/g, `\$1`)}.`).setThumbnail(actorImageURL)
+        .setTitle(`Group ${instanceType} instance closed by ${actorName.replace(/(~|_|\*|#)/g, `\$1`)}.`).setThumbnail(actorImageURL)
         .addField(`Instance Info`, `
 World: ${worldName}
 Platform: ${wpsTex}
@@ -201,7 +201,7 @@ function groupMemberJoin(groupID, logtime, actorName, actorImageURL, actorID, us
     else if (userPlatform == 'android') { displayPlatform = '<:platformAndroidonly:1395167186645028945> **Android**' }
     else if (userPlatform == 'ios') { displayPlatform = '<:platformiOSonly:1395167188414890015> **IOS**' }
     let embed = new MessageBuilder()
-        .setTitle(`User ${actorName.replace(/([~_*#])/g, `\$1`)} has joined the group.`).setThumbnail(actorImageURL)
+        .setTitle(`User ${actorName.replace(/(~|_|\*|#)/g, `\$1`)} has joined the group.`).setThumbnail(actorImageURL)
         .setDescription(`[View user on vrchat.com](https://vrchat.com/home/user/${actorID})`)
         .addField('Platform', displayPlatform, true)
         .addField(`Rank`, `${userTrustRank}`, true)
@@ -220,7 +220,7 @@ function groupMemberJoinAdded(groupID, logtime, targetName, actorName, actorImag
     else if (targetUserPlatform == 'android') { displayPlatform = '<:platformAndroidonly:1395167186645028945> **Android**' }
     else if (targetUserPlatform == 'ios') { displayPlatform = '<:platformiOSonly:1395167188414890015> **IOS**' }
     let embed = new MessageBuilder()
-        .setTitle(`User ${targetName.replace(/([~_*#])/g, `\$1`)} has been added to the group by ${actorName.replace(/([~_*#])/g, `\$1`)}.`).setThumbnail(actorImageURL)
+        .setTitle(`User ${targetName.replace(/(~|_|\*|#)/g, `\$1`)} has been added to the group by ${actorName.replace(/(~|_|\*|#)/g, `\$1`)}.`).setThumbnail(actorImageURL)
         .setDescription(`[View Added user on vrchat.com](https://vrchat.com/home/user/${targetID})`)
         .addField('Platform', displayPlatform, true)
         .addField(`Rank`, `${targetUserTrustRank}`, true)
@@ -239,7 +239,7 @@ function groupMemberLeave(groupID, logtime, actorName, actorImageURL, actorID, u
     else if (userPlatform == 'android') { displayPlatform = '<:platformAndroidonly:1395167186645028945> **Android**' }
     else if (userPlatform == 'ios') { displayPlatform = '<:platformiOSonly:1395167188414890015> **IOS**' }
     let embed = new MessageBuilder()
-        .setTitle(`User ${actorName.replace(/([~_*#])/g, `\$1`)} has left the group.`).setThumbnail(actorImageURL)
+        .setTitle(`User ${actorName.replace(/(~|_|\*|#)/g, `\$1`)} has left the group.`).setThumbnail(actorImageURL)
         .setDescription(`[View user on vrchat.com](https://vrchat.com/home/user/${actorID})`)
         .addField('Platform', displayPlatform, true)
         .addField(`Rank`, `${userTrustRank}`, true)
@@ -257,7 +257,7 @@ function groupMemberRemove(groupID, logtime, actorName, actorImageURL, targetNam
     else if (targetUserPlatform == 'android') { displayPlatform = '<:platformAndroidonly:1395167186645028945> **Android**' }
     else if (targetUserPlatform == 'ios') { displayPlatform = '<:platformiOSonly:1395167188414890015> **IOS**' }
     let embed = new MessageBuilder()
-        .setTitle(`User ${targetName.replace(/([~_*#])/g, `\$1`)} was removed from the group by ${actorName.replace(/([~_*#])/g, `\$1`)}`).setThumbnail(actorImageURL)
+        .setTitle(`User ${targetName.replace(/(~|_|\*|#)/g, `\$1`)} was removed from the group by ${actorName.replace(/(~|_|\*|#)/g, `\$1`)}`).setThumbnail(actorImageURL)
         .setDescription(`[View Removed user on vrchat.com](https://vrchat.com/home/user/${targetID})`)
         .addField('Platform', displayPlatform, true)
         .addField(`Rank`, `${targetUserTrustRank}`, true)
@@ -280,7 +280,7 @@ function groupInstanceKick(groupID, logtime, actorName, actorImageURL, targetNam
     if (worldPlatformSupport[2] == true) { wpsTex += '<:platformiOSonly:1395167188414890015>' }
     if (worldPlatformSupport == [false, false, false]) { wpsTex = 'none <:NOooo:992068007251685396>' }
     let embed = new MessageBuilder()
-        .setTitle(`${actorName.replace(/([~_*#])/g, `\$1`)} has issued an instance kick for ${targetName.replace(/([~_*#])/g, `\$1`)}`).setThumbnail(actorImageURL)
+        .setTitle(`${actorName.replace(/(~|_|\*|#)/g, `\$1`)} has issued an instance kick for ${targetName.replace(/(~|_|\*|#)/g, `\$1`)}`).setThumbnail(actorImageURL)
         .setDescription(`[View Kicked user on vrchat.com](https://vrchat.com/home/user/${targetID})`)
         .addField('Platform', displayPlatform, true)
         .addField(`Rank`, `${targetUserTrustRank}`, true)
@@ -311,7 +311,7 @@ function groupInstanceWarn(groupID, logtime, actorName, actorImageURL, targetNam
     if (worldPlatformSupport[2] == true) { wpsTex += '<:platformiOSonly:1395167188414890015>' }
     if (worldPlatformSupport == [false, false, false]) { wpsTex = 'none <:NOooo:992068007251685396>' }
     let embed = new MessageBuilder()
-        .setTitle(`${actorName.replace(/([~_*#])/g, `\$1`)} has issued an instance warn for ${targetName.replace(/([~_*#])/g, `\$1`)}`).setThumbnail(actorImageURL)
+        .setTitle(`${actorName.replace(/(~|_|\*|#)/g, `\$1`)} has issued an instance warn for ${targetName.replace(/(~|_|\*|#)/g, `\$1`)}`).setThumbnail(actorImageURL)
         .setDescription(`[View Warned user on vrchat.com](https://vrchat.com/home/user/${targetID})`)
         .addField('Platform', displayPlatform, true)
         .addField(`Rank`, `${targetUserTrustRank}`, true)
@@ -337,7 +337,7 @@ function groupUserBan(groupID, logtime, actorName, actorImageURL, targetName, ta
     else if (targetUserPlatform == 'android') { displayPlatform = '<:platformAndroidonly:1395167186645028945> **Android**' }
     else if (targetUserPlatform == 'ios') { displayPlatform = '<:platformiOSonly:1395167188414890015> **IOS**' }
     let embed = new MessageBuilder()
-        .setTitle(`User ${targetName.replace(/([~_*#])/g, `\$1`)} was banned by ${actorName.replace(/([~_*#])/g, `\$1`)}.`).setThumbnail(actorImageURL)
+        .setTitle(`User ${targetName.replace(/(~|_|\*|#)/g, `\$1`)} was banned by ${actorName.replace(/(~|_|\*|#)/g, `\$1`)}.`).setThumbnail(actorImageURL)
         .setDescription(`[View Banned user on vrchat.com](https://vrchat.com/home/user/${targetID})`)
         .addField('Platform', displayPlatform, true)
         .addField(`Rank`, `${targetUserTrustRank}`, true)
@@ -351,7 +351,7 @@ exports.groupUserBan = groupUserBan;
 
 function groupUserUnban(groupID, logtime, actorName, actorImageURL, targetName, targetID) {
     let embed = new MessageBuilder()
-        .setTitle(`User ${targetName.replace(/([~_*#])/g, `\$1`)} was unbanned by ${actorName.replace(/([~_*#])/g, `\$1`)}.`).setThumbnail(actorImageURL)
+        .setTitle(`User ${targetName.replace(/(~|_|\*|#)/g, `\$1`)} was unbanned by ${actorName.replace(/(~|_|\*|#)/g, `\$1`)}.`).setThumbnail(actorImageURL)
         .setDescription(`[View Unbanned user on vrchat.com](https://vrchat.com/home/user/${targetID})`)
         .setColor(hex.Green).setFooter('VRC Audit Log', 'https://assets.vrchat.com/www/favicons/favicon-32x32.png').setTimestamp(logtime);
     hookSelector(groupID, embed)
@@ -365,7 +365,7 @@ function groupInviteCreate(groupID, logtime, actorName, actorImageURL, targetNam
     else if (targetUserPlatform == 'android') { displayPlatform = '<:platformAndroidonly:1395167186645028945> **Android**' }
     else if (targetUserPlatform == 'ios') { displayPlatform = '<:platformiOSonly:1395167188414890015> **IOS**' }
     let embed = new MessageBuilder()
-        .setTitle(`User ${targetName.replace(/([~_*#])/g, `\$1`)} has been invited to the group by ${actorName.replace(/([~_*#])/g, `\$1`)}.`).setThumbnail(actorImageURL)
+        .setTitle(`User ${targetName.replace(/(~|_|\*|#)/g, `\$1`)} has been invited to the group by ${actorName.replace(/(~|_|\*|#)/g, `\$1`)}.`).setThumbnail(actorImageURL)
         .setDescription(`[View Invited user on vrchat.com](https://vrchat.com/home/user/${targetID})`)
         .addField('Platform', displayPlatform, true)
         .addField(`Rank`, `${targetUserTrustRank}`, true)
@@ -379,7 +379,7 @@ exports.groupInviteCreate = groupInviteCreate;
 
 function groupInviteCancel(groupID, logtime, actorName, actorImageURL, targetName, targetID) {
     let embed = new MessageBuilder()
-        .setTitle(`User ${targetName.replace(/([~_*#])/g, `\$1`)} has been uninvited to the group by ${actorName.replace(/([~_*#])/g, `\$1`)}.`).setThumbnail(actorImageURL)
+        .setTitle(`User ${targetName.replace(/(~|_|\*|#)/g, `\$1`)} has been uninvited to the group by ${actorName.replace(/(~|_|\*|#)/g, `\$1`)}.`).setThumbnail(actorImageURL)
         .setDescription(`[View Invited user on vrchat.com](https://vrchat.com/home/user/${targetID})`)
         .setColor(hex.Cyan).setFooter('VRC Audit Log', 'https://assets.vrchat.com/www/favicons/favicon-32x32.png').setTimestamp(logtime);
     hookSelector(groupID, embed)

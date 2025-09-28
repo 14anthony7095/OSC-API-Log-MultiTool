@@ -108,7 +108,7 @@ oscEmitter.on('osc', (address, value) => {
     }
     if (address == `/avatar/parameters/api/explore/stop` && value == true) {
         if (exploreMode == true) {
-            console.log(`${loglv().hey}${selflog} Explore Mode: Disabled - Avatar Trigger`);
+            console.log(`${loglv().hey}${selflog} Explore Mode: Disabled - Avatar Trigger`)
             exploreMode = false
         } else if (exploreMode == false) {
             // switchQueueList() // All the lists are merged.. soo.. rip
@@ -139,6 +139,13 @@ logEmitter.on('nextworld', (output) => {
         inviteLocalQueue()
     }
 })
+logEmitter.on('stopworld', (output) => {
+    if (exploreMode == true) {
+        console.log(`${loglv().hey}${selflog} Explore Mode: Disabled - Quit VRChat`)
+        setUserStatus('')
+        exploreMode = false
+    }
+})
 
 
 async function main() {
@@ -161,19 +168,27 @@ async function main() {
 }
 
 var markededSomnaGroupInstances = []
+var trackedSomnaIns = {}
 async function scanSomnaGroupInstances() {
     console.log(`${loglv().log}${selflog} [Somnophilia] Checking for instances`)
     let res = await vrchat.getGroupInstances({ 'path': { 'groupId': 'grp_10bb5d71-aa5e-43d8-9dd2-3c8cebe17152' } })
-    if (res.data == undefined ) {
+    if (res.data == undefined) {
         console.log(res)
-    }else if (res.data.length > 0) {
+    } else if (res.data.length > 0) {
         console.log(`${loglv().log}${selflog} [Somnophilia] 0/${res.data.length}: Found ${res.data.length} instances`)
         res.data.forEach((grpins, index, arr) => {
             if (grpins.instanceId.includes('~ageGate')) {
-                console.log(`${loglv().log}${selflog} [Somnophilia] ${index + 1}/${arr.length}: AgeGated #${grpins.instanceId.split('~')[0]} - ${grpins.world.id}`)
+
+                if (trackedSomnaIns[grpins.instanceId.split('~')[0]]) {
+                    trackedSomnaIns[grpins.instanceId.split('~')[0]] = 1 + trackedSomnaIns[grpins.instanceId.split('~')[0]]
+                } else {
+                    trackedSomnaIns[grpins.instanceId.split('~')[0]] = 1
+                }
+
+                console.log(`${loglv().log}${selflog} [Somnophilia] ${index + 1}/${arr.length}: - AgeGated #${grpins.instanceId.split('~')[0]} - (${trackedSomnaIns[grpins.instanceId.split('~')[0]] * 10}min) - ${grpins.world.id}`)
             } else {
-                console.log(`${loglv().hey}${selflog} [Somnophilia] ${index + 1}/${arr.length}: Not Gated #${grpins.instanceId.split('~')[0]} - ${grpins.world.id} - Sending message to WebHook`)
-                if( !markededSomnaGroupInstances.includes(grpins.instanceId) ) {
+                console.log(`${loglv().hey}${selflog} [Somnophilia] ${index + 1}/${arr.length}: - Not Gated #${grpins.instanceId.split('~')[0]} - (${trackedSomnaIns[grpins.instanceId.split('~')[0]] * 10}min) - ${grpins.world.id} - Sending message to WebHook`)
+                if (!markededSomnaGroupInstances.includes(grpins.instanceId)) {
                     markededSomnaGroupInstances.push(grpins.instanceId)
                     groupInstanceCreateWASNT18PLUS(grpins.world.id, grpins.instanceId, grpins.world.name, grpins.world.imageUrl)
                 }
@@ -229,12 +244,21 @@ async function addLabWorldsToLocalQueue() {
     console.log(`${loglv().log}${selflog} Adding 100 Community Labs worlds to queue`)
     let { data: worldData } = await vrchat.searchWorlds({ query: { n: 100, sort: 'labsPublicationDate', order: 'descending', offset: 0, tag: 'system_labs' } })
     fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
+        let localQueueList = data.split(`\r\n`)
+        let lastInQueue = localQueueList[localQueueList.length-1]
+        
         let worldlist = ''
         worldData.forEach((w, index, arr) => {
             console.log(`${loglv().log}${selflog} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
             index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
         })
-        fs.appendFile(worldQueueTxt, `\r\n` + worldlist, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
+
+        if( worldlist.includes(lastInQueue) ){
+            console.log(`${loglv().hey}${selflog} Cancelled list appendage, Queue already contains part of latest batch`)
+            oscChatBox(`Cancelled queue append:\v Queue already contains latest labs batch`)
+        }else{
+            fs.appendFile(worldQueueTxt, worldlist, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
+        }
     })
 }
 
@@ -316,18 +340,11 @@ async function inviteOnlineWorlds_Loop(world_id) {
     }
 }
 
-logEmitter.on('eventJoinWorld', (eJW_worldID) => {
-    fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
-        if (data.includes(eJW_worldID)) {
-            fs.writeFile(worldQueueTxt, data.replace(`${eJW_worldID}\r\n`, ''), (err) => { if (err) { console.log(err) } })
-        }
-    })
-})
 function inviteLocalQueue() {
     fs.readFile(worldQueueTxt, 'utf8', async (err, data) => {
         // err ? console.log(err); return : ''
         let localQueueList = data.split(`\r\n`)
-        let randnum = Math.round(Math.random() * localQueueList.length)
+        let randnum = Math.round(Math.random() * (localQueueList.length-1))
         let world_id = localQueueList[randnum]
 
         let extimelow = Math.floor((localQueueList.length * 2) / 60)
@@ -518,7 +535,7 @@ async function scanGroupAuditLogs() {
     await scanaudit(logOutput_9year, targetGroupLogID_9year);
     await scanaudit(logOutput_10year, targetGroupLogID_10year);
 
-    scanSomnaGroupInstances()
+    // scanSomnaGroupInstances()
 }
 
 async function requestAllOnlineFriends() {

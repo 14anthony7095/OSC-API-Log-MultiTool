@@ -66,7 +66,7 @@ exports.killvrc = killvrc;
 exports.killprep = killprep;
 
 logEmitter.on('playerJoin', playername => {
-	playername == 'Snake Dog' ? killvrc(1) : ''
+	//playername == 'Snake Dog' ? killvrc(1) : ''
 })
 
 oscEmitter.on('osc', (address, value) => {

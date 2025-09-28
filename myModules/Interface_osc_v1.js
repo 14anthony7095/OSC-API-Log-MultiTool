@@ -14,6 +14,7 @@ var osc = require('osc');
 var udpPort = new osc.UDPPort({ localAddress: '127.0.0.1', localPort: 9100 })
 const remotePort = 9000
 const { cmdEmitter } = require('./input.js');
+const { playNote } = require('./interface_midi.js')
 const { EventEmitter } = require('events');
 const { PiShock, PiShockAll } = require('./Interface_PS.js');
 const { toUnicode } = require('punycode');
@@ -296,8 +297,10 @@ function oscSend6(addr, v1, v2, v3, v4, v5, v6) {
 }
 exports.oscSend6 = oscSend6;
 
-var PiS_duration = 0;
-var PiS_power = 0;
+var PiS_duration = 0
+var PiS_power = 0
+var menuX = 0
+var menuY = 0
 oscEmitter.on('ready', (ready) => { });
 oscEmitter.on('osc', (address, value) => {
 
@@ -312,7 +315,33 @@ oscEmitter.on('osc', (address, value) => {
 			PiShockAll(PiS_power, PiS_duration)
 		}
 	}
+
+	if (address == '/avatar/parameters/14a/osc/menuX') { menuX = value }
+	if (address == '/avatar/parameters/14a/osc/menuY') { menuY = value }
+	if (address == '/avatar/parameters/14a/osc/menuX' || address == '/avatar/parameters/14a/osc/menuY') {
+		let deg = Math.atan2(menuY, menuX) * (180 / Math.PI) + 180
+		playNote(10,70, clamp( (deg / 360) * 127 ) )
+		// console.log(`aTan ${Math.atan2(menuY, menuX)}`)
+		// console.log(`Angle ${deg}`)
+	}
+
+	if (address.includes('14a/midi')) {
+		var channel = clamp2(address.split('14a/midi/')[1].split('/')[0])
+		var number = clamp(address.split('14a/midi/')[1].split('/')[1])
+		var velocity = 0
+		if (value % 1 == 0) {
+			// Int: Clamp [ 0 - 255 ] to 127
+			velocity = clamp(value)
+		} else {
+			// Float: Clamp [ -1.0 - 1.0 ]
+			velocity = clamp(value * 127)
+		}
+		playNote(channel, number, velocity)
+	}
+
 });
+function clamp(input) { return Math.round(Math.max(0, Math.min(127, input))) }
+function clamp2(input) { return Math.round(Math.max(0, Math.min(15, input))) }
 
 udpPort.on("message", function (msg, rinfo) {
 	// console.log(msg);
@@ -333,7 +362,7 @@ udpPort.on("message", function (msg, rinfo) {
 	}
 	if (msg['address'] == '/avatar/parameters/toolGunHolster_Angle') { return }
 	if (logOscIn == true) { console.log(`\x1b[36m->> ${selfLog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args'][0]) }
-	if( msg['address'].includes('/usercamera/') ) { console.log(`\x1b[36m->> ${selfLog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
+	// if (msg['address'].includes('/usercamera/')) { console.log(`\x1b[36m->> ${selfLog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
 });
 
 // function lerp(start,end,factor){ return start + (end - start) * factor; }
@@ -375,6 +404,7 @@ udpPort.on("ready", function () {
 	if (isFullLaunch == true) {
 		require('./Interface_vrc-Api.js')
 		// require('./Interface_websocket-server.js')
+		// require('./interface_midi.js')
 
 		require('./osc_PingSystem.js') // OSC
 		require('./osc_Chessboard-logic.js') // OSC
