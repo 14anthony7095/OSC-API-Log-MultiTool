@@ -245,7 +245,8 @@ async function addLabWorldsToLocalQueue() {
     let { data: worldData } = await vrchat.searchWorlds({ query: { n: 100, sort: 'labsPublicationDate', order: 'descending', offset: 0, tag: 'system_labs' } })
     fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
         let localQueueList = data.split(`\r\n`)
-        let lastInQueue = localQueueList[localQueueList.length-1]
+        let lastInQueue = localQueueList[localQueueList.length-2]
+        console.log(lastInQueue)
         
         let worldlist = ''
         worldData.forEach((w, index, arr) => {

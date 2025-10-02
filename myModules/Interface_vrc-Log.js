@@ -256,6 +256,7 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 	if (line.includes(`[VRCItems] Item prop_79789b58-e020-4b2e-aa25-ba21a1938eec`)) { eventPenLightPropSpawned() }
 	if (line.includes(`[VRCItems] Item prop_49fec698-f0cb-475c-9bc3-8f24e1bcc4eb`)) { eventCampFirePropSpawned() }
 	if (line.includes(`[VRCItems] Item prop_fb4e6b9e-ddd2-464c-8e44-cdba7f77eb5d`)) { eventMarshmallowPropSpawned() }
+	if (line.includes(`[VRCItems] Item prop_dae2be6b-9c3b-4783-948b-4ff46d3a14e5`)) { eventBigScreenBeyondPropSpawned() }
 
 	if (line.includes(`[VRCX] VideoPlay(PopcornPalace) `)) { eventPopcornPalace(line.split('[VRCX] VideoPlay(PopcornPalace) ')[1]) }
 
@@ -469,7 +470,7 @@ function eventGameClose() {
 	worldID_Closed = false
 }
 
-var vrcpropcount = { "cubes": 0, "wands": 0, "blasters": 0, "penlight": 0, "campfire": 0, "marshmallow": 0 }
+var vrcpropcount = { "cubes": 0, "wands": 0, "blasters": 0, "penlight": 0, "campfire": 0, "marshmallow": 0, "bigscreen":0 }
 fs.readFile('./datasets/propcounts.json', 'utf8', (err, data) => { vrcpropcount = JSON.parse(data) })
 function eventCubePropSpawned() {
 	vrcpropcount["cubes"]++
@@ -480,7 +481,8 @@ Wands: ${vrcpropcount["wands"]}
 Blasters: ${vrcpropcount["blasters"]}
 Penlights: ${vrcpropcount["penlight"]}
 Campfires: ${vrcpropcount["campfire"]}
-Marshmallow: ${vrcpropcount["marshmallow"]}`)
+Marshmallow: ${vrcpropcount["marshmallow"]}
+BigScreen: ${vrcpropcount["bigscreen"]}`)
 }
 function eventWandPropSpawned() {
 	vrcpropcount["wands"]++
@@ -491,7 +493,8 @@ Wands: ${vrcpropcount["wands"] - 1} -> ${vrcpropcount["wands"]}
 Blasters: ${vrcpropcount["blasters"]}
 Penlights: ${vrcpropcount["penlight"]}
 Campfires: ${vrcpropcount["campfire"]}
-Marshmallow: ${vrcpropcount["marshmallow"]}`)
+Marshmallow: ${vrcpropcount["marshmallow"]}
+BigScreen: ${vrcpropcount["bigscreen"]}`)
 }
 function eventBlasterPropSpawned() {
 	vrcpropcount["blasters"]++
@@ -502,7 +505,8 @@ Wands: ${vrcpropcount["wands"]}
 Blasters: ${vrcpropcount["blasters"] - 1} -> ${vrcpropcount["blasters"]}
 Penlights: ${vrcpropcount["penlight"]}
 Campfires: ${vrcpropcount["campfire"]}
-Marshmallow: ${vrcpropcount["marshmallow"]}`)
+Marshmallow: ${vrcpropcount["marshmallow"]}
+BigScreen: ${vrcpropcount["bigscreen"]}`)
 }
 function eventPenLightPropSpawned() {
 	vrcpropcount["penlight"]++
@@ -513,7 +517,8 @@ Wands: ${vrcpropcount["wands"]}
 Blasters: ${vrcpropcount["blasters"]}
 Penlights: ${vrcpropcount["penlight"] - 1} -> ${vrcpropcount["penlight"]}
 Campfires: ${vrcpropcount["campfire"]}
-Marshmallow: ${vrcpropcount["marshmallow"]}`)
+Marshmallow: ${vrcpropcount["marshmallow"]}
+BigScreen: ${vrcpropcount["bigscreen"]}`)
 }
 function eventCampFirePropSpawned() {
 	vrcpropcount["campfire"]++
@@ -524,7 +529,8 @@ Wands: ${vrcpropcount["wands"]}
 Blasters: ${vrcpropcount["blasters"]}
 Penlights: ${vrcpropcount["penlight"]}
 Campfires: ${vrcpropcount["campfire"] - 1} -> ${vrcpropcount["campfire"]}
-Marshmallow: ${vrcpropcount["marshmallow"]}`)
+Marshmallow: ${vrcpropcount["marshmallow"]}
+BigScreen: ${vrcpropcount["bigscreen"]}`)
 }
 function eventMarshmallowPropSpawned() {
 	vrcpropcount["marshmallow"]++
@@ -535,8 +541,22 @@ Wands: ${vrcpropcount["wands"]}
 Blasters: ${vrcpropcount["blasters"]}
 Penlights: ${vrcpropcount["penlight"]}
 Campfires: ${vrcpropcount["campfire"]}
-Marshmallow: ${vrcpropcount["marshmallow"] - 1} -> ${vrcpropcount["marshmallow"]}`)
+Marshmallow: ${vrcpropcount["marshmallow"] - 1} -> ${vrcpropcount["marshmallow"]}
+BigScreen: ${vrcpropcount["bigscreen"]}`)
 }
+function eventBigScreenBeyondPropSpawned() {
+	vrcpropcount["bigscreen"]++
+	fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => { if (err) { console.log(err); return } })
+	console.log(`${loglv().log}${selfLog} Item spawned
+Cubes: ${vrcpropcount["cubes"]}
+Wands: ${vrcpropcount["wands"]}
+Blasters: ${vrcpropcount["blasters"]}
+Penlights: ${vrcpropcount["penlight"]}
+Campfires: ${vrcpropcount["campfire"]}
+Marshmallow: ${vrcpropcount["marshmallow"]}
+BigScreen: ${vrcpropcount["bigscreen"] - 1} -> ${vrcpropcount["bigscreen"]}`)
+}
+
 
 var lastSetUserStatus = ''
 function eventHeadingToWorld(logOutputLine) {
@@ -581,6 +601,10 @@ function eventInstanceClosed() {
 		lastSetUserStatus = 'Instance is closed'
 		logEmitter.emit('setstatus', 'Instance is closed')
 	} else if (groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+		if( lastSetUserStatus != `Exploring World Queue` ){
+			lastSetUserStatus = `Exploring World Queue`
+			logEmitter.emit('setstatus', `Exploring World Queue`)
+		}
 		logEmitter.emit('nextworld')
 	}
 	worldID_Closed = true
@@ -599,6 +623,7 @@ function eventReceivedNotification(line) {
 			if (senderUserID == '8JoV9XEdpo') {
 				if (line.includes(`This instance will be reset`)) {
 					let remainingTime = line.split('will be reset in ')[1].split(' due')[0]
+					lastSetUserStatus = `Instance Reset in ${remainingTime}`
 					logEmitter.emit('setstatus', `Instance Reset in ${remainingTime}`)
 					worldID_Closed = true
 					oscSend('/avatar/parameters/log/instance_closed', true)
@@ -714,6 +739,7 @@ function eventPlayerLeft(logOutputLine) {
 			clearTimeout(worldHopTimeout)
 			cooldownUrl = true
 			if (worldID_Closed == true) {
+				lastSetUserStatus = ``
 				logEmitter.emit('setstatus', '')
 				worldID_Closed = false
 			}
