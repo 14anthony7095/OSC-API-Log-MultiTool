@@ -59,7 +59,7 @@
 48 - Suisai_Calm down (RoofTop)	: 190
 
 # Disc 7
-49 - VS Sole Solution			: 229	>>
+49 - Hyperion Orbit				: 265
 50 - Dying Sun					: 200
 51 - Empire Of Steel			: 231
 52 - I'll Never Let You Go		: 158

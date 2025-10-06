@@ -245,20 +245,23 @@ async function addLabWorldsToLocalQueue() {
     let { data: worldData } = await vrchat.searchWorlds({ query: { n: 100, sort: 'labsPublicationDate', order: 'descending', offset: 0, tag: 'system_labs' } })
     fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
         let localQueueList = data.split(`\r\n`)
-        let lastInQueue = localQueueList[localQueueList.length-2]
-        console.log(lastInQueue)
-        
+        let lastInQueue = localQueueList[localQueueList.length - 2]
+        // console.log(lastInQueue)
+
         let worldlist = ''
+        let skipAdd = false
         worldData.forEach((w, index, arr) => {
             console.log(`${loglv().log}${selflog} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
+            // console.log(`${loglv().log}${selflog} (${index + 1}/${arr.length}) ${w.id}`)
+            lastInQueue == w.id ? skipAdd = true : ''
             index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
         })
 
-        if( worldlist.includes(lastInQueue) ){
+        if (worldlist.includes(lastInQueue) || skipAdd == true) {
             console.log(`${loglv().hey}${selflog} Cancelled list appendage, Queue already contains part of latest batch`)
             oscChatBox(`Cancelled queue append:\v Queue already contains latest labs batch`)
-        }else{
-            fs.appendFile(worldQueueTxt, worldlist, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
+        } else {
+            fs.appendFile(worldQueueTxt, worldlist + `\r\n`, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
         }
     })
 }
@@ -302,7 +305,22 @@ async function getOnlineWorlds(favgroup = 'worlds1', addMoreWorlds = false) {
 var exploreNextCountDownTimer;
 async function inviteOnlineWorlds_Loop(world_id) {
     let { data: checkCap } = await vrchat.getWorld({ 'path': { 'worldId': world_id } })
-    if (checkCap.capacity < getPlayersInInstance().length && getInstanceGroupID() == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+    if (checkCap == undefined) {
+        console.log(`${loglv().hey}${selflog} World failed to fetch. Skipping`);
+        oscChatBox(`World fetch failed.\vSkipping.`, 5);
+        fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
+            if (data.includes(world_id)) {
+                fs.writeFile(worldQueueTxt, data.replace(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
+            }
+        })
+        worldsToExplore.shift()
+        if (worldsToExplore.length == 0) {
+            console.log(`${loglv().hey}${selflog} Explore Mode: Disabled - out of worlds`)
+            exploreMode = false
+        }
+        if (exploreMode == true) { inviteOnlineWorlds_Loop(worldsToExplore[0]) }
+        return
+    } else if (checkCap.capacity < getPlayersInInstance().length && getInstanceGroupID() == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
         console.log(`${loglv().hey}${selflog} World can not fit everyone. Skipping`)
         oscChatBox(`World can't fit everyone.\vSkipping.`, 5);
         worldsToExplore.shift()
@@ -345,7 +363,7 @@ function inviteLocalQueue() {
     fs.readFile(worldQueueTxt, 'utf8', async (err, data) => {
         // err ? console.log(err); return : ''
         let localQueueList = data.split(`\r\n`)
-        let randnum = Math.round(Math.random() * (localQueueList.length-1))
+        let randnum = Math.round(Math.random() * (localQueueList.length - 1))
         let world_id = localQueueList[randnum]
 
         let extimelow = Math.floor((localQueueList.length * 2) / 60)
