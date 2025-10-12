@@ -7,7 +7,7 @@
 */
 //	--	Libraries	--
 var { loglv, playerCounter, graphTimeRangeMinutes } = require('./config.js');
-const { oscSend, oscEmitter } = require('./Interface_osc_v1.js');
+const { oscSend, oscEmitter, OSCDataBurst } = require('./Interface_osc_v1.js');
 const { getVisitsCount } = require('./Interface_vrc-Api.js')
 
 
@@ -23,14 +23,14 @@ console.log(`${loglv().log}${selfLog} Loaded -> ${loglv(playerCounter)}${playerC
 function start() {
 	isActive = true
 	console.log(`${loglv().log}${selfLog} Starting..`)
-	
-	getVisitsCount().then(count=>{ workload(count) }).catch((err)=>{ workload(0, 'Lost Connection') })
-	
+
+	getVisitsCount().then(count => { workload(count) }).catch((err) => { workload(0, 'Lost Connection') })
+
 	counterTimer = setInterval(() => {
-		getVisitsCount().then(count=>{ workload(count) }).catch((err)=>{ workload(0, 'Lost Connection') })
+		getVisitsCount().then(count => { workload(count) }).catch((err) => { workload(0, 'Lost Connection') })
 	}, 10000)
 }
-start()
+// start()
 
 
 function stop() {
@@ -40,81 +40,44 @@ function stop() {
 }
 
 
-function toBinary(dec) { return (parseInt(dec) >>> 0).toString(2).padStart(4, '0') }
+// function toBinary(dec) { return (parseInt(dec) >>> 0).toString(2).padStart(4, '0') }
+
+// function wait(seconds) { return new Promise((resolve, reject) => { setTimeout(() => { resolve(true) }, seconds * 1000) }) }
 
 
-function counterAddressData(addr, data, clearChar = false) {
-	let a1 = toBinary(addr)[3]
-	let a2 = toBinary(addr)[2]
-	let a4 = toBinary(addr)[1]
-	let a8 = toBinary(addr)[0]
-	let d1 = toBinary(data)[3]
-	let d2 = toBinary(data)[2]
-	let d4 = toBinary(data)[1]
-	let d8 = toBinary(data)[0]
-	if (clearChar == true) { d1 = 0; d2 = 1; d4 = 0; d8 = 1 }
+function workload(playerCount) {
 
-	oscSend('/avatar/parameters/counter/CountAddr_x8', 1 == a8)
-	oscSend('/avatar/parameters/counter/CountAddr_x4', 1 == a4)
-	oscSend('/avatar/parameters/counter/CountAddr_x2', 1 == a2)
-	oscSend('/avatar/parameters/counter/CountAddr_x1', 1 == a1)
-	oscSend('/avatar/parameters/counter/CountData_x8', 1 == d8)
-	oscSend('/avatar/parameters/counter/CountData_x4', 1 == d4)
-	oscSend('/avatar/parameters/counter/CountData_x2', 1 == d2)
-	oscSend('/avatar/parameters/counter/CountData_x1', 1 == d1)
-}
+	/* 	
+VRO: 1 2 3 4 5 6
+	VRO%bar reset on ADDR 1
+INS: 7 / 8
+INF: 9 %
 
+ADDR	Int 0-255
+DATA	Int 0-255 (remap to -1 to 1 Float)
 
-function wait(seconds){
-	return new Promise((resolve,reject)=>{
-		setTimeout(()=>{ resolve(true) },seconds*1000)
-	})
-}
+Int Double DATA handling
+  _0 = 0
+  _1 = 1
+  _9 = 9
+  10 = 10
+  11 = 11
+  99 = 99
+  00 = 100
+  01 = 101
+  09 = 109  
+  0_ = 200
+  9_ = 209
+  __ = 255
+ */
 
+	let digitSeg = playerCount.toString().padStart(6, '0')
+	let digitLen = playerCount.toString().length
+	digitLen == 6 ? OSCDataBurst(1, digitSeg[0] ) : OSCDataBurst(1, 10 )
+	digitLen == 5 ? OSCDataBurst(2, digitSeg[1] ) : OSCDataBurst(2, 10 )
+	digitLen == 4 ? OSCDataBurst(3, digitSeg[2] ) : OSCDataBurst(3, 10 )
+	digitLen == 3 ? OSCDataBurst(4, digitSeg[3] ) : OSCDataBurst(4, 10 )
+	digitLen == 2 ? OSCDataBurst(5, digitSeg[4] ) : OSCDataBurst(5, 10 )
+	digitLen == 1 ? OSCDataBurst(6, digitSeg[5] ) : OSCDataBurst(6, 10 )
 
-async function workload(playerCount) {
-
-	// console.log(`${loglv().debug}${selfLog} count ${playerCount}`)
-	
-
-	oscSend('/avatar/parameters/counter/Count_RefreshTimer', true)
-	counterAddressData(1, playerCount.toString().padStart(6, '0')[5], false)
-	await wait(0.2)
-	
-	oscSend('/avatar/parameters/counter/Count_RefreshTimer', false)
-	if (playerCount.toString().padStart(6, '0') < 10) {
-		counterAddressData(2, 10, true)
-	} else {
-		counterAddressData(2, playerCount.toString().padStart(6, '0')[4], false)
-	}
-	await wait(0.2)
-
-	if (playerCount.toString().padStart(6, '0') < 100) {
-		counterAddressData(3, 10, true)
-	} else {
-		counterAddressData(3, playerCount.toString().padStart(6, '0')[3], false)
-	}
-	await wait(0.2)
-
-	if (playerCount.toString().padStart(6, '0') < 1000) {
-		counterAddressData(4, 10, true)
-	} else {
-		counterAddressData(4, playerCount.toString().padStart(6, '0')[2], false)
-	}
-	await wait(0.2)
-
-	if (playerCount.toString().padStart(6, '0') < 10000) {
-		counterAddressData(5, 10, true)
-	} else {
-		counterAddressData(5, playerCount.toString().padStart(6, '0')[1], false)
-	}
-	await wait(0.2)
-
-	if (playerCount.toString().padStart(6, '0') < 100000) {
-		counterAddressData(6, 10, true)
-	} else {
-		counterAddressData(6, playerCount.toString().padStart(6, '0')[0], false)
-	}
-	await wait(0.2)
-	counterAddressData(0, 0)
 }

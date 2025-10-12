@@ -1,11 +1,14 @@
 const Jimp = require('jimp');
 const fs = require('fs');
+const EventEmitter = require('events');
+const displayEmitter = new EventEmitter
 // const { oscSend } = require("./Interface_osc_v1");
 var osc = require('osc');
 var udpPort = new osc.UDPPort({ localAddress: '127.0.0.1' })
 const remotePort = 9000
 udpPort.open()
 function oscSend(a, v) { udpPort.send({ address: a, args: [v] }, '127.0.0.1', remotePort) }
+
 
 const color64 = [
     "000000", "000055", "0000AA", "0000FF", "005500", "005555", "0055AA", "0055FF", "00AA00", "00AA55", "00AAAA", "00AAFF", "00FF00", "00FF55", "00FFAA", "00FFFF",
@@ -31,6 +34,7 @@ async function mainloop() {
     setTimeout(() => {
         // Auto-ReRender
         mainloop()
+        displayEmitter.emit('finished')
     }, 256 * delay);
 
     for (let index = 0; index <= 255; index++) {
@@ -63,9 +67,14 @@ async function mainloop() {
 
 fs.watchFile('./bin/test.png', (curr, prev) => { dumpImageData() })
 
-function dumpImageData() {
+var imageProgress = 0
+displayEmitter.on('finished',()=>{
+    imageProgress++
+    dumpImageData(imageProgress+'img.jpg')
+})
+function dumpImageData(imageName='test.png') {
     return new Promise((resolve, reject) => {
-        Jimp.read('./bin/test.png', (err, value, coords) => {
+        Jimp.read('./bin/'+imageName, (err, value, coords) => {
             cur1 = Buffer.from(value.bitmap.data).toString('hex').slice(0, 2048).match(/.{1,8}/g)
             cur2 = Buffer.from(value.bitmap.data).toString('hex').slice(2048, 4096).match(/.{1,8}/g)
             cur3 = Buffer.from(value.bitmap.data).toString('hex').slice(4096, 6144).match(/.{1,8}/g)

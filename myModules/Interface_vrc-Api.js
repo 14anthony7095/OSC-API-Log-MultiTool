@@ -596,7 +596,9 @@ var vrcDataCache = {}
 function scanaudit(logoutput, groupID) {
     console.log(`${loglv().log}${selflog} Scanning through audit log for group ${groupID}`)
     return new Promise((resolve, reject) => {
-        if (logoutput.results.length == 0) {
+        if( logoutput == undefined ){
+            resolve(false)
+        }else if (logoutput.results.length == 0) {
             setTimeout(() => {
                 resolve(true)
                 console.log(`${loglv().log}${selflog} Audit Log was Empty for ${groupID}`)

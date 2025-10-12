@@ -45,28 +45,35 @@ var scr = [
 `00190019001900191900190019001900001900190019001919001900190019000019001900190019190019001900190000190019001900191900190019001900`
 ]
 
+var scr2 = [
+`000 000 000 000 000 000 000 000
+000 000 000 000 000 000 000 000
+000 000 000 000 000 000 000 000
+000 000 000 000 000 000 000 000
+000 000 000 000 000 000 000 000
+000 000 000 000 000 000 000 000
+000 000 000 000 000 000 000 000
+000 000 000 000 000 000 000 000`,
+]
+
 async function sendScreen() {
 	var port = await JZZ().openMidiOut('LoopBe Internal MIDI').or();
 	scr.forEach((frame, index) => {
 		setTimeout(() => {
 			frame.match(/.{2}/g).forEach((num, index2, arr) => {
-				// console.log(num[0], num[1])
-				/*
-				0 = Gray Slate
-				1 = Gray Stone
-				2 = White
-				3 = Red
-				4 = Orange
-				5 = Yellow
-				6 = Green
-				7 = Cyan
-				8 = Blue
-				9 = Magenta
-				*/
 				parseInt(num[0]) == 1 ? port.noteOn(1, index2, parseInt(num[1])+1) : port.noteOff(1, index2, 127)
 			})
 		}, 1000 * index);
 	})
+
+	// scr2.forEach((frame, index) => {
+	// 	setTimeout(() => {
+	// 		frame.replace(' ','').match(/.{3}/g).forEach((brightness, index2, arr) => {
+	// 			port.noteOn(1, index2, clamp(brightness) )
+	// 		})
+	// 	}, 1000 * index);
+	// })
+
 }
 
 function clamp(input) { return Math.round(Math.max(0, Math.min(127, input))) }

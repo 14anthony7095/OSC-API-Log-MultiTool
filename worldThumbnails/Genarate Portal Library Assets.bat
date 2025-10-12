@@ -14,6 +14,6 @@ timeout /T 10 /nobreak>nul
 echo Going down into "dl"
 cd dl
 echo Cleaning up downloaded files
-for %%f in (*.png) do del /q %%f
+rem for %%f in (*.png) do del /q %%f
 timeout /T 5 /nobreak
 pause

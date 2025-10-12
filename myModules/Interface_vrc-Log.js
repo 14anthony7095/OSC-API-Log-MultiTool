@@ -467,6 +467,7 @@ function eventGameClose() {
 		lastSetUserStatus = ''
 		logEmitter.emit('setstatus', '')
 	}
+	groupID = 'none'
 	worldID_Closed = false
 }
 

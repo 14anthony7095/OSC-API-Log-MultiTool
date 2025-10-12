@@ -14,7 +14,7 @@ var osc = require('osc');
 var udpPort = new osc.UDPPort({ localAddress: '127.0.0.1', localPort: 9100 })
 const remotePort = 9000
 const { cmdEmitter } = require('./input.js');
-const { playNote,sendScreenDebug } = require('./interface_midi.js')
+const { playNote, sendScreenDebug } = require('./interface_midi.js')
 const { EventEmitter } = require('events');
 const { PiShock, PiShockAll } = require('./Interface_PS.js');
 const { toUnicode } = require('punycode');
@@ -25,7 +25,7 @@ console.log(`${loglv().log}${selfLog} Loaded -> ${loglv(logOscIn)}Input${loglv()
 console.log(`${loglv().log}${selfLog} Connected to ${deviceIP}`)
 
 var nanaPartyCCTVtimer;
-
+const vrcap = '/avatar/parameters/'
 cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'help') {
 		console.log(`${selfLog}
@@ -171,27 +171,15 @@ function oscSend(a, v) {
 }
 exports.oscSend = oscSend;
 
-
-var dataBurstsQueue = []
-var dataBurstdQueue = []
-var dataBurstd2Queue = []
-var dataBurstd3Queue = []
-var dataBurstd4Queue = []
-
+var dataBurst = []
 var dataBurstmKAT = []
 const katChars = [` `, `!`, `"`, `#`, `$`, `%`, `&`, `'`, `(`, `)`, `*`, `+`, `,`, `-`, `.`, `/`, `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `:`, `;`, `<`, `=`, `>`, `?`, `@`, `A`, `B`, `C`, `D`, `E`, `F`, `G`, `H`, `I`, `J`, `K`, `L`, `M`, `N`, `O`, `P`, `Q`, `R`, `S`, `T`, `U`, `V`, `W`, `X`, `Y`, `Z`, `[`, `\\`, `]`, `^`, `_`, `\``, `a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, `j`, `k`, `l`, `m`, `n`, `o`, `p`, `q`, `r`, `s`, `t`, `u`, `v`, `w`, `x`, `y`, `z`, `{`, `|`, `}`, `~`]
 //function remapKat(value) { return -1 + value * 2 / 254/ 127.0 }
 
 var isBurstingData = false
-
-function OSCDataBurst(slot = 0, data1 = 0, data2 = 0, data3 = 0, data4 = 0, katMode = false) {
+function OSCDataBurst(in_addr, in_dataA) {
 	//console.log(`${loglv().debug}${selfLog} [DataBurst] Adding buffer data ${data1}, ${data2}, ${data3} to Slot ${slot}`)
-	dataBurstsQueue.push(slot)
-	dataBurstdQueue.push(data1)
-	dataBurstd2Queue.push(data2)
-	dataBurstd3Queue.push(data3)
-	dataBurstd4Queue.push(data4)
-	dataBurstmKAT.push(katMode)
+	dataBurst.push({ 'addr': in_addr, 'dataA': in_dataA })
 
 	if (isBurstingData == false) {
 		isBurstingData = true
@@ -202,39 +190,20 @@ function OSCDataBurst(slot = 0, data1 = 0, data2 = 0, data3 = 0, data4 = 0, katM
 }
 function sendOscDataBurst() {
 	//isBurstingData = true
-	//console.log(`${loglv().debug}${selfLog} [DataBurst] Sending data ${dataBurstdQueue[0]}, ${dataBurstd2Queue[0]}, ${dataBurstd3Queue[0]} to Slot ${dataBurstsQueue[0]}`)
-	if (dataBurstmKAT[0] == false) {
-		oscSend('/avatar/parameters/oscSlot', dataBurstsQueue[0])
-		oscSend('/avatar/parameters/oscData', dataBurstdQueue[0])
-		oscSend('/avatar/parameters/oscData2', dataBurstd2Queue[0])
-		oscSend('/avatar/parameters/oscData3', dataBurstd3Queue[0])
-		oscSend('/avatar/parameters/oscData4', dataBurstd4Queue[0])
-	} else if (dataBurstmKAT[0] == true) {
-		oscSend('/avatar/parameters/KAT_Pointer', dataBurstsQueue[0])
-		oscSend('/avatar/parameters/KAT_CharSync0', parseFloat(katChars.indexOf(dataBurstdQueue[0]) / 127))
-		oscSend('/avatar/parameters/KAT_CharSync1', parseFloat(katChars.indexOf(dataBurstd2Queue[0]) / 127))
-		oscSend('/avatar/parameters/KAT_CharSync2', parseFloat(katChars.indexOf(dataBurstd3Queue[0]) / 127))
-		oscSend('/avatar/parameters/KAT_CharSync3', parseFloat(katChars.indexOf(dataBurstd4Queue[0]) / 127))
-	}
+	// console.log(`${loglv().debug}${selfLog} [DataBurst] Sending data ${dataBurst[0].dataA} to Address ${dataBurst[0].addr}`)
+	oscSend(vrcap + 'osc/Addr', dataBurst[0].addr)
+	oscSend(vrcap + 'osc/DataA', dataBurst[0].dataA)
 	setTimeout(() => {
-		//console.log(`${loglv().debug}${selfLog} Shifting`)
-		dataBurstsQueue.shift()
-		dataBurstdQueue.shift()
-		dataBurstd2Queue.shift()
-		dataBurstd3Queue.shift()
-		dataBurstd4Queue.shift()
-		dataBurstmKAT.shift()
-		//console.log(`${loglv().debug}${selfLog} Still more?`)
-		if (dataBurstsQueue.length > 0) {
+		// console.log(`${loglv().debug}${selfLog} Shifting`)
+		dataBurst.shift()
+		// console.log(`${loglv().debug}${selfLog} Still more?`)
+		if (dataBurst.length > 0) {
 			sendOscDataBurst()
 		} else {
-			//console.log(`${loglv().debug}${selfLog} [DataBurst] Idling`)
+			// console.log(`${loglv().debug}${selfLog} [DataBurst] Idling`)
 			isBurstingData = false
-			oscSend('/avatar/parameters/oscSlot', 0)
-			oscSend('/avatar/parameters/oscData', 0.5)
-			oscSend('/avatar/parameters/oscData2', 0.5)
-			oscSend('/avatar/parameters/oscData3', 0.5)
-			oscSend('/avatar/parameters/oscData4', 0.5)
+			oscSend(vrcap + 'osc/Addr', 0)
+			oscSend(vrcap + 'osc/DataA', 255)
 		}
 	}, 200)
 }
@@ -306,21 +275,21 @@ oscEmitter.on('osc', (address, value) => {
 
 	// /avatar/parameters/14a/oscsrc/testParameter
 	// /avatar/parameters/14a/testParameter
-	if (address.includes(`/14a/oscsrc/`)) { oscSend('/avatar/parameters/14a/' + address.split('/14a/oscsrc/')[1], value) }
+	if (address.includes(`/14a/oscsrc/`)) { oscSend(vrcap + '14a/' + address.split('/14a/oscsrc/')[1], value) }
 
-	if (address == `/avatar/parameters/PiS_duration`) { PiS_duration = value }
-	if (address == `/avatar/parameters/PiS_power`) { PiS_power = value }
-	if (address == `/avatar/parameters/Contacts/PiActivate` && value == false) {
+	if (address == vrcap + `PiS_duration`) { PiS_duration = value }
+	if (address == vrcap + `PiS_power`) { PiS_power = value }
+	if (address == vrcap + `Contacts/PiActivate` && value == false) {
 		if (PiS_duration >= 1 && PiS_power >= 1) {
 			PiShockAll(PiS_power, PiS_duration)
 		}
 	}
 
-	if (address == '/avatar/parameters/14a/osc/menuX') { menuX = value }
-	if (address == '/avatar/parameters/14a/osc/menuY') { menuY = value }
-	if (address == '/avatar/parameters/14a/osc/menuX' || address == '/avatar/parameters/14a/osc/menuY') {
+	if (address == vrcap + '14a/osc/menuX') { menuX = value }
+	if (address == vrcap + '14a/osc/menuY') { menuY = value }
+	if (address == vrcap + '14a/osc/menuX' || address == vrcap + '14a/osc/menuY') {
 		let deg = Math.atan2(menuY, menuX) * (180 / Math.PI) + 180
-		playNote(10,70, clamp( (deg / 360) * 127 ) )
+		playNote(10, 70, clamp((deg / 360) * 127))
 		// console.log(`aTan ${Math.atan2(menuY, menuX)}`)
 		// console.log(`Angle ${deg}`)
 	}
@@ -336,10 +305,10 @@ oscEmitter.on('osc', (address, value) => {
 			// Float: Clamp [ -1.0 - 1.0 ]
 			velocity = clamp(value * 127)
 		}
-		if( channel == 0 && number == 2 && value == 1 ){
+		if (channel == 0 && number == 2 && value == 1) {
 			sendScreenDebug()
 		}
-		
+
 		playNote(channel, number, velocity)
 	}
 
@@ -359,12 +328,12 @@ udpPort.on("message", function (msg, rinfo) {
 		exports.avatarId = msg['args'][0]
 		oscEmitter.emit('avatar', msg['args'][0]);
 		console.log(`${loglv().log}${selfLog} Avatar Changed: ${avatarId}`)
-		if (avatarId == `avtr_21cbf284-0c09-423c-9973-5cd41dccd308`) { oscSend(`/avatar/parameters/LL/Menu/IsUnlocked`, 1 == 1) }
-		if (avatarId == `avtr_2a9a9021-2b82-4564-bb63-2d96deb6a6d7`) { oscSend(`/avatar/parameters/Patreon-NDA`, 1 == 1) }
-		if (avatarId == `avtr_94237663-3ed4-48fd-b29d-b3d6b174e004`) { oscSend(`/avatar/parameters/VF100_SecurityLockSync`, 1 == 1) }
-		oscSend(`/avatar/parameters/14a/osc/14anthony7095`, true)
+		if (avatarId == `avtr_21cbf284-0c09-423c-9973-5cd41dccd308`) { oscSend(vrcap + `LL/Menu/IsUnlocked`, 1 == 1) }
+		if (avatarId == `avtr_2a9a9021-2b82-4564-bb63-2d96deb6a6d7`) { oscSend(vrcap + `Patreon-NDA`, 1 == 1) }
+		if (avatarId == `avtr_94237663-3ed4-48fd-b29d-b3d6b174e004`) { oscSend(vrcap + `VF100_SecurityLockSync`, 1 == 1) }
+		oscSend(vrcap + `14a/osc/14anthony7095`, true)
 	}
-	if (msg['address'] == '/avatar/parameters/toolGunHolster_Angle') { return }
+	if (msg['address'] == vrcap + 'toolGunHolster_Angle') { return }
 	if (logOscIn == true) { console.log(`\x1b[36m->> ${selfLog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args'][0]) }
 	// if (msg['address'].includes('/usercamera/')) { console.log(`\x1b[36m->> ${selfLog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
 });
