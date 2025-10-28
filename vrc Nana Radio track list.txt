@@ -1,3 +1,4 @@
+Track Slot - Song Name - Song Length in Seconds
 # Disc 1
 1 - Aether Cat 					: 243
 2 - Blinding Lights 			: 201
@@ -21,8 +22,8 @@
 # Disc 3
 17 - As Above So Below			: 206
 18 - ToN Tomfoolery				: 128
-19 - ENA Temptation Stairway	: 106
-20 - Frozen in Time				: 186
+19 - ENA Temptation Stairway	: 106 * [swapped in Action Menu]
+20 - 1 9 9 2					: 405 * [swapped in Action Menu]
 21 - ToN Kerry's Song			: 60
 22 - OW Travelers Theme			: 210
 23 - A Brief Respite			: 138
@@ -72,7 +73,7 @@
 57 - Dancin						: 67
 58 - SAR Default Dance Theme	: 10
 59 - Post Malone_Sunflower		: 158
-60 - VS Temptation of the Occult: 107	>>
+60 - ThePenis (Eek)				: 96
 61 - VS Vempair Survaivors		: 183
 62 - Asgore Runs over Dess		: 155
 63 - Astral Observatory			: 165

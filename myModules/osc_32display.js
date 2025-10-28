@@ -67,11 +67,11 @@ async function mainloop() {
 
 fs.watchFile('./bin/test.png', (curr, prev) => { dumpImageData() })
 
-var imageProgress = 0
+/* var imageProgress = 0
 displayEmitter.on('finished',()=>{
     imageProgress++
     dumpImageData(imageProgress+'img.jpg')
-})
+}) */
 function dumpImageData(imageName='test.png') {
     return new Promise((resolve, reject) => {
         Jimp.read('./bin/'+imageName, (err, value, coords) => {

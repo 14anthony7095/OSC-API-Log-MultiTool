@@ -60,59 +60,24 @@ main()
 
 
 
+
 async function manualCall() {
     let { data: auth } = await vrchat.verifyAuthToken()
-    // auth.ok != true ?console.log(auth.token) : console.log(`Couldn't return authcookie for whatever reason..`)
+    auth.ok == true ? console.log(auth.token) : console.log(`Couldn't return authcookie for whatever reason..`)
     const vrcapihttp = `https://vrchat.com/api/1/`
 
-
-
-    fetch(vrcapihttp + "props/prop_79789b58-e020-4b2e-aa25-ba21a1938eec",
+    var request = await fetch(vrcapihttp+"inventory/inv_c74dca5d-b15c-4693-99f6-b7b8a6ff12dd/equip",
         {
-            method: 'GET',
+            method: 'PUT',
             headers: {
-                'Cookie': "auth=" + auth.token,
-                "Content-Type": "application/json"
+                'User-Agent': '14anthony7095/Curl',
+                'Cookie': 'auth='+auth.token,
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                "startsAt": "2025-08-15T21:00:00.000Z",
-                "endsAt": "2025-08-15T23:00:00.000Z",
-                "title": "EventClone test",
-                "accessType": "group",
-                "description": "weekly meetup gathering hangout explore etc\nevent created to be cloned onto 5 weeks afterward",
-                "category": "hangout",
-                "tags": [],
-                "isDraft": false,
-                "imageId": "file_072c4481-1642-4226-91b8-01bbb61444d9",
-                "roleIds": [],
-                "parentId": null,
-                "platforms": [
-                    "standalonewindows"
-                ],
-                "languages": [
-                    "eng"
-                ],
-                "sendCreationNotification": false,
-                "featured": false,
-                "hostEarlyJoinMinutes": 60,
-                "guestEarlyJoinMinutes": 5,
-                "closeInstanceAfterEndMinutes": 5,
-                "usesInstanceOverflow": true
-            })
-        }).then(res => { console.log(res) })
-
-
-    // fetch(vrcapihttp + 'groups/grp_75bcbc95-361e-4d90-9752-5a2d7bc270a3/transfer?transferTargetId=usr_df10c726-a5d8-48c0-8562-fe4c491d0d0b',
-    //     {
-    //         method: 'POST',
-    //         headers: {
-    //             'Cookie': "auth=" + auth.token,
-    //             "Content-Type": "application/json"
-    //         },
-    //         body: JSON.stringify({})
-    //     })
-
-
+            body: JSON.stringify({"equipSlot":"portal"})
+        })
+    var data = await request.json()
+    console.log(data)
 
 }
 

@@ -31,11 +31,11 @@ const { undiscoveredEvent,
     groupInviteCancel,
     groupUserBan,
     groupUserUnban,
-    groupUpdate,
-    groupInstanceCreateWASNT18PLUS } = require('./interace_WebHook.js')
+    groupUpdate } = require('./interace_WebHook.js')
 const fs = require('fs');
 const { cmdEmitter } = require('./input.js');
 const { oscEmitter, oscChatBox } = require('./Interface_osc_v1.js');
+const say = require('say')
 const { logEmitter, getPlayersInInstance, getPlayersInstanceObject, getCurrentAccountInUse, fetchLogFile, getInstanceGroupID } = require('./Interface_vrc-Log.js');
 const { VRChat } = require("vrchat");
 require('dotenv').config()
@@ -94,6 +94,14 @@ cmdEmitter.on('cmd', (cmd, args) => {
     if (cmd == 'rep' && args[0] == 'scan') { getGroupRepsForInstance() }
 })
 
+function sleep(time) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve(true)
+        }, time)
+    })
+}
+
 oscEmitter.on('osc', (address, value) => {
     if (address == `/avatar/parameters/api/explore/start` && value == true) {
         getOnlineWorlds('worlds1', false)
@@ -139,6 +147,17 @@ logEmitter.on('nextworld', (output) => {
         inviteLocalQueue()
     }
 })
+logEmitter.on('scanPlayerStatus4Ban', async (outputNAME) => {
+    let usercheck = await vrchat.searchUsers({ 'query': { 'search': outputNAME } })
+    if (usercheck.data[0].status == 'busy' || usercheck.data[0].status == 'ask me') {
+        console.log(`${loglv().log}${selflog} ${outputNAME} is on ${usercheck.data[0].status == 'ask me' ? '🟠' : '🔴'} Status, Banning`)
+        say.speak(`User ${outputNAME} is on a gated status, kick from instance`, 'Microsoft Zira Desktop', 1.0)
+        await vrchat.banGroupMember({
+            'path': { 'groupId': 'grp_cacf2dd8-8958-4412-be78-dedd798e6df4' },
+            'body': { 'userId': usercheck.data[0].id }
+        })
+    }
+})
 logEmitter.on('stopworld', (output) => {
     if (exploreMode == true) {
         console.log(`${loglv().hey}${selflog} Explore Mode: Disabled - Quit VRChat`)
@@ -152,47 +171,27 @@ async function main() {
     console.log(`${loglv().debug}${selflog} start main function`)
     const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
     console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
-
-    // {
-    //     profileIndex?: number,
-    //     hoursInWorld?: number, 
-    //     hasCloseAccess?: boolean, 
-    //     hoursInstanceClose?: number, 
-    //     worldStartGroup?: string<GroupID>, 
-    //     worldInstanceTypes = string<'members'|'plus'|'public'>,
-    //     worldStartTimes?: { number<DayOfWeek0-6>: { number<TimeOfDay0-23>: string<WorldID>; }; }
-    // }
-
-    // startvrcworlds()
-
 }
 
-var markededSomnaGroupInstances = []
+
+
 var trackedSomnaIns = {}
 async function scanSomnaGroupInstances() {
     console.log(`${loglv().log}${selflog} [Somnophilia] Checking for instances`)
-    let res = await vrchat.getGroupInstances({ 'path': { 'groupId': 'grp_10bb5d71-aa5e-43d8-9dd2-3c8cebe17152' } })
+    let res = await vrchat.getGroupInstances({ 'path': { 'groupId': 'grp_f52018be-6721-43cd-abf9-37609f7bf0d5' } })
     if (res.data == undefined) {
         console.log(res)
     } else if (res.data.length > 0) {
-        console.log(`${loglv().log}${selflog} [Somnophilia] 0/${res.data.length}: Found ${res.data.length} instances`)
+        console.log(`${loglv().log}${selflog} [Somno] 0/${res.data.length}: Found ${res.data.length} instances`)
         res.data.forEach((grpins, index, arr) => {
-            if (grpins.instanceId.includes('~ageGate')) {
+            let giid = grpins.instanceId.split('~')[0]
+            if (!trackedSomnaIns[giid]) { trackedSomnaIns[giid].timestamp = Date.now() }
 
-                if (trackedSomnaIns[grpins.instanceId.split('~')[0]]) {
-                    trackedSomnaIns[grpins.instanceId.split('~')[0]] = 1 + trackedSomnaIns[grpins.instanceId.split('~')[0]]
-                } else {
-                    trackedSomnaIns[grpins.instanceId.split('~')[0]] = 1
-                }
+            trackedSomnaIns[giid].capAt2 = grpins.world.capacity == 2 ? true : false
+            trackedSomnaIns[giid].joinable = grpins.memberCount == grpins.world.capacity ? false : true
+            trackedSomnaIns[giid].uptime = Date.now() - trackedSomnaIns[giid].timestamp
 
-                console.log(`${loglv().log}${selflog} [Somnophilia] ${index + 1}/${arr.length}: - AgeGated #${grpins.instanceId.split('~')[0]} - (${trackedSomnaIns[grpins.instanceId.split('~')[0]] * 10}min) - ${grpins.world.id}`)
-            } else {
-                console.log(`${loglv().hey}${selflog} [Somnophilia] ${index + 1}/${arr.length}: - Not Gated #${grpins.instanceId.split('~')[0]} - (${trackedSomnaIns[grpins.instanceId.split('~')[0]] * 10}min) - ${grpins.world.id} - Sending message to WebHook`)
-                if (!markededSomnaGroupInstances.includes(grpins.instanceId)) {
-                    markededSomnaGroupInstances.push(grpins.instanceId)
-                    groupInstanceCreateWASNT18PLUS(grpins.world.id, grpins.instanceId, grpins.world.name, grpins.world.imageUrl)
-                }
-            }
+            console.log(`${loglv().log}${selflog} [Somno] ${index + 1}/${arr.length}: [${new Date(trackedSomnaIns[giid].uptime).toISOString().substring(11, 19)}] #${giid} - ${trackedSomnaIns[giid].capAt2 ? '✅' : '❌'}${trackedSomnaIns[giid].joinable ? '⚠️' : '🆗'} (${grpins.memberCount}/${grpins.world.capacity}) - ${grpins.world.name.slice(0, 51)}`)
         })
     }
 }
@@ -307,7 +306,7 @@ async function inviteOnlineWorlds_Loop(world_id) {
     let { data: checkCap } = await vrchat.getWorld({ 'path': { 'worldId': world_id } })
     if (checkCap == undefined) {
         console.log(`${loglv().hey}${selflog} World failed to fetch. Skipping`);
-        oscChatBox(`World fetch failed.\vSkipping.`, 5);
+        oscChatBox(`~World fetch failed.\vSkipping.`, 5);
         fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
             if (data.includes(world_id)) {
                 fs.writeFile(worldQueueTxt, data.replace(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
@@ -322,7 +321,7 @@ async function inviteOnlineWorlds_Loop(world_id) {
         return
     } else if (checkCap.capacity < getPlayersInInstance().length && getInstanceGroupID() == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
         console.log(`${loglv().hey}${selflog} World can not fit everyone. Skipping`)
-        oscChatBox(`World can't fit everyone.\vSkipping.`, 5);
+        oscChatBox(`~World can't fit everyone.\vSkipping.`, 5);
         worldsToExplore.shift()
         if (worldsToExplore.length == 0) {
             console.log(`${loglv().hey}${selflog} Explore Mode: Disabled - out of worlds`)
@@ -344,7 +343,7 @@ async function inviteOnlineWorlds_Loop(world_id) {
             }
         }).then(created_instance => {
             // `&shortName=${created_instance.data.secureName}`
-            startvrc(0, created_instance.data.location, true)
+            startvrc(created_instance.data.location, false)
             console.log(`${loglv().log}${selflog} Auto-Close set for ${created_instance.data.closedAt}.`)
 
             worldsToExplore.shift()
@@ -369,6 +368,7 @@ function inviteLocalQueue() {
         let extimelow = Math.floor((localQueueList.length * 2) / 60)
         let extimehig = Math.floor((localQueueList.length * 10) / 60)
         console.log(`${loglv().log}${selflog} ${localQueueList.length} worlds to explore. [${extimelow} to ${extimehig} Hours]`)
+        oscChatBox(`${localQueueList.length} worlds remaining in Queue.\vEstimated explore time:\v${extimelow} - ${extimehig} Hours`)
 
         let { data: checkCap } = await vrchat.getWorld({ 'path': { 'worldId': world_id } })
         if (checkCap == undefined) {
@@ -398,7 +398,7 @@ function inviteLocalQueue() {
             }
         }).then(created_instance => {
             // `&shortName=${created_instance.data.secureName}`
-            startvrc(0, created_instance.data.location, true)
+            startvrc(created_instance.data.location, false)
             console.log(`${loglv().log}${selflog} Auto-Close set for ${created_instance.data.closedAt}.`)
         }).catch(err => {
             console.log(err)
@@ -433,64 +433,19 @@ function getVisitsCount() {
 exports.getVisitsCount = getVisitsCount;
 
 const { default: open } = require('open');
-async function startvrc(profileIndex, vrclocation, direct) {
+async function startvrc(vrclocation, autoGo = false) {
     // vrcIsOpen = true
     // require('child_process').execSync(`"C:\\Program Files (x86)\\Steam\\steamapps\\common\\VRChat\\start_protected_game.exe" --no-vr --profile=${profileIndex} "vrchat://launch/?ref=vrchat.com&id=${vrclocation}&attach=${parseInt(direct)}"`)
 
     await open(`vrchat://launch/?ref=vrchat.com&id=${vrclocation}&attach=1`)
+    if (autoGo == true) {
+        setTimeout(() => {
+            require('child_process').execSync(`"C:\\Users\\14Anthony7095\\Documents\\14aOSC-API-Log\\bin\\vrcPressGoOnWorldPage.exe"`)
+        }, 2000);
+    }
     // await open(`vrchat://launch/?ref=vrchat.com&id=${vrclocation}&attach=${parseInt(direct)}`, {arguments: ['--no-vr']})
     // require('child_process').execSync(`"C:\\Program Files (x86)\\Steam\\steamapps\\common\\VRChat\\start_protected_game.exe" --no-vr --profile=${profileIndex} "vrchat://launch/?ref=14aOSCAPI.app&id=${vrclocation}&attach=${parseInt(direct)}"`)
     // direct == false ? fetchLogFile() : ''
-}
-
-
-var startvrcworldsLastDayTime = [9, 25]
-function startvrcworlds(profileIndex = 0, minutesInWorld = 60, hasCloseAccess = false, minutesInstanceClose = 180, worldStartGroup = 'grp_3473d54b-8e10-4752-9548-d77a092051a4', worldInstanceTypes = 'members', worldStartTimes = { "0": { "0": 'wrld_10000000-0000-0000-0000-000000000000', "12": 'wrld_10000000-0000-0000-0000-000000000000' } }) {
-
-    if (worldStartTimes[new Date().getDay()][new Date().getHours()] == undefined) {
-        // console.log(`${loglv().debug}${selflog} Not time to start a Quarterly instance yet..`)
-        return
-    } else if (startvrcworldsLastDayTime[0] == new Date().getDay() && startvrcworldsLastDayTime[1] == new Date().getHours()) {
-        // console.log(`${loglv().debug}${selflog} Already Visited this Quarterly instance..`)
-        return
-    }
-    // if (vrcIsOpen == true) { killprep() }
-
-    console.log(`${loglv().hey}${selflog} Starting a Quarterly instance!`)
-    startvrcworldsLastDayTime = [new Date().getDay(), new Date().getHours()]
-
-    let bodybuild = {}
-    if (hasCloseAccess == true) {
-        bodybuild = {
-            'ownerId': worldStartGroup,
-            'worldId': worldStartTimes[new Date().getDay()][new Date().getHours()],
-            'type': 'group',
-            'groupAccessType': worldInstanceTypes,
-            'region': 'use',
-            'closedAt': new Date(Date.now() + (minutesInstanceClose * 3600_000)).toISOString()
-        }
-    } else {
-        bodybuild = {
-            'ownerId': worldStartGroup,
-            'worldId': worldStartTimes[new Date().getDay()][new Date().getHours()],
-            'type': 'group',
-            'groupAccessType': worldInstanceTypes,
-            'region': 'use'
-        }
-    }
-
-    vrchat.createInstance({
-        body: bodybuild
-    }).then(created_instance => {
-        console.log(`${loglv().hey}${selflog} Launching self into instance.. `)
-        console.log(created_instance)
-        vrcIsOpen = true
-        require('child_process').execSync(`"C:\\Program Files (x86)\\Steam\\steamapps\\common\\VRChat\\start_protected_game.exe" --no-vr --profile=${profileIndex} "vrchat://launch/?ref=vrchat.com&id=${created_instance.data.location}"`)
-        fetchLogFile()
-        setTimeout(() => { killprep() }, (minutesInWorld - 1) * 60_000)
-        setTimeout(() => { vrcIsOpen = false; killvrc(1) }, minutesInWorld * 60_000)
-    })
-
 }
 
 setInterval(() => {
@@ -554,7 +509,7 @@ async function scanGroupAuditLogs() {
     await scanaudit(logOutput_9year, targetGroupLogID_9year);
     await scanaudit(logOutput_10year, targetGroupLogID_10year);
 
-    // scanSomnaGroupInstances()
+    scanSomnaGroupInstances()
 }
 
 async function requestAllOnlineFriends() {
@@ -592,13 +547,27 @@ async function requestAllOnlineFriends() {
     })
 }
 
+
+logEmitter.on('propNameRequest', async (propID, vrcpropcount) => {
+    // console.log(`${loglv().debug}${selflog} ${propID} for ${vrcpropcount}`)
+    let res = await vrchat.getProp({ 'path': { 'propId': 'prop_' + propID } })
+    // console.log(`${loglv().debug}${selflog} ${res.data}`)
+    if (res.data != undefined) {
+        vrcpropcount.Names[propID] = res.data.name
+        vrcpropcount.Counts[propID] = 1
+        console.log(`${loglv().hey}${selflog} Added ${vrcpropcount.Names[propID]} to the Items list`)
+        fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => { if (err) { console.log(err); return } })
+    }
+})
+
+
 var vrcDataCache = {}
 function scanaudit(logoutput, groupID) {
     console.log(`${loglv().log}${selflog} Scanning through audit log for group ${groupID}`)
     return new Promise((resolve, reject) => {
-        if( logoutput == undefined ){
+        if (logoutput == undefined) {
             resolve(false)
-        }else if (logoutput.results.length == 0) {
+        } else if (logoutput.results.length == 0) {
             setTimeout(() => {
                 resolve(true)
                 console.log(`${loglv().log}${selflog} Audit Log was Empty for ${groupID}`)

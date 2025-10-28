@@ -29,7 +29,7 @@
     "vlc-player": "^2.0.0",
     "vlc-remote": "^5.0.2",
     "vrcapi-client": "^0.4.0",
-    "vrchat": "^2.20.3",
+    "vrchat": "^2.20.4",
     "websocket": "^1.0.34",
     "ws": "^8.5.0",
     "ytdl-core": "^4.11.5"

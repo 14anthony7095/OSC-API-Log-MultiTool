@@ -14,7 +14,7 @@ var osc = require('osc');
 var udpPort = new osc.UDPPort({ localAddress: '127.0.0.1', localPort: 9100 })
 const remotePort = 9000
 const { cmdEmitter } = require('./input.js');
-const { playNote, sendScreenDebug } = require('./interface_midi.js')
+const { playNote } = require('./interface_midi.js')
 const { EventEmitter } = require('events');
 const { PiShock, PiShockAll } = require('./Interface_PS.js');
 const { toUnicode } = require('punycode');
@@ -304,9 +304,6 @@ oscEmitter.on('osc', (address, value) => {
 		} else {
 			// Float: Clamp [ -1.0 - 1.0 ]
 			velocity = clamp(value * 127)
-		}
-		if (channel == 0 && number == 2 && value == 1) {
-			sendScreenDebug()
 		}
 
 		playNote(channel, number, velocity)

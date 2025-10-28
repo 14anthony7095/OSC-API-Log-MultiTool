@@ -160,19 +160,6 @@ Region: ${instanceRegion}`)
 exports.groupInstanceCreate = groupInstanceCreate;
 // instanceCreate(`2025-02-02T15:18:17.000Z`,process.env["VRC_ACC_NAME_1"],'https://cdn.discordapp.com/avatars/111238505824342016/754f691b9711ae9e568f0000338c8446.webp?size=128',`wrld_64c391dc-d1bd-448e-a869-95f10f506eaa`,`12345`,`Group+`,`US West`)
 
-function groupInstanceCreateWASNT18PLUS(worldID = '', instanceID = '', worldName = '', worldImage = '') {
-    let embed = new MessageBuilder()
-        .setTitle(`Someone didn't set Instance to be 18+ AgeGated!`)
-        .addField(`Instance Info`, `
-World: ${worldName}
-WorldID: [${worldID}](https://vrchat.com/home/world/${worldID}/info)
-ID: ${instanceID}`)
-        .setImage(worldImage)
-        .setColor(hex.Orange)
-    hookSelector(groupID, embed)
-}
-exports.groupInstanceCreateWASNT18PLUS = groupInstanceCreateWASNT18PLUS;
-
 function groupInstanceClose(groupID, logtime, actorName, actorImageURL, worldID, instanceID, instanceType, instanceRegion, worldName, worldImage, worldPlatformSupport = [false, false, false]) {
     var wpsTex = ''
     if (worldPlatformSupport[0] == true) { wpsTex += '<:platformPConly:1395167189845147800>' }

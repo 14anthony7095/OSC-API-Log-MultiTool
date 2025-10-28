@@ -48,12 +48,6 @@ function makeEpisodeQueueList(series = 'unnamed', type = 'TV-Show', seasondata =
 
 // makeEpisodeQueueList(`Samurai Jack`,`Anime`,[13,13,13,13,10])
 
-function startvrc(vrclocation) {
-    // vrcIsOpen = true
-    require('child_process').execSync(`start "C:\\Program Files (x86)\\Steam\\steamapps\\common\\VRChat\\start_protected_game.exe" "vrchat://launch/?ref=vrchat.com&id=${vrclocation}"`)
-}
-
-
 
 function nonkeyJong() {
     let nonkeyJongLines = [

@@ -1,7 +1,49 @@
-[
-	{
-		"id":"usr_uuid",
-		"displayName":"name",
-		"joinCount":0
+{
+	"ranks": [
+		"Amateur",
+		"Novice",
+		"Knowledgeable",
+		"Experienced",
+		"Seasoned",
+		"Advanced",
+		"Expert",
+		"Veteran",
+		"Master",
+		"Legendary",
+		"Ancient"
+	],
+	"rank_by_time": [
+		2,
+		240,
+		360,
+		540,
+		840,
+		1320,
+		2160,
+		4020,
+		7620,
+		15300,
+		45900
+	],
+	"rank_by_worlds": [
+		1,
+		48,
+		72,
+		108,
+		162,
+		259,
+		440,
+		792,
+		1505,
+		3010,
+		9030
+	],
+	"usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752": {
+		"name": "14anthony7095",
+		"time": 780000,
+		"lastCheckTime": 1760931711987,
+		"worlds": 1474,
+		"rank": "Veteran",
+		"promotedAt": 1760931711987
 	}
-]
+}
