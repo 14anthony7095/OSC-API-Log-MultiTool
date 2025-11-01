@@ -34,6 +34,10 @@ async function main() {
     const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
     console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
 
+    let { data: fav1 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: 'random', offset: 0 } })
+    fav1.forEach(w=>{
+        console.log(w)
+    })
     // manualCall()
 
     // vrchat.getOwnAvatar({'body':{},'query':{''},path:{'userId'}})

@@ -174,26 +174,44 @@ async function main() {
 }
 
 
-
 var trackedSomnaIns = {}
-async function scanSomnaGroupInstances() {
-    console.log(`${loglv().log}${selflog} [Somnophilia] Checking for instances`)
-    let res = await vrchat.getGroupInstances({ 'path': { 'groupId': 'grp_f52018be-6721-43cd-abf9-37609f7bf0d5' } })
-    if (res.data == undefined) {
-        console.log(res)
-    } else if (res.data.length > 0) {
-        console.log(`${loglv().log}${selflog} [Somno] 0/${res.data.length}: Found ${res.data.length} instances`)
-        res.data.forEach((grpins, index, arr) => {
-            let giid = grpins.instanceId.split('~')[0]
-            if (!trackedSomnaIns[giid]) { trackedSomnaIns[giid].timestamp = Date.now() }
-
-            trackedSomnaIns[giid].capAt2 = grpins.world.capacity == 2 ? true : false
-            trackedSomnaIns[giid].joinable = grpins.memberCount == grpins.world.capacity ? false : true
-            trackedSomnaIns[giid].uptime = Date.now() - trackedSomnaIns[giid].timestamp
-
-            console.log(`${loglv().log}${selflog} [Somno] ${index + 1}/${arr.length}: [${new Date(trackedSomnaIns[giid].uptime).toISOString().substring(11, 19)}] #${giid} - ${trackedSomnaIns[giid].capAt2 ? '✅' : '❌'}${trackedSomnaIns[giid].joinable ? '⚠️' : '🆗'} (${grpins.memberCount}/${grpins.world.capacity}) - ${grpins.world.name.slice(0, 51)}`)
-        })
-    }
+async function scanSomnaGroupInstances(ssginID,group_name) {
+    return new Promise(async (resolve, reject) => {
+        console.log(`${loglv().log}${selflog} [${group_name}] Checking for instances`)
+        let res = await vrchat.getGroupInstances({ 'path': { 'groupId': ssginID } })
+        if (res.data == undefined) {
+            console.log(res)
+            resolve(true)
+        } else if (res.data.length > 0) {
+            console.log(`${loglv().log}${selflog} ⨽ Found ${res.data.length} instances`)
+            let sort2join = ''
+            let sort2full = ''
+            let sortOjoin = ''
+            let sortOfull = ''
+            res.data.forEach((grpins, index, arr) => {
+                if (!trackedSomnaIns[grpins.instanceId.split('~')[0]]) {
+                    trackedSomnaIns[grpins.instanceId.split('~')[0]] = Date.now()
+                }
+                if (grpins.world.capacity == 2) {
+                    if (grpins.memberCount != grpins.world.capacity) {
+                        sort2join += `${loglv().log}${selflog} ⨽ #${grpins.instanceId.split('~')[0]} - [ ${new Date(Date.now() - trackedSomnaIns[grpins.instanceId.split('~')[0]]).toISOString().substring(11, 19)} ] - ${grpins.world.capacity == 2 ? '✅' : '❌'}${grpins.memberCount == grpins.world.capacity ? '⚠️' : '🆗'} (${grpins.memberCount}/${grpins.world.capacity}) - ${grpins.world.name.slice(0, 51)}\n`
+                    } else {
+                        sort2full += `${loglv().log}${selflog} ⨽ #${grpins.instanceId.split('~')[0]} - [ ${new Date(Date.now() - trackedSomnaIns[grpins.instanceId.split('~')[0]]).toISOString().substring(11, 19)} ] - ${grpins.world.capacity == 2 ? '✅' : '❌'}${grpins.memberCount == grpins.world.capacity ? '⚠️' : '🆗'} (${grpins.memberCount}/${grpins.world.capacity}) - ${grpins.world.name.slice(0, 51)}\n`
+                    }
+                } else {
+                    if (grpins.memberCount != grpins.world.capacity) {
+                        sortOjoin += `${loglv().log}${selflog} ⨽ #${grpins.instanceId.split('~')[0]} - [ ${new Date(Date.now() - trackedSomnaIns[grpins.instanceId.split('~')[0]]).toISOString().substring(11, 19)} ] - ${grpins.world.capacity == 2 ? '✅' : '❌'}${grpins.memberCount == grpins.world.capacity ? '⚠️' : '🆗'} (${grpins.memberCount}/${grpins.world.capacity}) - ${grpins.world.name.slice(0, 51)}\n`
+                    } else {
+                        sortOfull += `${loglv().log}${selflog} ⨽ #${grpins.instanceId.split('~')[0]} - [ ${new Date(Date.now() - trackedSomnaIns[grpins.instanceId.split('~')[0]]).toISOString().substring(11, 19)} ] - ${grpins.world.capacity == 2 ? '✅' : '❌'}${grpins.memberCount == grpins.world.capacity ? '⚠️' : '🆗'} (${grpins.memberCount}/${grpins.world.capacity}) - ${grpins.world.name.slice(0, 51)}\n`
+                    }
+                }
+            })
+            console.log(sort2join + `` + sort2full + `` + sortOjoin + `` + sortOfull)
+            resolve(true)
+        }else{
+            resolve(true)
+        }
+    })
 }
 
 function getGroupRepsForInstance() {
@@ -218,7 +236,7 @@ function getGroupRepsForInstance() {
 }
 
 async function addLabWorldsToQueue() {
-    console.log(`${loglv().log}${selflog} Compiling world list..`)
+    console.log(`${loglv().log}${selflog} Compiling world list..`) 
     let { data: fav1 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: 'random', offset: 0 } })
     let { data: fav2 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: 'random', offset: 100 } })
     let { data: fav3 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: 'random', offset: 200 } })
@@ -272,11 +290,15 @@ async function getOnlineWorlds(favgroup = 'worlds1', addMoreWorlds = false) {
         worldsToExplore = []
     }
 
+    console.log(`${loglv().warn}${selflog} Function disabled due to api interface breakage`)
+    oscChatBox(`~Function disabled due to api interface breakage`,5)
+    return
+
     console.log(`${loglv().log}${selflog} Compiling world list..`)
-    let { data: fav1 } = await vrchat.getFavoritedWorlds({ query: { featured: false, sort: 'random', n: 100, order: 'ascending', offset: 0 } })
-    let { data: fav2 } = await vrchat.getFavoritedWorlds({ query: { featured: false, sort: 'random', n: 100, order: 'ascending', offset: 100 } })
-    let { data: fav3 } = await vrchat.getFavoritedWorlds({ query: { featured: false, sort: 'random', n: 100, order: 'ascending', offset: 200 } })
-    let { data: fav4 } = await vrchat.getFavoritedWorlds({ query: { featured: false, sort: 'random', n: 100, order: 'ascending', offset: 300 } })
+    let { data: fav1 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 0 } })
+    let { data: fav2 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 100 } })
+    let { data: fav3 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 200 } })
+    let { data: fav4 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 300 } })
     let favworldsAll = fav1.concat(fav2, fav3, fav4)
     let favWorlds1 = favworldsAll.filter(favworldsAll => favworldsAll.favoriteGroup == favgroup)
     favWorlds1.forEach((wrld, index, arr) => { worldsToExplore.push(wrld.id) })
@@ -509,7 +531,10 @@ async function scanGroupAuditLogs() {
     await scanaudit(logOutput_9year, targetGroupLogID_9year);
     await scanaudit(logOutput_10year, targetGroupLogID_10year);
 
-    scanSomnaGroupInstances()
+    // await scanSomnaGroupInstances(`grp_d8a28345-5a80-4f6d-854a-051f0b68bbc2`,"SLEEPERP")
+    // await scanSomnaGroupInstances(`grp_f52018be-6721-43cd-abf9-37609f7bf0d5`,"SPSLEEP")
+    // await scanSomnaGroupInstances(`grp_f6602b4e-43b8-4d54-9b61-77eaa0c05bd6`,"Somno Furs")
+    // await scanSomnaGroupInstances(`grp_14ffbd54-fdc5-443c-91b8-cf13654486a1`,"Somnophilia")
 }
 
 async function requestAllOnlineFriends() {
