@@ -3,24 +3,24 @@ const { cmdEmitter } = require('./input.js');
 const { oscEmitter, OSCDataBurst, oscSend } = require('./Interface_osc_v1.js');
 const WebSocket = require('ws');
 const { PiShockAll } = require('./Interface_PS.js');
-let selfLog = `\x1b[0m[\x1b[31mHeart-Rate Monitor\x1b[0m]`
-console.log(`${loglv().log}${selfLog} Loaded`)
+let selflog = `\x1b[0m[\x1b[31mHeart-Rate Monitor\x1b[0m]`
+console.log(`${loglv().log}${selflog} Loaded`)
 require('dotenv').config()
 
 var hrmRandomizer;
 var hrmLinar;
 cmdEmitter.on('cmd',(cmd,args,raw)=>{
-	if( cmd == 'help' ){ console.log(`${selfLog}
+	if( cmd == 'help' ){ console.log(`${selflog}
 -	heart random [true/false]
 -	heart set [num]`) }
 	if( cmd == 'heart' && args[0] == 'random' ){
 		if( args[1] == 'true' ){
 			hrmRandomizer = setInterval(()=>{
 				var randrate = Math.floor( Math.random() * 254 )
-				console.log(`${loglv().log}${selfLog} BPM: ${randrate}` )
+				console.log(`${loglv().log}${selflog} BPM: ${randrate}` )
 				// OSCDataBurst(15, parseFloat( randrate / 255 - 1 ), 0, 0, 0, false )
 				oscSend('/avatar/parameters/Float/HeartRate_BPM', parseFloat( randrate / 255 - 1 ) )
-				console.log(`${loglv().log}${selfLog} OSC Data: ${parseFloat( randrate / 255 - 1 )}` )
+				console.log(`${loglv().log}${selflog} OSC Data: ${parseFloat( randrate / 255 - 1 )}` )
 			},2000)
 		}
 		if( args[1] == 'false' ){ clearInterval(hrmRandomizer) }
@@ -51,10 +51,10 @@ cmdEmitter.on('cmd',(cmd,args,raw)=>{
 var wsopenned = false
 function start() {
 	if( wsopenned == false ){
-		console.log(`${loglv().log}${selfLog} Starting..`)		
+		console.log(`${loglv().log}${selflog} Starting..`)		
 		openWebSocket()
 	}else if( wsopenned == true ){
-		console.log(`${loglv().log}${selfLog} WS is already running, continuing to use last session.`)
+		console.log(`${loglv().log}${selflog} WS is already running, continuing to use last session.`)
 	}
 }
 
@@ -62,7 +62,7 @@ function start() {
 
 function stop() {
 	isActive = false
-	console.log(`${loglv().log}${selfLog} Stopping, but will continue to run in background until crashes`)
+	console.log(`${loglv().log}${selflog} Stopping, but will continue to run in background until crashes`)
 }
 var lastbpm = 0
 var lastbpmUpdate = 0
@@ -71,7 +71,7 @@ function openWebSocket() {
 	const ws = new WebSocket(process.env["PULSOID_WSS"])
 	ws.on('open', e =>{
 		wsopenned = true
-		console.log(`${loglv().log}${selfLog} WebSocket Connection Open to PULSOID`)
+		console.log(`${loglv().log}${selflog} WebSocket Connection Open to PULSOID`)
 		ws.on('message', ev => {
 			const data = JSON.parse(ev)
 			const Heartrate = {
@@ -81,7 +81,7 @@ function openWebSocket() {
 				// - 1 minute cooldown for Logging to console window
 				if(Date.now() > lastbpmUpdate+60_000){
 					lastbpmUpdate = Date.now()
-					console.log(`${loglv().log}${selfLog} BPM: ${data.data.heartRate}` )
+					console.log(`${loglv().log}${selflog} BPM: ${data.data.heartRate}` )
 				}
 
 				// - Shock me if Heartrate below Threshold
@@ -96,7 +96,7 @@ function openWebSocket() {
 		})
 	})
 	ws.on('close', e =>{
-		console.log(`${loglv().hey}${selfLog} [PULSOID] Device Lost Connection.. Reconnecting in 60sec`)
+		console.log(`${loglv().hey}${selflog} [PULSOID] Device Lost Connection.. Reconnecting in 60sec`)
 		wsopenned = false
 		if( isActive == true ){
 			reconDelay = setTimeout(()=>{
@@ -105,7 +105,7 @@ function openWebSocket() {
 		}
 	})
 	ws.on('error', (error) => {
-		console.log(`${loglv().warn}${selfLog} [PULSOID] ${error}`)
+		console.log(`${loglv().warn}${selflog} [PULSOID] ${error}`)
 		wsopenned = false
 		clearTimeout(reconDelay)
 		ws.close()

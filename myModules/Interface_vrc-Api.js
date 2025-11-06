@@ -34,7 +34,7 @@ const { undiscoveredEvent,
     groupUpdate } = require('./interace_WebHook.js')
 const fs = require('fs');
 const { cmdEmitter } = require('./input.js');
-const { oscEmitter, oscChatBox } = require('./Interface_osc_v1.js');
+const { oscEmitter, oscChatBox, oscSend } = require('./Interface_osc_v1.js');
 const say = require('say')
 const { logEmitter, getPlayersInInstance, getPlayersInstanceObject, getCurrentAccountInUse, fetchLogFile, getInstanceGroupID } = require('./Interface_vrc-Log.js');
 const { VRChat } = require("vrchat");
@@ -175,7 +175,7 @@ async function main() {
 
 
 var trackedSomnaIns = {}
-async function scanSomnaGroupInstances(ssginID,group_name) {
+async function scanSomnaGroupInstances(ssginID, group_name) {
     return new Promise(async (resolve, reject) => {
         console.log(`${loglv().log}${selflog} [${group_name}] Checking for instances`)
         let res = await vrchat.getGroupInstances({ 'path': { 'groupId': ssginID } })
@@ -208,7 +208,7 @@ async function scanSomnaGroupInstances(ssginID,group_name) {
             })
             console.log(sort2join + `` + sort2full + `` + sortOjoin + `` + sortOfull)
             resolve(true)
-        }else{
+        } else {
             resolve(true)
         }
     })
@@ -236,7 +236,7 @@ function getGroupRepsForInstance() {
 }
 
 async function addLabWorldsToQueue() {
-    console.log(`${loglv().log}${selflog} Compiling world list..`) 
+    console.log(`${loglv().log}${selflog} Compiling world list..`)
     let { data: fav1 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: 'random', offset: 0 } })
     let { data: fav2 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: 'random', offset: 100 } })
     let { data: fav3 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: 'random', offset: 200 } })
@@ -290,31 +290,32 @@ async function getOnlineWorlds(favgroup = 'worlds1', addMoreWorlds = false) {
         worldsToExplore = []
     }
 
-    console.log(`${loglv().warn}${selflog} Function disabled due to api interface breakage`)
-    oscChatBox(`~Function disabled due to api interface breakage`,5)
-    return
-
     console.log(`${loglv().log}${selflog} Compiling world list..`)
-    let { data: fav1 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 0 } })
-    let { data: fav2 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 100 } })
-    let { data: fav3 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 200 } })
-    let { data: fav4 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 300 } })
-    let favworldsAll = fav1.concat(fav2, fav3, fav4)
-    let favWorlds1 = favworldsAll.filter(favworldsAll => favworldsAll.favoriteGroup == favgroup)
-    favWorlds1.forEach((wrld, index, arr) => { worldsToExplore.push(wrld.id) })
-    let extimelow = Math.floor((favWorlds1.length * 2) / 60)
-    let extimehig = Math.floor((favWorlds1.length * 10) / 60)
-    console.log(`${loglv().log}${selflog} ${favWorlds1.length} worlds to explore. [${extimelow} to ${extimehig} Hours]`)
+    try {
+        let { data: fav1 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 0 } })
+        let { data: fav2 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 100 } })
+        let { data: fav3 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 200 } })
+        let { data: fav4 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 300 } })
+        let favworldsAll = fav1.concat(fav2, fav3, fav4)
+        let favWorlds1 = favworldsAll.filter(favworldsAll => favworldsAll.favoriteGroup == favgroup)
+        favWorlds1.forEach((wrld, index, arr) => { worldsToExplore.push(wrld.id) })
+        let extimelow = Math.floor((favWorlds1.length * 2) / 60)
+        let extimehig = Math.floor((favWorlds1.length * 10) / 60)
+        console.log(`${loglv().log}${selflog} ${favWorlds1.length} worlds to explore. [${extimelow} to ${extimehig} Hours]`)
 
-    if (100 - (favWorlds1.length) >= 1 && addMoreWorlds == true) {
-        console.log(`${loglv().log}${selflog} Adding ${100 - (favWorlds1.length)} Community Labs worlds to queue`)
-        let { data: worldData } = await vrchat.searchWorlds({ query: { n: 100 - (favWorlds1.length), sort: 'labsPublicationDate', order: 'descending', offset: 0, tag: 'system_labs' } })
-        worldData.forEach((w, index, arr) => {
-            setTimeout(() => {
-                console.log(`${loglv().log}${selflog} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
-                vrchat.addFavorite({ body: { favoriteId: w.id, tags: 'worlds1', type: 'world' } })
-            }, 5_000 * index)
-        })
+        if (100 - (favWorlds1.length) >= 1 && addMoreWorlds == true) {
+            console.log(`${loglv().log}${selflog} Adding ${100 - (favWorlds1.length)} Community Labs worlds to queue`)
+            let { data: worldData } = await vrchat.searchWorlds({ query: { n: 100 - (favWorlds1.length), sort: 'labsPublicationDate', order: 'descending', offset: 0, tag: 'system_labs' } })
+            worldData.forEach((w, index, arr) => {
+                setTimeout(() => {
+                    console.log(`${loglv().log}${selflog} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
+                    vrchat.addFavorite({ body: { favoriteId: w.id, tags: 'worlds1', type: 'world' } })
+                }, 5_000 * index)
+            })
+        }
+    } catch (error) {
+        console.log(`${loglv().warn}${selflog} ${error}`)
+        oscSend(`~Could not fetch Favorited-Worlds data`)
     }
 
     console.log(`${loglv().hey}${selflog} Explore Mode: Enabled`)
@@ -359,9 +360,11 @@ async function inviteOnlineWorlds_Loop(world_id) {
                 'worldId': world_id,
                 'type': 'group',
                 'region': 'use',
+                'displayName': '14a - World Hop',
                 'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
-                'groupAccessType': 'plus',
-                'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
+                'groupAccessType': 'public',
+                'queueEnabled': true,
+                'closedAt': new Date(Date.now() + 600_000).toISOString()
             }
         }).then(created_instance => {
             // `&shortName=${created_instance.data.secureName}`
@@ -383,7 +386,7 @@ async function inviteOnlineWorlds_Loop(world_id) {
 function inviteLocalQueue() {
     fs.readFile(worldQueueTxt, 'utf8', async (err, data) => {
         // err ? console.log(err); return : ''
-        let localQueueList = data.split(`\r\n`)
+        let localQueueList = data.split('===')[0].split(`\r\n`)
         let randnum = Math.round(Math.random() * (localQueueList.length - 1))
         let world_id = localQueueList[randnum]
 
@@ -414,8 +417,10 @@ function inviteLocalQueue() {
                 'worldId': world_id,
                 'type': 'group',
                 'region': 'use',
+                'displayName': '14a - World Hop',
                 'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
-                'groupAccessType': 'plus',
+                'groupAccessType': 'public',
+                'queueEnabled': true,
                 'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
             }
         }).then(created_instance => {
@@ -531,10 +536,10 @@ async function scanGroupAuditLogs() {
     await scanaudit(logOutput_9year, targetGroupLogID_9year);
     await scanaudit(logOutput_10year, targetGroupLogID_10year);
 
-    // await scanSomnaGroupInstances(`grp_d8a28345-5a80-4f6d-854a-051f0b68bbc2`,"SLEEPERP")
-    // await scanSomnaGroupInstances(`grp_f52018be-6721-43cd-abf9-37609f7bf0d5`,"SPSLEEP")
-    // await scanSomnaGroupInstances(`grp_f6602b4e-43b8-4d54-9b61-77eaa0c05bd6`,"Somno Furs")
-    // await scanSomnaGroupInstances(`grp_14ffbd54-fdc5-443c-91b8-cf13654486a1`,"Somnophilia")
+    await scanSomnaGroupInstances(`grp_d8a28345-5a80-4f6d-854a-051f0b68bbc2`,"SLEEPERP")
+    await scanSomnaGroupInstances(`grp_f52018be-6721-43cd-abf9-37609f7bf0d5`,"SPSLEEP")
+    await scanSomnaGroupInstances(`grp_f6602b4e-43b8-4d54-9b61-77eaa0c05bd6`,"Somno Furs")
+    await scanSomnaGroupInstances(`grp_14ffbd54-fdc5-443c-91b8-cf13654486a1`,"Somnophilia")
 }
 
 async function requestAllOnlineFriends() {

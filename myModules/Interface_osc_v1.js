@@ -9,7 +9,7 @@
 const { loglv, useChatBox } = require('./config.js')
 var { logOscIn, logOscOut } = require('./config.js')
 const { deviceIP, isFullLaunch } = require('../index.js')
-let selfLog = `\x1b[0m[\x1b[34mOSC\x1b[0m]`
+let selflog = `\x1b[0m[\x1b[34mOSC\x1b[0m]`
 var osc = require('osc');
 var udpPort = new osc.UDPPort({ localAddress: '127.0.0.1', localPort: 9100 })
 const remotePort = 9000
@@ -21,14 +21,14 @@ const { toUnicode } = require('punycode');
 const oscEmitter = new EventEmitter();
 exports.oscEmitter = oscEmitter;
 
-console.log(`${loglv().log}${selfLog} Loaded -> ${loglv(logOscIn)}Input${loglv().reset} , ${loglv(logOscOut)}Output${loglv().reset} , ${loglv(useChatBox)}ChatBox${loglv().reset}`)
-console.log(`${loglv().log}${selfLog} Connected to ${deviceIP}`)
+console.log(`${loglv().log}${selflog} Loaded -> ${loglv(logOscIn)}Input${loglv().reset} , ${loglv(logOscOut)}Output${loglv().reset} , ${loglv(useChatBox)}ChatBox${loglv().reset}`)
+console.log(`${loglv().log}${selflog} Connected to ${deviceIP}`)
 
 var nanaPartyCCTVtimer;
 const vrcap = '/avatar/parameters/'
 cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'help') {
-		console.log(`${selfLog}
+		console.log(`${selflog}
 -	osc in [true/false]
 -	osc out [true/false]
 -	osc say ["Message"]
@@ -111,7 +111,7 @@ function oscChatBox(say, sec_to_clear) {
 	if (useChatBox == false) { return }
 
 	if (bucket <= 0) {
-		console.log(`${loglv().warn}${selfLog} Sending messages to fast [TimeLeft: ${(timerend - Date.now()) / 1000}sec ]`)
+		console.log(`${loglv().warn}${selflog} Sending messages to fast [TimeLeft: ${(timerend - Date.now()) / 1000}sec ]`)
 		return
 	}
 
@@ -122,12 +122,12 @@ function oscChatBox(say, sec_to_clear) {
 		setTimeout(() => {
 			timerActive = false
 			bucket = 4
-			//console.log(`${loglv().debug}${selfLog} ChatBox RateLimiter Reset`)
+			//console.log(`${loglv().debug}${selflog} ChatBox RateLimiter Reset`)
 		}, 6000)
 	}
 	bucket--
 
-	//console.log(`${loglv().debug}${selfLog} \x1b[33m/chatbox/input\x1b[0m: `+say.slice(0,144))
+	//console.log(`${loglv().debug}${selflog} \x1b[33m/chatbox/input\x1b[0m: `+say.slice(0,144))
 	//,{ type: "i", value: 0 } MessageSentSFX
 
 	udpPort.send({
@@ -138,7 +138,7 @@ function oscChatBox(say, sec_to_clear) {
 			false
 		]
 	}, deviceIP, remotePort);
-	if (logOscOut == true) { console.log(`\x1b[33m<- ${selfLog} \x1b[33m/chatbox/input\x1b[0m: ` + say.slice(0, 144)) }
+	if (logOscOut == true) { console.log(`\x1b[33m<- ${selflog} \x1b[33m/chatbox/input\x1b[0m: ` + say.slice(0, 144)) }
 	if (sec_to_clear >= 1) {
 		setTimeout(() => {
 			udpPort.send({
@@ -166,7 +166,7 @@ function oscSend(a, v) {
 	}, deviceIP, remotePort);
 
 	if (logOscOut == true) {
-		console.log(`\x1b[33m<- ${selfLog} \x1b[33m${a}\x1b[0m: ${v}`)
+		console.log(`\x1b[33m<- ${selflog} \x1b[33m${a}\x1b[0m: ${v}`)
 	}
 }
 exports.oscSend = oscSend;
@@ -178,7 +178,7 @@ const katChars = [` `, `!`, `"`, `#`, `$`, `%`, `&`, `'`, `(`, `)`, `*`, `+`, `,
 
 var isBurstingData = false
 function OSCDataBurst(in_addr, in_dataA) {
-	//console.log(`${loglv().debug}${selfLog} [DataBurst] Adding buffer data ${data1}, ${data2}, ${data3} to Slot ${slot}`)
+	//console.log(`${loglv().debug}${selflog} [DataBurst] Adding buffer data ${data1}, ${data2}, ${data3} to Slot ${slot}`)
 	dataBurst.push({ 'addr': in_addr, 'dataA': in_dataA })
 
 	if (isBurstingData == false) {
@@ -190,17 +190,17 @@ function OSCDataBurst(in_addr, in_dataA) {
 }
 function sendOscDataBurst() {
 	//isBurstingData = true
-	// console.log(`${loglv().debug}${selfLog} [DataBurst] Sending data ${dataBurst[0].dataA} to Address ${dataBurst[0].addr}`)
+	// console.log(`${loglv().debug}${selflog} [DataBurst] Sending data ${dataBurst[0].dataA} to Address ${dataBurst[0].addr}`)
 	oscSend(vrcap + 'osc/Addr', dataBurst[0].addr)
 	oscSend(vrcap + 'osc/DataA', dataBurst[0].dataA)
 	setTimeout(() => {
-		// console.log(`${loglv().debug}${selfLog} Shifting`)
+		// console.log(`${loglv().debug}${selflog} Shifting`)
 		dataBurst.shift()
-		// console.log(`${loglv().debug}${selfLog} Still more?`)
+		// console.log(`${loglv().debug}${selflog} Still more?`)
 		if (dataBurst.length > 0) {
 			sendOscDataBurst()
 		} else {
-			// console.log(`${loglv().debug}${selfLog} [DataBurst] Idling`)
+			// console.log(`${loglv().debug}${selflog} [DataBurst] Idling`)
 			isBurstingData = false
 			oscSend(vrcap + 'osc/Addr', 0)
 			oscSend(vrcap + 'osc/DataA', 255)
@@ -237,7 +237,7 @@ function oscSend2(addr, valu, valu2) {
 	}, deviceIP, remotePort);
 
 	if (logOscOut == true) {
-		console.log(`\x1b[33m<- ${selfLog} \x1b[33m${addr}\x1b[0m: ${valu} ${valu2}`)
+		console.log(`\x1b[33m<- ${selflog} \x1b[33m${addr}\x1b[0m: ${valu} ${valu2}`)
 	}
 }
 exports.oscSend2 = oscSend2;
@@ -249,7 +249,7 @@ function oscSend3(addr, valu, valu2, valu3) {
 	}, deviceIP, remotePort);
 
 	if (logOscOut == true) {
-		console.log(`\x1b[33m<- ${selfLog} \x1b[33m` + addr + `\x1b[0m: ` + valu + ` ` + valu2 + ` ` + valu3)
+		console.log(`\x1b[33m<- ${selflog} \x1b[33m` + addr + `\x1b[0m: ` + valu + ` ` + valu2 + ` ` + valu3)
 	}
 }
 exports.oscSend3 = oscSend3;
@@ -261,7 +261,7 @@ function oscSend6(addr, v1, v2, v3, v4, v5, v6) {
 	}, deviceIP, remotePort);
 
 	if (logOscOut == true) {
-		console.log(`\x1b[33m<- ${selfLog} \x1b[33m` + addr + `\x1b[0m: ` + v1 + ` ` + v2 + ` ` + v3 + ` ` + v4 + ` ` + v5 + ` ` + v6)
+		console.log(`\x1b[33m<- ${selflog} \x1b[33m` + addr + `\x1b[0m: ` + v1 + ` ` + v2 + ` ` + v3 + ` ` + v4 + ` ` + v5 + ` ` + v6)
 	}
 }
 exports.oscSend6 = oscSend6;
@@ -324,15 +324,15 @@ udpPort.on("message", function (msg, rinfo) {
 		var avatarId = msg['args'][0]
 		exports.avatarId = msg['args'][0]
 		oscEmitter.emit('avatar', msg['args'][0]);
-		console.log(`${loglv().log}${selfLog} Avatar Changed: ${avatarId}`)
+		console.log(`${loglv().log}${selflog} Avatar Changed: ${avatarId}`)
 		if (avatarId == `avtr_21cbf284-0c09-423c-9973-5cd41dccd308`) { oscSend(vrcap + `LL/Menu/IsUnlocked`, 1 == 1) }
 		if (avatarId == `avtr_2a9a9021-2b82-4564-bb63-2d96deb6a6d7`) { oscSend(vrcap + `Patreon-NDA`, 1 == 1) }
 		if (avatarId == `avtr_94237663-3ed4-48fd-b29d-b3d6b174e004`) { oscSend(vrcap + `VF100_SecurityLockSync`, 1 == 1) }
 		oscSend(vrcap + `14a/osc/14anthony7095`, true)
 	}
 	if (msg['address'] == vrcap + 'toolGunHolster_Angle') { return }
-	if (logOscIn == true) { console.log(`\x1b[36m->> ${selfLog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args'][0]) }
-	// if (msg['address'].includes('/usercamera/')) { console.log(`\x1b[36m->> ${selfLog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
+	if (logOscIn == true) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args'][0]) }
+	// if (msg['address'].includes('/usercamera/')) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
 });
 
 // function lerp(start,end,factor){ return start + (end - start) * factor; }
@@ -369,7 +369,7 @@ udpPort.on("ready", function () {
 	oscReady = true
 	exports.oscReady = oscReady
 	oscEmitter.emit('ready', true);
-	console.log(`${loglv().log}${selfLog} Ready..`)
+	console.log(`${loglv().log}${selflog} Ready..`)
 
 	if (isFullLaunch == true) {
 		require('./Interface_vrc-Api.js')

@@ -8,7 +8,7 @@ const { cmdEmitter } = require('./input.js');
 require('dotenv').config()
 
 //	--	Global Vars	--
-let selfLog = `\x1b[0m[\x1b[35mTwitch.tv\x1b[0m]`
+let selflog = `\x1b[0m[\x1b[35mTwitch.tv\x1b[0m]`
 let selfMode = `Za World`
 if (msgVerbose == 0) { selfMode = `\x1b[31mNo Messages\x1b[0m` }
 if (msgVerbose == 1) { selfMode = `\x1b[35mCheer Only\x1b[0m` }
@@ -27,7 +27,7 @@ var twitchFromVideo = twitchChannels
 
 //	--	On Load	--
 
-console.log(`${loglv().log}${selfLog} Loaded -> ${selfMode} , ${loglv(ttvAlwaysRun)}AlwaysRun${loglv().reset} , ${loglv(ttvChatBox)}UseChatBox${loglv().reset} , ChannelFrom[${selfFetch}]${loglv().reset}`)
+console.log(`${loglv().log}${selflog} Loaded -> ${selfMode} , ${loglv(ttvAlwaysRun)}AlwaysRun${loglv().reset} , ${loglv(ttvChatBox)}UseChatBox${loglv().reset} , ChannelFrom[${selfFetch}]${loglv().reset}`)
 const opts = {
 	identity: { username: `14aBot`, password: process.env["TWITCH_BOT_AUTH"] },
 	channels: twitchChannels
@@ -36,7 +36,7 @@ const client = new tmi.client(opts);
 
 cmdEmitter.on('cmd', (cmd, args) => {
 	if (cmd == 'help') {
-		console.log(`${selfLog}
+		console.log(`${selflog}
 -	twitch msg [0-3] // [0] Disable	[1] Cheers	[2] Latest	[3] Buffer
 -	twitch chatbox [true/false]
 -	twitch join ["Channel"]
@@ -84,10 +84,10 @@ oscEmitter.on('osc', (address, value) => {
 
 function start() {
 	isActive = true
-	console.log(`${loglv().log}${selfLog} Starting..`)
+	console.log(`${loglv().log}${selflog} Starting..`)
 	if (isttvRunning == false) {
-		console.log(`${loglv().log}${selfLog} Attempting to Connect`)
-		client.connect().catch((err) => { console.error(`${loglv().warn}${selfLog} ` + err) })
+		console.log(`${loglv().log}${selflog} Attempting to Connect`)
+		client.connect().catch((err) => { console.error(`${loglv().warn}${selflog} ` + err) })
 		isttvRunning = true
 	}
 	else if (isttvRunning == true) {
@@ -106,11 +106,11 @@ var clearingBuffer = false
 function switchChannel(newChannel) {
 	if (ttvFetchFrom == 1 && isActive == true) {
 		say.stop()
-		console.log(`${loglv().log}${selfLog} Switching to channel ${newChannel}`)
+		console.log(`${loglv().log}${selflog} Switching to channel ${newChannel}`)
 		twitchFromVideo = newChannel
 		client.getChannels().forEach(tc => {
 			client.part(tc)
-				.catch(err => { console.log(`${loglv().warn}${selfLog}`, err) })
+				.catch(err => { console.log(`${loglv().warn}${selflog}`, err) })
 		})
 		clearingBuffer = true
 		chatBuffer = []
@@ -128,14 +128,14 @@ function switchChannel(newChannel) {
 			oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901) )
 			oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137) )
 		}).catch(err => {
-			console.log(`${loglv().warn}${selfLog}`, err)
+			console.log(`${loglv().warn}${selflog}`, err)
 		})
 	}
 }
 exports.switchChannel = switchChannel;
 function joinChannel(newChannel) {
 	if (ttvFetchFrom == 2 && isActive == true) {
-		console.log(`${loglv().log}${selfLog} Joining channel ${newChannel}`)
+		console.log(`${loglv().log}${selflog} Joining channel ${newChannel}`)
 		twitchFromVideo = newChannel
 
 		client.join(newChannel).then((data) => {
@@ -143,10 +143,10 @@ function joinChannel(newChannel) {
 			isActive = true
 			isttvRunning = true
 		}).catch(err => {
-			console.log(`${loglv().warn}${selfLog}`, err)
+			console.log(`${loglv().warn}${selflog}`, err)
 			if (err == 'No response from Twitch.') {
 				setTimeout(() => {
-					console.log(`${loglv().log}${selfLog} Retrying Join`)
+					console.log(`${loglv().log}${selflog} Retrying Join`)
 					joinChannel(newChannel)
 				}, 5000);
 			}
@@ -157,13 +157,13 @@ exports.joinChannel = joinChannel;
 
 function leaveChannel(newChannel) {
 	if (ttvFetchFrom == 2 && isActive == true) {
-		console.log(`${loglv().log}${selfLog} Leaving channel ${newChannel}`)
+		console.log(`${loglv().log}${selflog} Leaving channel ${newChannel}`)
 
 		client.part(newChannel).catch((err) => {
-			console.log(`${loglv().warn}${selfLog}`, err)
+			console.log(`${loglv().warn}${selflog}`, err)
 			if (err == 'No response from Twitch.') {
 				setTimeout(() => {
-					console.log(`${loglv().log}${selfLog} Retrying Leave`)
+					console.log(`${loglv().log}${selflog} Retrying Leave`)
 					leaveChannel(newChannel)
 				}, 5000);
 			}
@@ -174,7 +174,7 @@ exports.leaveChannel = leaveChannel;
 
 function rejoinChannel() {
 	if (ttvFetchFrom == 1 && isActive == true) {
-		console.log(`${loglv().log}${selfLog} Reconnecting to last channel ${twitchFromVideo}`)
+		console.log(`${loglv().log}${selflog} Reconnecting to last channel ${twitchFromVideo}`)
 
 		isActive = true
 		isttvRunning = true
@@ -191,7 +191,7 @@ function rejoinChannel() {
 function stop() {
 	if (ttvAlwaysRun == false) {
 		isActive = false
-		console.log(`${loglv().log}${selfLog} Pausing..`)
+		console.log(`${loglv().log}${selflog} Pausing..`)
 	}
 }
 
@@ -225,12 +225,12 @@ function saySpeak() {
 	oscSend('/avatar/parameters/ttvIsTalking', true)
 	oscSend('/avatar/parameters/ttvCheerTier', parseFloat(chatBuffer[0].isCheer))
 	say.speak(chatBuffer[0].say, 'Microsoft David Desktop', 1.0, (err) => {
-		if (err) { return console.error(`${loglv().warn}${selfLog} say.js error: ` + err) }
+		if (err) { return console.error(`${loglv().warn}${selflog} say.js error: ` + err) }
 		if (useChatBox == true && ttvChatBox == true) {
 			//oscChatBox('~')
 		}
 		chatBuffer.shift()
-		if (msgVerbose == 3) { console.log(`${loglv().debug}${selfLog} Messages Left in Buffer: ${chatBuffer.length}`) }
+		if (msgVerbose == 3) { console.log(`${loglv().debug}${selflog} Messages Left in Buffer: ${chatBuffer.length}`) }
 		oscSend('/avatar/parameters/ttvIsTalking', false)
 		OSCDataBurst(8, parseFloat(1), parseFloat(1), parseFloat(1))
 		oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156) )
@@ -241,7 +241,7 @@ function saySpeak() {
 		setTimeout(() => {
 			isTalking = false
 			if (chatBuffer.length > 100) {
-				console.log(`${loglv().hey}${selfLog} Messages buffer is too full, switching to Latest Messages mode`)
+				console.log(`${loglv().hey}${selflog} Messages buffer is too full, switching to Latest Messages mode`)
 				clearingBuffer = true
 				chatBuffer = []
 				oscSend('/avatar/parameters/ToN_IsStarted', false)
@@ -261,13 +261,13 @@ function saySpeak() {
 }
 
 client.on('connected', (addr, port) => {
-	console.log(`${loglv().log}${selfLog} Connected to ${addr}:${port}`)
+	console.log(`${loglv().log}${selflog} Connected to ${addr}:${port}`)
 })
 
 client.on("join", (channel, username, self) => {
 	if (oscReady == false) { return }
 	if (self) {
-		console.log(`${loglv().log}${selfLog} Joined ${channel}'s Chat`)
+		console.log(`${loglv().log}${selflog} Joined ${channel}'s Chat`)
 		if (ttvAlwaysRun == true) { oscSend('/avatar/parameters/ttvEnabled', 1 == 1) }
 	}
 });
@@ -295,11 +295,11 @@ client.on("message", (channel, userstate, message, self) => {
 			}
 
 			let whatpartofmsgwassay = `<` + userstate["display-name"] + `> ` + message
-			let userlog = `${loglv().log}${selfLog} ` + channel + ` ` + whatpartofmsgwassay
+			let userlog = `${loglv().log}${selflog} ` + channel + ` ` + whatpartofmsgwassay
 			if (useChatBox == true && ttvChatBox == true && whatpartofmsgwassay.slice(144).length > 0) {
 				var partalmsgpercent = ((100 * whatpartofmsgwassay.slice(144).length) / whatpartofmsgwassay.length).toFixed(0)
-				userlog = `${loglv().log}${selfLog} ` + channel + ` ` + whatpartofmsgwassay.slice(0, 144) + `\x1b[31m` + whatpartofmsgwassay.slice(144) + `
-${loglv().log}${selfLog} \x1b[33m${partalmsgpercent}% of message was not shown in ChatBox${loglv().reset}`
+				userlog = `${loglv().log}${selflog} ` + channel + ` ` + whatpartofmsgwassay.slice(0, 144) + `\x1b[31m` + whatpartofmsgwassay.slice(144) + `
+${loglv().log}${selflog} \x1b[33m${partalmsgpercent}% of message was not shown in ChatBox${loglv().reset}`
 			}
 
 			if (useChatBox == true) { oscChatTyping(1) }
@@ -340,12 +340,12 @@ client.on('cheer', (channel, userstate, message) => {
 		var msgNoCheer = message.replace(/\//g, '.').replace(/Cheer10000/g, '').replace(/Cheer5000/g, '').replace(/Cheer1000/g, '').replace(/Cheer100/g, '').replace(/Cheer1/g, '')
 
 		let whatpartofmsgwassay = `<` + userstate["display-name"] + `> ` + message
-		let userlog = `${loglv().log}${selfLog} Cheer` + userstate.bits + ` ` + channel + ` ` + whatpartofmsgwassay
+		let userlog = `${loglv().log}${selflog} Cheer` + userstate.bits + ` ` + channel + ` ` + whatpartofmsgwassay
 
 		if (useChatBox == true && ttvChatBox == true && whatpartofmsgwassay.slice(144).length > 0) {
 			var partalmsgpercent = ((100 * whatpartofmsgwassay.slice(144).length) / whatpartofmsgwassay.length).toFixed(0)
-			userlog = `${loglv().log}${selfLog} Cheer` + userstate.bits + ` ` + channel + ` ` + whatpartofmsgwassay.slice(0, 144) + `\x1b[31m` + whatpartofmsgwassay.slice(144) + `
-${loglv().log}${selfLog} \x1b[33m${partalmsgpercent}% of message was not shown in ChatBox\x1b[0m`
+			userlog = `${loglv().log}${selflog} Cheer` + userstate.bits + ` ` + channel + ` ` + whatpartofmsgwassay.slice(0, 144) + `\x1b[31m` + whatpartofmsgwassay.slice(144) + `
+${loglv().log}${selflog} \x1b[33m${partalmsgpercent}% of message was not shown in ChatBox\x1b[0m`
 		}
 
 		chatBuffer.push({

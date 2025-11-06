@@ -5,10 +5,10 @@ const cmdEmitter = new EventEmitter();
 exports.cmdEmitter = cmdEmitter;
 
 const cmdInputFile = "C:/Users/14anthony7095/Documents/14aOSC-API-Log/input.txt"
-let selfLog = `\x1b[0m[INPUT\x1b[0m]`
+let selflog = `\x1b[0m[INPUT\x1b[0m]`
 
 cmdEmitter.on('cmd',(cmd,args)=>{
-    console.log(`${loglv().log}${selfLog} Command recieved ${cmd} ${args}`)
+    console.log(`${loglv().log}${selflog} Command recieved ${cmd} ${args}`)
 })
 
 fs.watchFile(cmdInputFile,(current,previous)=>{

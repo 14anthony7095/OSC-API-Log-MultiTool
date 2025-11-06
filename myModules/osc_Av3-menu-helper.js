@@ -2,8 +2,8 @@ const { loglv } = require('./config.js')
 const { OSCDataBurst,oscEmitter, oscSend } = require('./Interface_osc_v1.js');
 const { logEmitter } = require('./Interface_vrc-Log.js')
 // const say = require('say');
-let selfLog = `\x1b[0m(\x1b[34mAv3MenuHelper\x1b[0m)`
-console.log(`${loglv().log}${selfLog} Loaded`)
+let selflog = `\x1b[0m(\x1b[34mAv3MenuHelper\x1b[0m)`
+console.log(`${loglv().log}${selflog} Loaded`)
 
 // function remap(value,lowOld,highOld,lowNew,highNew) {
 // 	return lowNew + (value - lowOld) * (highNew - lowNew) / (highOld - lowOld)
@@ -34,11 +34,11 @@ oscEmitter.on('osc', (address, value) => {
 // logEmitter.on('log', line => {
 // 	if( syncingAvatars == true && line.includes('VRCPlayer[Local]') && line.includes('ReloadAvatarNetworkedRPC') ){
 // 		loadingParams = false
-// 		// console.log(`${loglv().debug}${selfLog} [SYNC] loadingParams = ${loadingParams} from logEmitter [SET]`)
-// 		console.log(`${loglv().debug}${selfLog} [SYNC] Resettings Parameters`)
+// 		// console.log(`${loglv().debug}${selflog} [SYNC] loadingParams = ${loadingParams} from logEmitter [SET]`)
+// 		console.log(`${loglv().debug}${selflog} [SYNC] Resettings Parameters`)
 // 		Object.keys( oscMemory ).forEach( (entry,index) =>{
 // 			if( entry.includes('*') ){
-// 				console.log(`${loglv().debug}${selfLog} [SYNC] resetting ${entry} to ${oscMemory[ entry ]}`)
+// 				console.log(`${loglv().debug}${selflog} [SYNC] resetting ${entry} to ${oscMemory[ entry ]}`)
 // 				if( oscMemDefaults[ entry ] != undefined ){
 // 					oscMemory[ entry ] = oscMemDefaults[ entry ]
 // 				}else{

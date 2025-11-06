@@ -5,7 +5,7 @@ var WebSocket = require("ws");
 const { Server } = require('node-osc');
 
 var vrcClientName = new RegExp(/VRChat-Client-[\w|\d]{6}/)
-let selfLog = `\x1b[0m[\x1b[34mOSCv3\x1b[0m]`
+let selflog = `\x1b[0m[\x1b[34mOSCv3\x1b[0m]`
 
 
 discovery.start();

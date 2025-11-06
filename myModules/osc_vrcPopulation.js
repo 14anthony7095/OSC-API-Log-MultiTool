@@ -12,17 +12,17 @@ const { getVisitsCount } = require('./Interface_vrc-Api.js')
 
 
 //	--	Global Vars	--
-let selfLog = `\x1b[0m[\x1b[36mCounter\x1b[0m]`
+let selflog = `\x1b[0m[\x1b[36mCounter\x1b[0m]`
 var isActive = false
 var counterTimer
 
 
-console.log(`${loglv().log}${selfLog} Loaded -> ${loglv(playerCounter)}${playerCounter}${loglv().reset}`)
+console.log(`${loglv().log}${selflog} Loaded -> ${loglv(playerCounter)}${playerCounter}${loglv().reset}`)
 
 
 function start() {
 	isActive = true
-	console.log(`${loglv().log}${selfLog} Starting..`)
+	console.log(`${loglv().log}${selflog} Starting..`)
 
 	getVisitsCount().then(count => { workload(count) }).catch((err) => { workload(0, 'Lost Connection') })
 
@@ -35,7 +35,7 @@ function start() {
 
 function stop() {
 	isActive = false
-	console.log(`${loglv().log}${selfLog} Stopping.`)
+	console.log(`${loglv().log}${selflog} Stopping.`)
 	clearInterval(counterTimer)
 }
 

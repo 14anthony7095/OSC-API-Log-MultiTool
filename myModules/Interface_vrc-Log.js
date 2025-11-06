@@ -21,7 +21,7 @@ const logEmitter = new EventEmitter
 exports.logEmitter = logEmitter;
 require('dotenv').config()
 
-let selfLog = `\x1b[0m[\x1b[32mVRC_Log\x1b[0m]`
+let selflog = `\x1b[0m[\x1b[32mVRC_Log\x1b[0m]`
 var path = 'C:/Users/14anthony7095/AppData/LocalLow/VRChat/VRChat/'
 var tarFile = 'nothing'
 var tarFilePath = 'nothing'
@@ -31,11 +31,11 @@ var playerHardLimit = 99
 var playerRatio = 0.5
 
 //	--	On Load	--
-console.log(`${loglv().log}${selfLog} Loaded -> ${loglv(printAllLogs)}printAllLogs${loglv().reset} , ${loglv(ChatVideoURL)}ChatVideoURL${loglv().reset} , ${loglv(ChatVideoTitle)}ChatVideoTitle${loglv().reset}`)
+console.log(`${loglv().log}${selflog} Loaded -> ${loglv(printAllLogs)}printAllLogs${loglv().reset} , ${loglv(ChatVideoURL)}ChatVideoURL${loglv().reset} , ${loglv(ChatVideoTitle)}ChatVideoTitle${loglv().reset}`)
 
 cmdEmitter.on('cmd', (cmd, args) => {
 	if (cmd == 'help') {
-		console.log(`${selfLog}
+		console.log(`${selflog}
 -	log vidurl [true/false]
 -	log vidtitle [true/false]
 -	log printall [true/false]
@@ -56,7 +56,7 @@ cmdEmitter.on('cmd', (cmd, args) => {
 })
 
 function fetchLogFile() {
-	console.log(`${loglv().log}${selfLog} Finding latest log file`)
+	console.log(`${loglv().log}${selflog} Finding latest log file`)
 	fs.readdir(path, function (err, files) {
 		files = files.map(function (fileName) {
 			return {
@@ -75,7 +75,7 @@ function fetchLogFile() {
 			})
 		tarFile = files[files.length - 1]
 		tarFilePath = path + '' + files[files.length - 1]
-		console.log(`${loglv().log}${selfLog} Found newest log file: ${files[files.length - 1]}`)
+		console.log(`${loglv().log}${selflog} Found newest log file: ${files[files.length - 1]}`)
 		//require('./oscPlyNameToggle.js')
 		startWatching()
 	})
@@ -104,20 +104,20 @@ var watcher;
 var lastUpdated = 0
 var lastChecked = 0
 function startWatching() {
-	console.log(`${loglv().log}${selfLog} Started Watcher`)
+	console.log(`${loglv().log}${selflog} Started Watcher`)
 	if (tarFilePath.includes('undefined')) {
 		setTimeout(() => { updateWatcher() }, 5000)
 		return
 	} else {
 		watcher = fs.watch(tarFilePath, 'utf8', (eventType, filename) => {
-			//console.log( `${loglv().debug}${selfLog}`, eventType, filename)
+			//console.log( `${loglv().debug}${selflog}`, eventType, filename)
 			if (eventType == 'change' && filename == tarFile) {
 				lastUpdated = Date.now()
-				//console.log(`${loglv().debug}${selfLog} ${lastUpdated} Log updated`)
+				//console.log(`${loglv().debug}${selflog} ${lastUpdated} Log updated`)
 				readLogFile()
 			}
 			if (eventType == 'rename' && filename.includes('output_log_')) {
-				console.log(`${loglv().warn}${selfLog} A newer log file might of just been created`)
+				console.log(`${loglv().warn}${selflog} A newer log file might of just been created`)
 				updateWatcher()
 			}
 		})
@@ -126,7 +126,7 @@ function startWatching() {
 
 
 function updateWatcher() {
-	console.log(`${loglv().log}${selfLog} Updating Watcher`)
+	console.log(`${loglv().log}${selflog} Updating Watcher`)
 	watcher.close()
 	fetchLogFile()
 }
@@ -140,7 +140,7 @@ var logCooldown = 0.001 // secs
 function readLogFile(cooldownSkip) {
 	if (cooldown == false || cooldownSkip == true) {
 		lastChecked = Date.now()
-		//console.log(`${loglv().debug}${selfLog} ${lastChecked} Reading Log`)
+		//console.log(`${loglv().debug}${selflog} ${lastChecked} Reading Log`)
 		cooldown = true
 
 		// Replace with createReadStream
@@ -153,7 +153,7 @@ function readLogFile(cooldownSkip) {
 		// 	// varibles to check for within the line scan
 		// 	newDataPerLine.slice( currentLength - previousLength ).forEach((line,index)=>{
 		// 		if( line.length != 0 ){
-		// 			console.log(`${loglv().debug}${selfLog} ${line}`)
+		// 			console.log(`${loglv().debug}${selflog} ${line}`)
 		// 			outputLogLines(index, newDataPerLine.length-1, line);
 		// 		}
 		// 	})
@@ -216,18 +216,25 @@ var seenVideoURLs = [] // For current instance only
 var worldHopTimeout;
 var worldHopTimeoutHour;
 var tonRoundType = ''
+var tonAvgStartWait = []
+var tonRoundReadyTime = 0
 var worldQueueTxt = './datasets/worldQueue.txt'
 var worldID = ``
 var worldID_Closed = false
 oscSend('/avatar/parameters/log/instance_closed', false)
 var groupID = ``
+var instanceType = ''
 
 function getInstanceGroupID() { return groupID }
 exports.getInstanceGroupID = getInstanceGroupID;
+function average(array) {
+	if (array.length == 0) { return 0 }
+	return Math.floor(array.reduce((a, b) => a + b) / array.length)
+}
 
 function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 	if (printAllLogs == true) {
-		console.log(`${loglv().debug}${selfLog} [${currentLineIndexFromBuffer}/${totalLinesInBuffer}] ${line}`)
+		console.log(`${loglv().debug}${selflog} [${currentLineIndexFromBuffer}/${totalLinesInBuffer}] ${line}`)
 	}
 
 	logEmitter.emit('log', line)
@@ -259,22 +266,30 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 	}
 
 
+
 	// Terrors of Nowhere
 	if (worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd') {
 		// if (line.includes(`[DEATH][14anthony7095]`)) { PiShockAll(30, 1) }
 		if (line.includes(`Round type is`)) {
 			tonRoundType = line.split('Round type is ')[1]
-			console.log(`${loglv().log}${selfLog} [TON] Round type is ${tonRoundType}`)
+			console.log(`${loglv().log}${selflog} [TON] Round type is ${tonRoundType}`)
 		}
 		if (line.includes(`Sus player =`)) {
 			tonSusPlayer = line.split('Sus player = ')[1]
-			say.speak('Impostor is', 'Microsoft Zira Desktop', 1.0)
-			console.log(`${loglv().log}${selfLog} [TON] Impostor is ${tonSusPlayer}`)
+			say.speak('Impostor is ' + tonSusPlayer, 'Microsoft Zira Desktop', 1.0)
+			console.log(`${loglv().log}${selflog} [TON] Impostor is ${tonSusPlayer}`)
 			// oscChatBox(`~Impostor is ${tonSusPlayer}`, 5)
 		}
 		if (line.includes(`Verified Round End`)) {
-			console.log(`${loglv().log}${selfLog} [TON] Intermission.. Ready to start next round.`)
-			oscChatBox(`~Ready to start next round`, 5)
+			console.log(`${loglv().log}${selflog} [TON] Intermission.. Ready to start next round.`)
+			tonRoundReadyTime = Date.now()
+			tonAvgStartWait.length > 1 ? oscChatBox(`~Round ready to start\vAvg. wait time: ${new Date(average(tonAvgStartWait)).toISOString().substring(11, 19)}`, 10) : oscChatBox(`~Round ready to start`, 10)
+		}
+		if (line.includes(`Everything recieved, looks good`)) {
+			console.log(`${loglv().log}${selflog} [TON] Round Starting.`)
+			if (tonRoundReadyTime != 0) {
+				tonAvgStartWait.push(Date.now() - (tonRoundReadyTime + 12000))
+			}
 		}
 	}
 
@@ -282,13 +297,13 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 	if (line.includes(`[PortalManager]`)) {
 		var PortalLog = line.split(`[PortalManager] `)[1]
 		if (PortalLog == 'Received portal destroy event.') { oscChatBox(`~Portal has vanished`, 5) }
-		console.log(`${loglv().log}${selfLog} [PortalManager]: ${PortalLog}`)
+		console.log(`${loglv().log}${selflog} [PortalManager]: ${PortalLog}`)
 	}
 
 	// Local Moderation Manager
 	if (line.includes(`[ModerationManager]`)) {
 		var moderationlog = line.split(`[ModerationManager] `)[1]
-		console.log(`${loglv().log}${selfLog} [ModerationManager]: ${moderationlog}`)
+		console.log(`${loglv().log}${selflog} [ModerationManager]: ${moderationlog}`)
 	}
 
 	// Asset Bundle Download Manager
@@ -297,7 +312,7 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 	// Image Downloading
 	if (line.includes('[Image Download] Attempting to load image from URL')) {
 		var imageurl = line.split('[Image Download] Attempting to load image from URL ')[1].trim()
-		// console.log(`${loglv().log}${selfLog} Downloading Image from ${imageurl}`)
+		// console.log(`${loglv().log}${selflog} Downloading Image from ${imageurl}`)
 		if (ChatImageStringURL == true) { oscChatBox(`~ImageURL: ${imageurl}`, 5) }
 	}
 
@@ -307,7 +322,7 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 		var stringurl = line.split('[String Download] Attempting to load String from URL ')[1].trim()
 		if (/https?\:\/\/vr-m\.net\/[0-9]\/keepalive/.test(stringurl)) { return } // Surpress Moves&Chill heartbeat
 		// if( stringurl == `'https://vr-m.net/1/keepalive'` ){ return	} // Surpress Moves&Chill heartbeat
-		// console.log(`${loglv().log}${selfLog} Downloading String from ${stringurl}`)
+		// console.log(`${loglv().log}${selflog} Downloading String from ${stringurl}`)
 		if (ChatImageStringURL == true) { oscChatBox(`~StringURL: ${stringurl}`, 5) }
 	}
 
@@ -324,7 +339,7 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 		var stickerlog = line.split(`[StickersManager] `)[1]
 		var stickerOwner = stickerlog.split('(')[1].split(')')[0]
 		var stickerFile = stickerlog.split('spawned sticker ')[1]
-		console.log(`${loglv().log}${selfLog} [StickersManager]: ${stickerOwner} placed ${stickerFile}`)
+		console.log(`${loglv().log}${selflog} [StickersManager]: ${stickerOwner} placed ${stickerFile}`)
 	}
 
 	// Fetch Video Player URL
@@ -374,7 +389,7 @@ function eventPopcornPalace(json) {
 	//     "looping": false
 	// }
 	let movieShowName = ''
-	if (jsondata.videoName != '') {
+	if (jsondata.videoName != '' && Date.now() > (worldjointimestamp + 300000)) {
 		if (jsondata.videoName.includes('One Piece')) {
 			movieShowName = jsondata.videoName.replace('- S1E', 'ep.').split(' -')[0]
 		} else {
@@ -461,14 +476,15 @@ function applyGroupLogo(gID) {
 function eventGameClose() {
 	clearTimeout(worldHopTimeout)
 	clearTimeout(worldHopTimeoutHour)
-	console.log(`${loglv().hey}${selfLog} VRChat has Closed.`)
+	console.log(`${loglv().hey}${selflog} VRChat has Closed.`)
 	logEmitter.emit('stopworld', '')
 	if (worldID_Closed == true && lastSetUserStatus == 'Instance is closed') {
 		lastSetUserStatus = ''
 		logEmitter.emit('setstatus', '')
 	}
-	groupID = 'none'
+	groupID = ''
 	worldID_Closed = false
+	tonAvgStartWait = []
 }
 
 var vrcpropcount = {
@@ -477,13 +493,13 @@ var vrcpropcount = {
 }
 fs.readFile('./datasets/propcounts.json', 'utf8', (err, data) => { vrcpropcount = JSON.parse(data) })
 function eventPropSpawned(propID) {
-	// console.log(`${loglv().debug}${selfLog} Item spawned: ${propID}`)
+	// console.log(`${loglv().debug}${selflog} Item spawned: ${propID}`)
 	if (!vrcpropcount.Counts[propID]) {
-		console.log(`${loglv().hey}${selfLog} Unseen Item spawned: ${propID}`)
+		console.log(`${loglv().hey}${selflog} Unseen Item spawned: ${propID}`)
 		logEmitter.emit('propNameRequest', propID, vrcpropcount)
 	} else {
 		vrcpropcount.Counts[propID] = vrcpropcount.Counts[propID] + 1
-		console.log(`${loglv().log}${selfLog} Item spawned: ${vrcpropcount.Names[propID]} - ${vrcpropcount.Counts[propID] - 1} -> ${vrcpropcount.Counts[propID]}`)
+		console.log(`${loglv().log}${selflog} Item spawned: ${vrcpropcount.Names[propID]} - ${vrcpropcount.Counts[propID] - 1} -> ${vrcpropcount.Counts[propID]}`)
 		fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => { if (err) { console.log(err); return } })
 	}
 }
@@ -495,34 +511,60 @@ function eventHeadingToWorld(logOutputLine) {
 	clearTimeout(worldHopTimeoutHour)
 
 	worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
-	console.log(`${loglv().debug}${selfLog} World ID ${worldID}`)
+	console.log(`${loglv().debug}${selflog} World ID ${worldID}`)
 
 	if (logOutputLine.includes(`~group(grp_`)) {
 		groupID = /grp_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
-		console.log(`${loglv().debug}${selfLog} Group ID ${groupID}`)
-	} else { groupID = 'none' }
+		console.log(`${loglv().debug}${selflog} Group ID ${groupID}`)
+		if (logOutputLine.includes(`~groupAccessType(plus)`)) {
+			instanceType = `groupPlus`
+		} else if (logOutputLine.includes(`~groupAccessType(public)`)) {
+			instanceType = `groupPublic`
+		} else {
+			instanceType = `group`
+		}
+	} else {
+		groupID = ''
+		if (logOutputLine.includes(`~private(`)) {
+			instanceType = `invite`
+		} else if (logOutputLine.includes(`~canRequestInvite`)) {
+			instanceType = `invitePlus`
+		} else if (logOutputLine.includes(`~friends(`)) {
+			instanceType = `friends`
+		} else if (logOutputLine.includes(`~hidden(`)) {
+			instanceType = `friendsPlus`
+		} else {
+			instanceType = `public`
+		}
+	}
+	console.log(`${loglv().debug}${selflog} Instance Type ${instanceType}`)
 }
 
+var worldjointimestamp = 0
 function eventJoinWorld() {
 	worldHopTimeout = setTimeout(() => {
 		say.speak(`Been in world for too long. Proceed to next in queue`, 'Microsoft David Desktop', 1.0, (err) => {
-			if (err) { return console.error(`${loglv().warn}${selfLog} say.js error: ` + err) }
+			if (err) { return console.error(`${loglv().warn}${selflog} say.js error: ` + err) }
 		})
 	}, 600_000)
 	worldHopTimeoutHour = setTimeout(() => {
 		say.speak(`Been in world for over an hour. Find a new world`, 'Microsoft David Desktop', 1.0, (err) => {
-			if (err) { return console.error(`${loglv().warn}${selfLog} say.js error: ` + err) }
+			if (err) { return console.error(`${loglv().warn}${selflog} say.js error: ` + err) }
 		})
 	}, 3600_000)
 
 	if (cooldownUrl == true) { cooldownUrl = false }
 
+	worldjointimestamp = Date.now()
 	playersInInstance = []
 	playersInstanceObject = []
 
 	fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
-		if (data.includes(worldID)) {
-			fs.writeFile(worldQueueTxt, data.replace(`${worldID}\r\n`, ''), (err) => { if (err) { console.log(err) } })
+		if (data.includes(worldID) && worldID != '') {
+			fs.writeFile(worldQueueTxt, data.replace(`${worldID}\r\n`, ''), (err) => {
+				if (err) { console.log(err) }
+				console.log(`${loglv().debug}${selflog} ${worldID} was successfully purged from queue`)
+			})
 		}
 	})
 }
@@ -581,10 +623,15 @@ function eventPlayerInitialized(logOutputLine) {
 	var playerDisplayName = logOutputLine.split('[Behaviour] Initialized player ')[1]
 
 	if (playerDisplayName != undefined) {
-		console.log(`${loglv().log}${selfLog} Player Joined: ` + playerDisplayName)
+		console.log(`${loglv().log}${selflog} Player Joined: ` + playerDisplayName)
 		logEmitter.emit('playerJoin', playerDisplayName)
+		if (worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd' &&
+			[`invite`, `invitePlus`, `friends`, `friendsPlus`].includes(instanceType) &&
+			Date.now() > (worldjointimestamp + 120_000)) {
+			oscChatBox(`~Someone is joining if you want to wait for them: ${playerDisplayName}`)
+		}
 
-		if (groupID == 'grp_cacf2dd8-8958-4412-be78-dedd798e6df4' && playerDisplayName != '14anthony7095' ) {
+		if (groupID == 'grp_cacf2dd8-8958-4412-be78-dedd798e6df4' && playerDisplayName != '14anthony7095') {
 			logEmitter.emit('scanPlayerStatus4Ban', playerDisplayName)
 		}
 
@@ -595,35 +642,35 @@ function eventPlayerInitialized(logOutputLine) {
 		oscSend('/avatar/parameters/log/player_count', playersInInstance.length > 80 ? 80 : playersInInstance.length)
 		oscSend('/avatar/parameters/log/player_max', playerHardLimit > 80 ? 80 : playerHardLimit)
 		oscSend('/avatar/parameters/log/player_ratio', parseFloat(playerRatio))
-		console.log(`${loglv().log}${selfLog} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
+		console.log(`${loglv().log}${selflog} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
 
 		switch (playerDisplayName) {
 			case process.env["VRC_ACC_NAME_6"]:
-				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selfLog} Switching InviteUser target to ${playerDisplayName}`) }
+				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflog} Switching InviteUser target to ${playerDisplayName}`) }
 				currentAccountInUse = { name: process.env["VRC_ACC_NAME_6"], id: process.env["VRC_ACC_ID_6"] }
 				break;
 			case process.env["VRC_ACC_NAME_4"]:
-				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selfLog} Switching InviteUser target to ${playerDisplayName}`) }
+				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflog} Switching InviteUser target to ${playerDisplayName}`) }
 				currentAccountInUse = { name: process.env["VRC_ACC_NAME_4"], id: process.env["VRC_ACC_ID_4"] }
 				break;
 			case process.env["VRC_ACC_NAME_7"]:
-				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selfLog} Switching InviteUser target to ${playerDisplayName}`) }
+				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflog} Switching InviteUser target to ${playerDisplayName}`) }
 				currentAccountInUse = { name: process.env["VRC_ACC_NAME_7"], id: process.env["VRC_ACC_ID_7"] }
 				break;
 			case process.env["VRC_ACC_NAME_3"]:
-				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selfLog} Switching InviteUser target to ${playerDisplayName}`) }
+				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflog} Switching InviteUser target to ${playerDisplayName}`) }
 				currentAccountInUse = { name: process.env["VRC_ACC_NAME_3"], id: process.env["VRC_ACC_ID_3"] }
 				break;
 			case process.env["VRC_ACC_NAME_5"]:
-				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selfLog} Switching InviteUser target to ${playerDisplayName}`) }
+				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflog} Switching InviteUser target to ${playerDisplayName}`) }
 				currentAccountInUse = { name: process.env["VRC_ACC_NAME_5"], id: process.env["VRC_ACC_ID_5"] }
 				break;
 			case process.env["VRC_ACC_NAME_2"]:
-				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selfLog} Switching InviteUser target to ${playerDisplayName}`) }
+				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflog} Switching InviteUser target to ${playerDisplayName}`) }
 				currentAccountInUse = { name: process.env["VRC_ACC_NAME_2"], id: process.env["VRC_ACC_ID_2"] }
 				break;
 			case process.env["VRC_ACC_NAME_1"]:
-				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selfLog} Switching InviteUser target to ${playerDisplayName}`) }
+				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflog} Switching InviteUser target to ${playerDisplayName}`) }
 				currentAccountInUse = { name: process.env["VRC_ACC_NAME_1"], id: process.env["VRC_ACC_ID_1"] }
 				break;
 			default:
@@ -645,7 +692,7 @@ function eventPlayerJoin(logOutputLine) {
 		try {
 			playersInstanceObject[pioIndex].id = playerID.replace(/\(/, '').replace(/\)/, '')
 		} catch (error) {
-			console.log(`${loglv().hey}${selfLog} playerTracker Object got UserID before PlayerName - ${error}`)
+			console.log(`${loglv().hey}${selflog} playerTracker Object got UserID before PlayerName - ${error}`)
 			playersInstanceObject.push({ 'name': playerDisplayName, 'id': playerID.replace(/\(/, '').replace(/\)/, '') })
 		}
 	}
@@ -658,7 +705,7 @@ function eventPlayerLeft(logOutputLine) {
 		// var playerID = /(?:\([0-z]{10}\))|(?:\(usr_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}\))/.exec(playerDisplayName)[0]
 
 		playerDisplayName = playerDisplayName.replace(/ \(usr_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}\)/, '').replace(/ \([0-z]{10}\)/, '')
-		console.log(`${loglv().log}${selfLog} Player Left: ` + playerDisplayName)
+		console.log(`${loglv().log}${selflog} Player Left: ` + playerDisplayName)
 		//oscChatBox(`~${playerDisplayName} Left`)
 
 		playersInInstance = playersInInstance.filter(name => name != playerDisplayName)
@@ -667,21 +714,22 @@ function eventPlayerLeft(logOutputLine) {
 		oscSend('/avatar/parameters/log/player_count', playersInInstance.length > 80 ? 80 : playersInInstance.length)
 		oscSend('/avatar/parameters/log/player_max', playerHardLimit > 80 ? 80 : playerHardLimit)
 		oscSend('/avatar/parameters/log/player_ratio', parseFloat(playerRatio))
-		console.log(`${loglv().log}${selfLog} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
+		console.log(`${loglv().log}${selflog} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
 		// logEmitter.emit('playerLeft', playerDisplayName, playerID, playersInInstance)
 
 		if (playerDisplayName == getCurrentAccountInUse().name) {
 			clearTimeout(worldHopTimeout)
 			cooldownUrl = true
 			if (worldID_Closed == true) {
-				if( lastSetUserStatus != `Exploring World Queue`){
+				if (lastSetUserStatus != `Exploring World Queue`) {
 					lastSetUserStatus = ``
 					logEmitter.emit('setstatus', '')
 				}
 				worldID_Closed = false
 			}
 			oscSend('/avatar/parameters/log/instance_closed', false)
-			let buildLog = `${loglv().log}${selfLog}`
+			tonAvgStartWait = []
+			let buildLog = `${loglv().log}${selflog}`
 			if (ttvFetchFrom == 1 && urlType == 'twitch') {
 				buildLog += ` Resetting Twitch target channel`
 				switchChannel(process.env["VRC_ACC_NAME_1"])
@@ -701,22 +749,22 @@ function eventPlayerAvatarSwitch(logOutputLine) {
 	let playerswitching = logOutputLine.split(`Switching `)[1].split(`to avatar `)[0].trim()
 	let avatarswitchedto = logOutputLine.split(`to avatar `)[1].trim()
 
-	console.log(`${loglv().log}${selfLog} [AvatarChange]: ${playerswitching} switching to (${avatarswitchedto})`)
+	console.log(`${loglv().log}${selflog} [AvatarChange]: ${playerswitching} switching to (${avatarswitchedto})`)
 
 }
 
 function eventAssetDownload(logOutputLine) {
 	var assetbundlelog = logOutputLine.split(`[AssetBundleDownloadManager] `)[1]
-	// console.log(`${loglv().log}${selfLog} [AssetBundleDownloadManager]: ${assetbundlelog}`)
+	// console.log(`${loglv().log}${selflog} [AssetBundleDownloadManager]: ${assetbundlelog}`)
 
 	if (assetbundlelog.includes('Unpacking Avatar')) {
-		console.log(`${loglv().log}${selfLog} [AssetBundle]: ${assetbundlelog}`)
+		console.log(`${loglv().log}${selflog} [AssetBundle]: ${assetbundlelog}`)
 	}
 
 	if (assetbundlelog.includes('Starting download of')) {
 		let dlqueue = parseInt(logOutputLine.split(', ')[1].split(' ')[0].trim())
 		if (dlqueue >= 1) {
-			console.log(`${loglv().log}${selfLog} [AssetBundle]: Download Queue: ${dlqueue}`)
+			console.log(`${loglv().log}${selflog} [AssetBundle]: Download Queue: ${dlqueue}`)
 			// oscChatBox(`~Loading ${dlqueue} avatars`, dlqueue == 1 ? 5 : undefined)
 		}
 	}
@@ -732,24 +780,24 @@ function eventAssetDownload(logOutputLine) {
 
 var cooldownUrl = false
 function videoUrlResolver(videourl) {
-	if (lastVideoURL === videourl) { console.log(`${loglv().log}${selfLog} Skipping url, already been displayed.`); return }
-	if (seenVideoURLs.includes(videourl)) { console.log(`${loglv().log}${selfLog} Skipping url, is in seen list.`); return }
-	if (videourl.includes('media.cdn.furality')) { console.log(`${loglv().log}${selfLog} Skipping url, Furality Content network.`); return }
+	if (lastVideoURL === videourl) { console.log(`${loglv().log}${selflog} Skipping url, already been displayed.`); return }
+	if (seenVideoURLs.includes(videourl)) { console.log(`${loglv().log}${selflog} Skipping url, is in seen list.`); return }
+	if (videourl.includes('media.cdn.furality')) { console.log(`${loglv().log}${selflog} Skipping url, Furality Content network.`); return }
 	/*
-	console.log(`${loglv().debug}${selfLog}\n	OLD= ${lastVideoURL}\n	NEW= ${videourl}`)
-	console.log(`${loglv().debug}${selfLog} IS EQUAL? ${lastVideoURL === videourl}`)
-	console.log(`${loglv().debug}${selfLog} Stringifiy ${JSON.stringify(videourl)}`)
+	console.log(`${loglv().debug}${selflog}\n	OLD= ${lastVideoURL}\n	NEW= ${videourl}`)
+	console.log(`${loglv().debug}${selflog} IS EQUAL? ${lastVideoURL === videourl}`)
+	console.log(`${loglv().debug}${selflog} Stringifiy ${JSON.stringify(videourl)}`)
 	*/
 	lastVideoURL = videourl
 	seenVideoURLs.push(videourl)
 
-	if (cooldownUrl == true) { console.log(`${loglv().log}${selfLog} Skipping url, forcing Ratelimit`); return }
+	if (cooldownUrl == true) { console.log(`${loglv().log}${selflog} Skipping url, forcing Ratelimit`); return }
 
 	cooldownUrl = true
 	setTimeout(() => { cooldownUrl = false }, 5000);
 
 	//	--- Print Video URL ---
-	console.log(`${loglv().log}${selfLog} Video URL: ${videourl}`)
+	console.log(`${loglv().log}${selflog} Video URL: ${videourl}`)
 	if (ChatVideoURL == true) { oscChatBox(`~VideoURL:\v${videourl}`, 5) }
 
 	//	---	Twitch Channel URL Resolver	---
@@ -757,7 +805,7 @@ function videoUrlResolver(videourl) {
 		//oscSend('/avatar/parameters/ttvEnabled', 1 )
 		if (ttvFetchFrom == 1) { switchChannel(videourl.split('twitch.tv/')[1]) }
 		if (urlType != 'twitch') {
-			console.log(`${loglv().log}${selfLog} Video URL Type set to "Twitch"`)
+			console.log(`${loglv().log}${selflog} Video URL Type set to "Twitch"`)
 			urlType = 'twitch'
 		}
 	}
@@ -766,7 +814,7 @@ function videoUrlResolver(videourl) {
 	if (videourl.includes('hyperbeam.com') && playersInInstance.includes('Chriin')) {
 		if (ttvFetchFrom == 1) { switchChannel('sirlarr') }
 		if (urlType != 'twitch') {
-			console.log(`${loglv().log}${selfLog} Video URL Type set to "Twitch"`)
+			console.log(`${loglv().log}${selflog} Video URL Type set to "Twitch"`)
 			urlType = 'twitch'
 		}
 	}
@@ -776,7 +824,7 @@ function videoUrlResolver(videourl) {
 	// if( videourl.includes('clients.your-server.de/video/redir-search/') ){
 	// 	let songtitle = videourl.split('redir-search/')[1].replace(/\%20/g,' ').replace(/\%21/g,'!').replace(/\%23/g,'#').replace(/\%24/g,'$').replace(/\%26/g,'&').replace(/\%27/g,`'`).replace(/\%28/g,'(').replace(/\%29/g,')').replace(/\%2A/g,'*').replace(/\%2B/g,'+').replace(/\%2C/g,',').replace(/\%2F/g,'/').replace(/\%3A/g,':').replace(/\%3B/g,';').replace(/\%3D/g,'=').replace(/\%3F/g,'?').replace(/\%40/g,'@').replace(/\%5B/g,'[').replace(/\%5D/g,']')
 	// 	setTimeout(()=>{
-	// 		console.log(`${loglv().log}${selfLog} Song Title: ${songtitle}`)
+	// 		console.log(`${loglv().log}${selflog} Song Title: ${songtitle}`)
 	// 		if( ChatVideoTitle == true ){ oscChatBox( `~SongTitle:\v`+songtitle ) }
 	// 	},2000)
 	// }
@@ -789,25 +837,25 @@ function videoUrlResolver(videourl) {
 	}
 
 	var isValidateYTurl = ytdl.validateURL(videourl)
-	//console.log(`${loglv().debug}${selfLog} yt-dl is validate url? ${isValidateYTurl}`)
+	//console.log(`${loglv().debug}${selflog} yt-dl is validate url? ${isValidateYTurl}`)
 
 	if (isValidateYTurl == true) {
 		//if( ttvAlwaysRun == false ){ oscSend('/avatar/parameters/ttvEnabled', 0 ) }
 
 		if (urlType != 'youtube') {
-			console.log(`${loglv().log}${selfLog} Video URL Type set to "Youtube"`)
+			console.log(`${loglv().log}${selflog} Video URL Type set to "Youtube"`)
 			urlType = 'youtube'
 			if (ttvFetchFrom == 1) { switchChannel(process.env["VRC_ACC_NAME_1"]) }
 		}
 		ytdl.getBasicInfo(videourl)
 			.then((data) => {
 				setTimeout(() => {
-					console.log(`${loglv().log}${selfLog} Video Title: ${data.videoDetails.title}`)
+					console.log(`${loglv().log}${selflog} Video Title: ${data.videoDetails.title}`)
 					if (ChatVideoTitle == true) { oscChatBox(`~VideoTitle:\v` + data.videoDetails.title, 2) }
 				}, 2000)
 			})
 			.catch((err) => {
-				console.log(`${loglv().warn}${selfLog} Youtube-dl: ${err}`)
+				console.log(`${loglv().warn}${selflog} Youtube-dl: ${err}`)
 				if (ChatVideoURL == true) { oscChatBox(`~${err}`, 2) }
 			})
 	}
@@ -820,8 +868,8 @@ function videoUrlResolver(videourl) {
 	// 		logEmitter.emit('moviename', movname.replace(/(\d{4}$)/, "($1)"))
 
 	// 		setTimeout(() => {
-	// 			console.log(`${loglv().log}${selfLog} Movie Title: ${movname}`)
-	// 			console.log(`${loglv().debug}${selfLog} Movie URL: ${res.url}`)
+	// 			console.log(`${loglv().log}${selflog} Movie Title: ${movname}`)
+	// 			console.log(`${loglv().debug}${selflog} Movie URL: ${res.url}`)
 
 	// 			if (ChatVideoTitle == true) { oscChatBox(`~Movie Title:\v` + movname.replace(/(\d{4}$)/, "($1)"), 5) }
 	// 		}, 2000)
@@ -852,9 +900,9 @@ function worldDownloadProgress(dlduration, dlprogress) {
 	} else {
 		dlETA = dlETA + ' seconds';
 	}
-	console.log(`${loglv().log}${selfLog} World Download ETA ${dlETA}`);
+	console.log(`${loglv().log}${selflog} World Download ETA ${dlETA}`);
 	say.speak(`E T A ${dlETA}`, 'Microsoft Zira Desktop', 1.0, (err) => {
-		if (err) { return console.error(`${loglv().warn}${selfLog} say.js error: ` + err) }
+		if (err) { return console.error(`${loglv().warn}${selflog} say.js error: ` + err) }
 		setTimeout(() => {
 			isTalking = false
 		}, 1000)

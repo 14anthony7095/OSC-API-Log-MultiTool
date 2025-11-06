@@ -1,7 +1,7 @@
 var config = require('./config.js')
 var oscm = require('./oscManager.js');
-let selfLog = `\x1b[0m(AutoClicker\x1b[0m)`
-console.log(`${config.ll(2)}${selfLog} Loaded`)
+let selflog = `\x1b[0m(AutoClicker\x1b[0m)`
+console.log(`${config.ll(2)}${selflog} Loaded`)
 
 var autoClock;
 function click(){

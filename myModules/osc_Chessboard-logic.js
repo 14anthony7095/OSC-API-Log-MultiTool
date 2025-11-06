@@ -1,6 +1,6 @@
 const { cmdEmitter } = require('./input.js');
 const { OSCDataBurst, oscEmitter } = require('./Interface_osc_v1.js');
-let selfLog = `\x1b[0m[\x1b[33mChess\x1b[0m]`
+let selflog = `\x1b[0m[\x1b[33mChess\x1b[0m]`
 
 
 // Global Functions
@@ -140,7 +140,7 @@ class BoardManager {
 		if( squareID >=0 && squareID <= 64 && this.pieceLocation[ itemName ] != squareID ){
 			// Manage Data
 			console.log(`
-${selfLog} [Data] Moving ${itemName} from space ${ this.pieceLocation[itemName] } -> ${squareID}`)
+${selflog} [Data] Moving ${itemName} from space ${ this.pieceLocation[itemName] } -> ${squareID}`)
 				// Slot
 					// Remove
 			this.squares[ this.pieceLocation[itemName] ] = this.squares[ this.pieceLocation[itemName] ].filter((i)=>{return i !== itemName})
@@ -150,11 +150,11 @@ ${selfLog} [Data] Moving ${itemName} from space ${ this.pieceLocation[itemName] 
 			this.pieceLocation[itemName] = squareID
 			
 			// Manage Visual
-			console.log(`${selfLog} [Avatar] Visually moving ${itemName} to space ${squareID}`)
+			console.log(`${selflog} [Avatar] Visually moving ${itemName} to space ${squareID}`)
 			OSCDataBurst( avatarBoneIDs[itemName], squareID / 64 )
 		}else{
 			console.log(`
-${selfLog} [Data] ${itemName} is already in space ${squareID}`)
+${selflog} [Data] ${itemName} is already in space ${squareID}`)
 		}
 
 	}
@@ -169,7 +169,7 @@ ${selfLog} [Data] ${itemName} is already in space ${squareID}`)
 	clear() {
 
 		// Remove from Data
-		console.log(`${selfLog} Square Data cleared and reset to default`)
+		console.log(`${selflog} Square Data cleared and reset to default`)
 		Object.keys(this.squares).forEach((squareID)=>{
 			if(squareID==0){
 				this.squares[0] = ["wBishop1","wBishop2","wBishop3","wKing",
@@ -192,7 +192,7 @@ ${selfLog} [Data] ${itemName} is already in space ${squareID}`)
 		})
 		
 		// Remove from Avatar
-		console.log(`${selfLog} Visually removing all Pieces from board`)
+		console.log(`${selflog} Visually removing all Pieces from board`)
 		Object.keys(avatarBoneIDs).forEach(boneID=>{
 			OSCDataBurst(avatarBoneIDs[boneID], 0)
 		})
@@ -200,7 +200,7 @@ ${selfLog} [Data] ${itemName} is already in space ${squareID}`)
 	}
 
 	start() {
-		console.log(`${selfLog} Moving starting Pieces to their starting positions`)
+		console.log(`${selflog} Moving starting Pieces to their starting positions`)
 		this.moveAction("wKing", XYToSpaceID(5,8) )
 		this.moveAction("wQueen1", XYToSpaceID(4,8) )
 		this.moveAction("wBishop1", XYToSpaceID(3,8) )
@@ -248,7 +248,7 @@ const chessBoard = new BoardManager();
 
 
 cmdEmitter.on('cmd',(cmd,args,raw)=>{
-	if( cmd == 'help' ){ console.log(`${selfLog}
+	if( cmd == 'help' ){ console.log(`${selflog}
 Places all Pieces at there starting position
 -	chess start
 Remove all Pieces and Helper Items

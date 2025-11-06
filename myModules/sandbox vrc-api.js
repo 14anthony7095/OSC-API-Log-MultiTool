@@ -29,33 +29,62 @@ const vrchat = new VRChat({
     }
 });
 
-
+var worldQueueTxt = './worldListBuilder.txt'
 async function main() {
     const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
     console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
 
-    let { data: fav1 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: 'random', offset: 0 } })
-    fav1.forEach(w=>{
-        console.log(w)
-    })
+
     // manualCall()
 
-    // vrchat.getOwnAvatar({'body':{},'query':{''},path:{'userId'}})
-    // var targetGroupLogID_NHI = 'grp_3473d54b-8e10-4752-9548-d77a092051a4' // Nanachi's Hollow Inn
-    // const { data: logOutput_NHI } = await vrchat.getGroupAuditLogs({ path: { groupId: targetGroupLogID_NHI }, query: { n: 100, offset: 0 } })
-    // console.log(logOutput_NHI)
+    var worldData = []
+    var searchTags = ['factory', 'automation', 'factorio', 'shapez', 'satisfactory', 'opus magnum', 'simulation', 'automate', 'factory simulation', 'factory automation']
 
-    // vrchat.uploadPrint({'body':{''}})
+    searchTags.forEach((tag, index, arr) => {
+        setTimeout(async () => {
+            console.log(`searching ${tag} tags`)
+            let tagString = ''
+            tag.split(' ').forEach((spaced) => {
+                tagString == '' ? tagString += `author_tag_${spaced}` : tagString += `,author_tag_${spaced}`
+            })
+            let worldData1 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': tagString } })
 
-    // let { data: gfg } = await vrchat.getFavoriteGroups({ 'query':{ 'n':100, 'offset':0, 'ownerId':'usr_bea83aa3-dc28-4a08-8a55-5a5dabb66bc3' } })
-    // console.log(gfg)
+            console.log(`searching ${tag}`)
+            let worldData2 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'search': tag } })
 
-    // let getnots = await vrchat.getNotifications(); console.log(getnots)
-    // let notifRes = await vrchat.getNotification({ 'path':{ 'notificationId':'not_cf3adb23-de16-4c3a-a57c-ab7a9aa32aeb' } }); console.log(notifRes)
+            console.log(`searching ${tag} tags in Community Labs`)
+            tagString = 'system_labs,'
+            tag.split(' ').forEach((spaced) => {
+                tagString == 'system_labs,' ? tagString += `author_tag_${spaced}` : tagString += `,author_tag_${spaced}`
+            })
+            let worldData3 = await vrchat.searchWorlds({ 'query': { 'sort': 'labsPublicationDate', 'n': 100, 'tag': tagString } })
+
+            console.log(`searching ${tag} in Community Labs`)
+            let worldData4 = await vrchat.searchWorlds({ 'query': { 'sort': 'labsPublicationDate', 'n': 100, 'search': tag } })
+
+            worldData = worldData1.data.concat(worldData2.data, worldData3.data, worldData4.data)
+
+            let worldlist = ''
+            worldData.forEach((w, index, arr) => {
+                console.log(`(${index + 1}/${arr.length}) Added ${w.name} to queue`)
+                // console.log(`${loglv().log}${selflog} (${index + 1}/${arr.length}) ${w.id}`)
+                index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
+            })
+            fs.appendFile(worldQueueTxt, worldlist + `\r\n`, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
+        }, 10_000 * index);
+    })
+
+    // 'search':'factory'
+
+    // author_tag_
+
+    // 'tag': 'system_labs, '
+    // 'sort':'labsPublicationDate'
 
 
-    // let {data: avatarData} = await vrchat.getAvatar({ 'path':{ 'avatarId':'avtr_0c97e918-23d0-4934-b364-5fd28fb10236' } })
-    // console.log( avatarData.performance.standalonewindows )
+
+
+
 
 
 }
@@ -70,15 +99,15 @@ async function manualCall() {
     auth.ok == true ? console.log(auth.token) : console.log(`Couldn't return authcookie for whatever reason..`)
     const vrcapihttp = `https://vrchat.com/api/1/`
 
-    var request = await fetch(vrcapihttp+"inventory/inv_c74dca5d-b15c-4693-99f6-b7b8a6ff12dd/equip",
+    var request = await fetch(vrcapihttp + "inventory/inv_c74dca5d-b15c-4693-99f6-b7b8a6ff12dd/equip",
         {
             method: 'PUT',
             headers: {
                 'User-Agent': '14anthony7095/Curl',
-                'Cookie': 'auth='+auth.token,
+                'Cookie': 'auth=' + auth.token,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({"equipSlot":"portal"})
+            body: JSON.stringify({ "equipSlot": "portal" })
         })
     var data = await request.json()
     console.log(data)
