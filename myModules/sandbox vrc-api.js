@@ -34,10 +34,35 @@ async function main() {
     const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
     console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
 
+    var props = [
+        "prop_89be973f-9e1a-4260-8deb-211e32da8196",
+        "prop_829ba6f6-b837-49d9-b9a9-056b82103b58",
+        "prop_5c54ccdb-cafb-461b-b07f-91d189fc7b72",
+        "prop_79789b58-e020-4b2e-aa25-ba21a1938eec",
+        "prop_49fec698-f0cb-475c-9bc3-8f24e1bcc4eb",
+        "prop_fb4e6b9e-ddd2-464c-8e44-cdba7f77eb5d",
+        "prop_213156fd-eb54-4c2c-8e12-cc840581ec73",
+        "prop_0b5e9595-e9e6-4f11-bd59-5ae6abe34f67",
+        "prop_57484479-1f1b-4a9c-986b-b0c86e1c0dda",
+        "prop_dae2be6b-9c3b-4783-948b-4ff46d3a14e5",
+        "prop_0fd9deb0-6ca8-4c69-acbe-17035f93792b",
+        "prop_e9d0bc1f-f7fd-4886-abec-d299745b2264",
+        "prop_3e81ff20-b64a-4ecb-9429-bd076a96fcf8",
+        "prop_81ce8d80-72d8-4f60-9d6b-689a8340f55d"
+    ]
+    var propsDataBase = 'name,description,id,authorName,authorId,created_at,updated_at,version,releaseStatus,itemTemplate,maxCountPerUser,scaleWithAvatar,spawnType,visibilityType,worldPlacementMask'
+
+    for (const item in props) {
+        console.log(props[item])
+        let propData = await vrchat.getProp({ 'path': { 'propId': props[item] } })
+        propsDataBase += `\n"${propData.data.name}","${propData.data.description.replace(`\n`,'')}",${propData.data.id},${propData.data.authorName},${propData.data.authorId},${propData.data._created_at},${propData.data._updated_at},${propData.data.version},${propData.data.releaseStatus},${propData.data.itemTemplate},${propData.data.maxCountPerUser},${propData.data.scaleWithAvatar},${propData.data.spawnType},${propData.data.visibilityType},${propData.data.worldPlacementMask}`
+    }
+
+    fs.writeFile('datasets/prop_data.csv', propsDataBase, 'utf-8', (err) => { if (err) { console.log(err) } })
 
     // manualCall()
 
-    var worldData = []
+    /* var worldData = []
     var searchTags = ['factory', 'automation', 'factorio', 'shapez', 'satisfactory', 'opus magnum', 'simulation', 'automate', 'factory simulation', 'factory automation']
 
     searchTags.forEach((tag, index, arr) => {
@@ -72,7 +97,7 @@ async function main() {
             })
             fs.appendFile(worldQueueTxt, worldlist + `\r\n`, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
         }, 10_000 * index);
-    })
+    }) */
 
     // 'search':'factory'
 

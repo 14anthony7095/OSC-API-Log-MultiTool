@@ -51,10 +51,17 @@ var messageQueue = []
 
 function hookSelector(grpID, embedMessage) {
     switch (grpID) {
-        case 'grp_10bb5d71-aa5e-43d8-9dd2-3c8cebe17152':
+        case 'grp_75bcbc95-361e-4d90-9752-5a2d7bc270a3':
+            hook_Self.setUsername('Leash Children')
+            hook_Self.setAvatar('https://cdn.discordapp.com/attachments/1118629754178904084/1442569079331356702/image.png')
             hook_Self.send(embedMessage).catch((err) => { console.log(err) })
             break;
-        case 'grp_e483cc04-a610-471f-90eb-ec4eda8420be':
+        case 'grp_cdb7c49d-9a90-4b17-8137-ff17bc624c6c':
+            hook_Self.setUsername('Weebs N Furries')
+            hook_Self.setAvatar('https://cdn.discordapp.com/attachments/1118629754178904084/1442569761857998938/image.png')
+            hook_Self.send(embedMessage).catch((err) => { console.log(err) })
+            break;
+       case 'grp_e483cc04-a610-471f-90eb-ec4eda8420be':
             hook_NoV.send(embedMessage).catch((err) => { console.log(err) })
             break;
         case 'grp_3473d54b-8e10-4752-9548-d77a092051a4':

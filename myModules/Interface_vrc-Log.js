@@ -7,7 +7,7 @@
 */
 // Libraries
 var { loglv, printAllLogs, ChatVideoURL, ChatVideoTitle, ttvAlwaysRun, ttvFetchFrom, ChatImageStringURL, ChatDownSpeed, logStickers, downloadStickers } = require('./config.js')
-var { oscSend, oscChatBox, avatarId, oscEmitter } = require('./Interface_osc_v1.js')
+var { oscSend, oscChatBox, OSCDataBurst, oscEmitter } = require('./Interface_osc_v1.js')
 var { switchChannel, joinChannel, leaveChannel } = require('./Interface_twitch.js');
 var fs = require('fs')
 var ytdl = require('ytdl-core');
@@ -283,7 +283,11 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 		if (line.includes(`Verified Round End`)) {
 			console.log(`${loglv().log}${selflog} [TON] Intermission.. Ready to start next round.`)
 			tonRoundReadyTime = Date.now()
-			tonAvgStartWait.length > 1 ? oscChatBox(`~Round ready to start\vAvg. wait time: ${new Date(average(tonAvgStartWait)).toISOString().substring(11, 19)}`, 10) : oscChatBox(`~Round ready to start`, 10)
+			let avgStartDisplay = new Date(average(tonAvgStartWait)).toISOString()
+			
+			OSCDataBurst(12, parseFloat( ( parseInt(avgStartDisplay.substring(14, 16)) * 60 + parseInt(avgStartDisplay.substring(17, 19)) ) / 255 ) )
+			
+			tonAvgStartWait.length > 1 ? oscChatBox(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}`, 12) : oscChatBox(`~Round ready to start`, 10)
 		}
 		if (line.includes(`Everything recieved, looks good`)) {
 			console.log(`${loglv().log}${selflog} [TON] Round Starting.`)
@@ -361,19 +365,29 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 	}
 }
 
+function queueInstanceDataBurst() {
+	OSCDataBurst(7, parseFloat((playersInInstance.length > 80 ? 80 : playersInInstance.length).toString().padStart(2, '0')[0] == 0 ? 10 : (playersInInstance.length > 80 ? 80 : playersInInstance.length).toString().padStart(2, '0')[0]) / 10)
+	OSCDataBurst(8, parseFloat((playersInInstance.length > 80 ? 80 : playersInInstance.length).toString().padStart(2, '0')[1]) / 10)
+	OSCDataBurst(9, parseFloat((playerHardLimit > 80 ? 80 : playerHardLimit) < 10 ? (playerHardLimit > 80 ? 80 : playerHardLimit) : (playerHardLimit > 80 ? 80 : playerHardLimit).toString()[0]) / 10)
+	OSCDataBurst(10, parseFloat((playerHardLimit > 80 ? 80 : playerHardLimit) < 10 ? 10 : (playerHardLimit > 80 ? 80 : playerHardLimit).toString()[1]) / 10)
+	OSCDataBurst(11, parseFloat(playerRatio))
+}
+
 oscEmitter.on('avatar', (avtrID) => {
 	if (['avtr_305ddd5d-d1f9-4adb-a025-50c2f1a9d219',
 		`avtr_5c866609-f49a-4867-ac74-5dab03d5d713`,
 		`avtr_0c97e918-23d0-4934-b364-5fd28fb10236`,
-		'avtr_6b25124e-e141-4df4-ad27-22766608e5dc'
+		'avtr_6b25124e-e141-4df4-ad27-22766608e5dc',
 	].includes(avtrID)) {
-		oscSend('/avatar/parameters/log/player_count', playersInInstance.length > 80 ? 80 : playersInInstance.length)
-		oscSend('/avatar/parameters/log/player_max', playerHardLimit > 80 ? 80 : playerHardLimit)
-		oscSend('/avatar/parameters/log/player_ratio', parseFloat(playerRatio))
+		queueInstanceDataBurst()
 		oscSend('/avatar/parameters/log/instance_closed', worldID_Closed)
 		applyGroupLogo(groupID)
 	}
 });
+
+setInterval(()=>{
+	queueInstanceDataBurst()
+},10_000)
 
 var movieShowNameLast = ''
 function eventPopcornPalace(json) {
@@ -389,7 +403,7 @@ function eventPopcornPalace(json) {
 	//     "looping": false
 	// }
 	let movieShowName = ''
-	if (jsondata.videoName != '' && Date.now() > (worldjointimestamp + 300000)) {
+	if (jsondata.videoName != '' && Date.now() > (worldjointimestamp + 60000)) {
 		if (jsondata.videoName.includes('One Piece')) {
 			movieShowName = jsondata.videoName.replace('- S1E', 'ep.').split(' -')[0]
 		} else {
@@ -488,18 +502,20 @@ function eventGameClose() {
 }
 
 var vrcpropcount = {
-	"Names": {},
-	"Counts": {}
+	'prop_id': {
+		"Name": 'sample',
+		"Count": 999
+	}
 }
 fs.readFile('./datasets/propcounts.json', 'utf8', (err, data) => { vrcpropcount = JSON.parse(data) })
 function eventPropSpawned(propID) {
 	// console.log(`${loglv().debug}${selflog} Item spawned: ${propID}`)
-	if (!vrcpropcount.Counts[propID]) {
+	if (!vrcpropcount[propID]) {
 		console.log(`${loglv().hey}${selflog} Unseen Item spawned: ${propID}`)
 		logEmitter.emit('propNameRequest', propID, vrcpropcount)
 	} else {
-		vrcpropcount.Counts[propID] = vrcpropcount.Counts[propID] + 1
-		console.log(`${loglv().log}${selflog} Item spawned: ${vrcpropcount.Names[propID]} - ${vrcpropcount.Counts[propID] - 1} -> ${vrcpropcount.Counts[propID]}`)
+		vrcpropcount[propID].count = vrcpropcount[propID].count + 1
+		console.log(`${loglv().log}${selflog} Item spawned: ${vrcpropcount[propID].name} - ${vrcpropcount[propID].count - 1} -> ${vrcpropcount[propID].count}`)
 		fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => { if (err) { console.log(err); return } })
 	}
 }
@@ -617,6 +633,7 @@ function eventReceivedNotification(line) {
 	// message: "This is a generated invite to A Simple Fishing World">
 }
 
+
 var currentAccountInUse = { name: process.env["VRC_ACC_NAME_1"], id: process.env["VRC_ACC_ID_1"] }
 function getCurrentAccountInUse() { return currentAccountInUse }; exports.getCurrentAccountInUse = getCurrentAccountInUse;
 function eventPlayerInitialized(logOutputLine) {
@@ -639,9 +656,11 @@ function eventPlayerInitialized(logOutputLine) {
 		playersInstanceObject.push({ 'name': playerDisplayName })
 
 		playerRatio = playersInInstance.length / playerHardLimit
-		oscSend('/avatar/parameters/log/player_count', playersInInstance.length > 80 ? 80 : playersInInstance.length)
-		oscSend('/avatar/parameters/log/player_max', playerHardLimit > 80 ? 80 : playerHardLimit)
-		oscSend('/avatar/parameters/log/player_ratio', parseFloat(playerRatio))
+
+		if ( Date.now() > (worldjointimestamp + 10000) ) {
+			queueInstanceDataBurst()
+		}
+
 		console.log(`${loglv().log}${selflog} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
 
 		switch (playerDisplayName) {
@@ -711,9 +730,9 @@ function eventPlayerLeft(logOutputLine) {
 		playersInInstance = playersInInstance.filter(name => name != playerDisplayName)
 		playersInstanceObject = playersInstanceObject.filter(playersInstanceObject => playersInstanceObject.name !== playerDisplayName)
 		playerRatio = playersInInstance.length / playerHardLimit
-		oscSend('/avatar/parameters/log/player_count', playersInInstance.length > 80 ? 80 : playersInInstance.length)
-		oscSend('/avatar/parameters/log/player_max', playerHardLimit > 80 ? 80 : playerHardLimit)
-		oscSend('/avatar/parameters/log/player_ratio', parseFloat(playerRatio))
+
+		queueInstanceDataBurst()
+
 		console.log(`${loglv().log}${selflog} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
 		// logEmitter.emit('playerLeft', playerDisplayName, playerID, playersInInstance)
 

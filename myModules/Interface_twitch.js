@@ -1,6 +1,6 @@
 
 var { loglv, msgVerbose, twitchChannels, ttvAlwaysRun, useChatBox, ttvChatBox, ttvFetchFrom, saltyMode, ttvFetchFrom } = require('./config.js')
-const { oscReady, oscSend, OSCDataBurst, oscChatBox, oscEmitter, oscChatTyping } = require('./Interface_osc_v1.js');
+const { oscReady, oscSend, oscChatBox, oscEmitter, oscChatTyping } = require('./Interface_osc_v1.js');
 
 const tmi = require('tmi.js');
 const say = require('say');
@@ -95,7 +95,6 @@ function start() {
 	}
 	oscSend('/avatar/parameters/ttvIsTalking', false)
 	oscSend('/avatar/parameters/ToN_IsStarted', false)
-	OSCDataBurst(8, parseFloat(1), parseFloat(1), parseFloat(1))
 	oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156) )
 	oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901) )
 	oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137) )
@@ -123,7 +122,6 @@ function switchChannel(newChannel) {
 			isActive = true
 			isttvRunning = true
 			oscSend('/avatar/parameters/ttvIsTalking', false)
-			OSCDataBurst(8, parseFloat(1), parseFloat(1), parseFloat(1))
 			oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156) )
 			oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901) )
 			oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137) )
@@ -180,7 +178,6 @@ function rejoinChannel() {
 		isttvRunning = true
 		oscSend('/avatar/parameters/ttvIsTalking', false)
 		oscSend('/avatar/parameters/ToN_IsStarted', false)
-		OSCDataBurst(8, parseFloat(1), parseFloat(1), parseFloat(1))
 		oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156) )
 		oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901) )
 		oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137) )
@@ -195,18 +192,6 @@ function stop() {
 	}
 }
 
-// Color Debug Demo
-/*
-setTimeout(()=>{
-	OSCDataBurst(8, parseFloat(1),parseFloat(0),parseFloat(0))
-	setTimeout(()=>{ OSCDataBurst(8,parseFloat(0),parseFloat(1),parseFloat(0)) },10000)
-	setTimeout(()=>{ OSCDataBurst(8,parseFloat(0),parseFloat(0),parseFloat(1)) },20000)
-	setTimeout(()=>{ OSCDataBurst(8,parseFloat(0),parseFloat(1),parseFloat(1)) },30000)
-	setTimeout(()=>{ OSCDataBurst(8,parseFloat(1),parseFloat(1),parseFloat(0)) },40000)
-	setTimeout(()=>{ OSCDataBurst(8,parseFloat(1),parseFloat(0),parseFloat(1)) },50000)
-	setTimeout(()=>{ OSCDataBurst(8,parseFloat(1),parseFloat(1),parseFloat(1)) },60000)
-},1000)
-*/
 
 if (useChatBox == true) { oscChatTyping(0) }
 function saySpeak() {
@@ -216,7 +201,6 @@ function saySpeak() {
 		oscChatBox(`~${chatBuffer[0].osc.slice(0, 144)}`)
 	}
 
-	OSCDataBurst(8, parseFloat(chatBuffer[0].color.split(',')[0]), parseFloat(chatBuffer[0].color.split(',')[1]), parseFloat(chatBuffer[0].color.split(',')[2]))
 	oscSend('/avatar/parameters/ToN_ColorR', parseFloat(chatBuffer[0].color.split(',')[0]) )
 	oscSend('/avatar/parameters/ToN_ColorG', parseFloat(chatBuffer[0].color.split(',')[1]) )
 	oscSend('/avatar/parameters/ToN_ColorB', parseFloat(chatBuffer[0].color.split(',')[2]) )
@@ -232,7 +216,6 @@ function saySpeak() {
 		chatBuffer.shift()
 		if (msgVerbose == 3) { console.log(`${loglv().debug}${selflog} Messages Left in Buffer: ${chatBuffer.length}`) }
 		oscSend('/avatar/parameters/ttvIsTalking', false)
-		OSCDataBurst(8, parseFloat(1), parseFloat(1), parseFloat(1))
 		oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156) )
 		oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901) )
 		oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137) )

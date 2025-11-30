@@ -15,9 +15,9 @@ var udpPort = new osc.UDPPort({ localAddress: '127.0.0.1', localPort: 9100 })
 const remotePort = 9000
 const { cmdEmitter } = require('./input.js');
 const { playNote } = require('./interface_midi.js')
-const { EventEmitter } = require('events');
 const { PiShock, PiShockAll } = require('./Interface_PS.js');
 const { toUnicode } = require('punycode');
+const { EventEmitter } = require('events');
 const oscEmitter = new EventEmitter();
 exports.oscEmitter = oscEmitter;
 
@@ -178,6 +178,23 @@ const katChars = [` `, `!`, `"`, `#`, `$`, `%`, `&`, `'`, `(`, `)`, `*`, `+`, `,
 
 var isBurstingData = false
 function OSCDataBurst(in_addr, in_dataA) {
+	/*
+	Usage Chart
+	0	Null Space / No Selection
+	1	MCounter: online digits, position 1
+	2	MCounter: online digits, position 2
+	3	MCounter: online digits, position 3
+	4	MCounter: online digits, position 4
+	5	MCounter: online digits, position 5
+	6	MCounter: online digits, position 6
+	7	MCounter: lobby digits, position 1
+	8	MCounter: lobby digits, position 2
+	9	MCounter: lobby digits, position 3
+	10	MCounter: lobby digits, position 4
+	11	MCounter: lobby progress bar
+	12	ToN-Wait-Time: 0 - 4:15 Float
+	13	MCounter: display mode indicator
+	*/
 	//console.log(`${loglv().debug}${selflog} [DataBurst] Adding buffer data ${data1}, ${data2}, ${data3} to Slot ${slot}`)
 	dataBurst.push({ 'addr': in_addr, 'dataA': in_dataA })
 
@@ -191,8 +208,8 @@ function OSCDataBurst(in_addr, in_dataA) {
 function sendOscDataBurst() {
 	//isBurstingData = true
 	// console.log(`${loglv().debug}${selflog} [DataBurst] Sending data ${dataBurst[0].dataA} to Address ${dataBurst[0].addr}`)
-	oscSend(vrcap + 'osc/Addr', dataBurst[0].addr)
-	oscSend(vrcap + 'osc/DataA', dataBurst[0].dataA)
+	oscSend(vrcap + 'oscAddr', dataBurst[0].addr)
+	oscSend(vrcap + 'oscDataA', dataBurst[0].dataA)
 	setTimeout(() => {
 		// console.log(`${loglv().debug}${selflog} Shifting`)
 		dataBurst.shift()
@@ -202,8 +219,8 @@ function sendOscDataBurst() {
 		} else {
 			// console.log(`${loglv().debug}${selflog} [DataBurst] Idling`)
 			isBurstingData = false
-			oscSend(vrcap + 'osc/Addr', 0)
-			oscSend(vrcap + 'osc/DataA', 255)
+			oscSend(vrcap + 'oscAddr', 0)
+			oscSend(vrcap + 'oscDataA', 1)
 		}
 	}, 200)
 }
@@ -331,7 +348,7 @@ udpPort.on("message", function (msg, rinfo) {
 		oscSend(vrcap + `14a/osc/14anthony7095`, true)
 	}
 	if (msg['address'] == vrcap + 'toolGunHolster_Angle') { return }
-	if (logOscIn == true) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args'][0]) }
+	if (logOscIn == true) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
 	// if (msg['address'].includes('/usercamera/')) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
 });
 
@@ -376,11 +393,11 @@ udpPort.on("ready", function () {
 		// require('./Interface_websocket-server.js')
 		// require('./interface_midi.js')
 
-		require('./osc_PingSystem.js') // OSC
+		// require('./osc_PingSystem.js') // OSC
 		require('./osc_Chessboard-logic.js') // OSC
 		require('./Interface_twitch.js') // OSC
 		require('./osc_AfkClock.js') // OSC
-		require('./osc_HeartRate.js') // OSC
+		// require('./osc_HeartRate.js') // OSC
 		require('./osc_AutoClicker.js') // OSC
 		require('./osc_Av3-menu-helper.js') // OSC
 		// require('./osc_32display.js') // OSC

@@ -39,6 +39,9 @@ const say = require('say')
 const { logEmitter, getPlayersInInstance, getPlayersInstanceObject, getCurrentAccountInUse, fetchLogFile, getInstanceGroupID } = require('./Interface_vrc-Log.js');
 const { VRChat } = require("vrchat");
 require('dotenv').config()
+const { EventEmitter } = require('events');
+const apiEmitter = new EventEmitter();
+exports.apiEmitter = apiEmitter;
 
 let selflog = `\x1b[0m[\x1b[33mVRC_API\x1b[0m]`
 console.log(`${loglv().log}${selflog} Loaded`)
@@ -68,6 +71,7 @@ var currentUser;
 var authcookie;
 var worldQueueTxt = './datasets/worldQueue.txt'
 var exploreMode = false
+var explorePrivacyLevel = 0
 fs.readFile('./lastFetchGroupLogs.txt', 'utf8', (err, data) => {
     if (err) { console.log(err); return }
     console.log(`${loglv().debug}${selflog} set last log fetch to ${data}`)
@@ -115,6 +119,7 @@ oscEmitter.on('osc', (address, value) => {
         }
     }
     if (address == `/avatar/parameters/api/explore/stop` && value == true) {
+        apiEmitter.emit('switch', 0)
         if (exploreMode == true) {
             console.log(`${loglv().hey}${selflog} Explore Mode: Disabled - Avatar Trigger`)
             exploreMode = false
@@ -126,6 +131,10 @@ oscEmitter.on('osc', (address, value) => {
         // addLabWorldsToQueue()
         addLabWorldsToLocalQueue()
     }
+    if (address == `/avatar/parameters/api/explore/privacy` && value == 0) { explorePrivacyLevel = 0 }
+    if (address == `/avatar/parameters/api/explore/privacy` && value == 1) { explorePrivacyLevel = 1 }
+    if (address == `/avatar/parameters/api/explore/privacy` && value == 2) { explorePrivacyLevel = 2 }
+    if (address == `/avatar/parameters/api/explore/privacy` && value == 3) { explorePrivacyLevel = 3 }
 
 
     if (address == `/avatar/parameters/api/requestall` && value == true) {
@@ -162,6 +171,7 @@ logEmitter.on('stopworld', (output) => {
     if (exploreMode == true) {
         console.log(`${loglv().hey}${selflog} Explore Mode: Disabled - Quit VRChat`)
         setUserStatus('')
+        apiEmitter.emit('switch', 0)
         exploreMode = false
     }
 })
@@ -192,7 +202,7 @@ async function scanSomnaGroupInstances(ssginID, group_name) {
                 if (!trackedSomnaIns[grpins.instanceId.split('~')[0]]) {
                     trackedSomnaIns[grpins.instanceId.split('~')[0]] = Date.now()
                 }
-                if (grpins.world.capacity == 2) {
+                if (grpins.world.capacity == 2 && (new Date(Date.now() - trackedSomnaIns[grpins.instanceId.split('~')[0]]).toISOString().substring(11, 19)) != '00:00:00') {
                     if (grpins.memberCount != grpins.world.capacity) {
                         sort2join += `${loglv().log}${selflog} ⨽ #${grpins.instanceId.split('~')[0]} - [ ${new Date(Date.now() - trackedSomnaIns[grpins.instanceId.split('~')[0]]).toISOString().substring(11, 19)} ] - ${grpins.world.capacity == 2 ? '✅' : '❌'}${grpins.memberCount == grpins.world.capacity ? '⚠️' : '🆗'} (${grpins.memberCount}/${grpins.world.capacity}) - ${grpins.world.name.slice(0, 51)}\n`
                     } else {
@@ -315,11 +325,12 @@ async function getOnlineWorlds(favgroup = 'worlds1', addMoreWorlds = false) {
         }
     } catch (error) {
         console.log(`${loglv().warn}${selflog} ${error}`)
-        oscSend(`~Could not fetch Favorited-Worlds data`)
+        oscChatBox(`~Could not fetch Favorited-Worlds data`)
     }
 
     console.log(`${loglv().hey}${selflog} Explore Mode: Enabled`)
     setUserStatus(`Exploring World Queue`)
+    apiEmitter.emit('switch', worldsToExplore.length)
     exploreMode = true
 
     inviteOnlineWorlds_Loop(worldsToExplore[0])
@@ -336,8 +347,10 @@ async function inviteOnlineWorlds_Loop(world_id) {
             }
         })
         worldsToExplore.shift()
+        apiEmitter.emit('switch', worldsToExplore.length)
         if (worldsToExplore.length == 0) {
             console.log(`${loglv().hey}${selflog} Explore Mode: Disabled - out of worlds`)
+            apiEmitter.emit('switch', 0)
             exploreMode = false
         }
         if (exploreMode == true) { inviteOnlineWorlds_Loop(worldsToExplore[0]) }
@@ -346,39 +359,84 @@ async function inviteOnlineWorlds_Loop(world_id) {
         console.log(`${loglv().hey}${selflog} World can not fit everyone. Skipping`)
         oscChatBox(`~World can't fit everyone.\vSkipping.`, 5);
         worldsToExplore.shift()
+        apiEmitter.emit('switch', worldsToExplore.length)
         if (worldsToExplore.length == 0) {
             console.log(`${loglv().hey}${selflog} Explore Mode: Disabled - out of worlds`)
+            apiEmitter.emit('switch', 0)
             exploreMode = false
         }
         exploreNextCountDownTimer = setTimeout(() => {
             if (exploreMode == true) { inviteOnlineWorlds_Loop(worldsToExplore[0]) }
         }, 600_000)
     } else {
+        var instanceBody = {}
+        switch (explorePrivacyLevel) {
+            case 0:
+                instanceBody = {
+                    'worldId': world_id,
+                    'type': 'group',
+                    'region': 'use',
+                    'displayName': 'World Hop',
+                    'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
+                    'groupAccessType': 'public',
+                    'queueEnabled': true,
+                    'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
+                }
+                break;
+            case 1:
+                instanceBody = {
+                    'worldId': world_id,
+                    'type': 'group',
+                    'region': 'use',
+                    'displayName': 'World Hop',
+                    'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
+                    'groupAccessType': 'plus',
+                    'queueEnabled': true,
+                    'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
+                }
+                break;
+            case 2:
+                instanceBody = {
+                    'worldId': world_id,
+                    'type': 'private',
+                    'canRequestInvite': true,
+                    'region': 'use',
+                    'displayName': 'World Hop',
+                    'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752',
+                    'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
+                }
+                break;
+            default:
+                instanceBody = {
+                    'worldId': world_id,
+                    'type': 'hidden',
+                    'region': 'use',
+                    'displayName': 'World Hop',
+                    'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752',
+                    'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
+                }
+                break;
+        }
+
         console.log(`${loglv().hey}${selflog} Creating group instance for ${world_id}`)
         vrchat.createInstance({
-            body: {
-                'worldId': world_id,
-                'type': 'group',
-                'region': 'use',
-                'displayName': '14a - World Hop',
-                'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
-                'groupAccessType': 'public',
-                'queueEnabled': true,
-                'closedAt': new Date(Date.now() + 600_000).toISOString()
-            }
+            body: instanceBody
         }).then(created_instance => {
             // `&shortName=${created_instance.data.secureName}`
             startvrc(created_instance.data.location, false)
             console.log(`${loglv().log}${selflog} Auto-Close set for ${created_instance.data.closedAt}.`)
-
             worldsToExplore.shift()
+            apiEmitter.emit('switch', worldsToExplore.length)
             if (worldsToExplore.length == 0) {
                 console.log(`${loglv().hey}${selflog} Explore Mode: Disabled - out of worlds`)
                 exploreMode = false
+                apiEmitter.emit('switch', 0)
             }
             exploreNextCountDownTimer = setTimeout(() => {
                 if (exploreMode == true) { inviteOnlineWorlds_Loop(worldsToExplore[0]) }
             }, 600_000)
+        }).catch((err) => {
+            console.log(`${loglv().warn}${selflog}` + err)
         })
     }
 }
@@ -393,7 +451,8 @@ function inviteLocalQueue() {
         let extimelow = Math.floor((localQueueList.length * 2) / 60)
         let extimehig = Math.floor((localQueueList.length * 10) / 60)
         console.log(`${loglv().log}${selflog} ${localQueueList.length} worlds to explore. [${extimelow} to ${extimehig} Hours]`)
-        oscChatBox(`${localQueueList.length} worlds remaining in Queue.\vEstimated explore time:\v${extimelow} - ${extimehig} Hours`)
+        // oscChatBox(`${localQueueList.length} worlds remaining in Queue.\vEstimated explore time:\v${extimelow} - ${extimehig} Hours`)
+        apiEmitter.emit('switch', localQueueList.length)
 
         let { data: checkCap } = await vrchat.getWorld({ 'path': { 'worldId': world_id } })
         if (checkCap == undefined) {
@@ -411,24 +470,65 @@ function inviteLocalQueue() {
             return
         }
 
+        var instanceBody = {}
+        switch (explorePrivacyLevel) {
+            case 0:
+                instanceBody = {
+                    'worldId': world_id,
+                    'type': 'group',
+                    'region': 'use',
+                    'displayName': 'World Hop',
+                    'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
+                    'groupAccessType': 'public',
+                    'queueEnabled': true,
+                    'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
+                }
+                break;
+            case 1:
+                instanceBody = {
+                    'worldId': world_id,
+                    'type': 'group',
+                    'region': 'use',
+                    'displayName': 'World Hop',
+                    'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
+                    'groupAccessType': 'plus',
+                    'queueEnabled': true,
+                    'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
+                }
+                break;
+            case 2:
+                instanceBody = {
+                    'worldId': world_id,
+                    'type': 'private',
+                    'canRequestInvite': true,
+                    'region': 'use',
+                    'displayName': 'World Hop',
+                    'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752',
+                    'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
+                }
+                break;
+            default:
+                instanceBody = {
+                    'worldId': world_id,
+                    'type': 'hidden',
+                    'region': 'use',
+                    'displayName': 'World Hop',
+                    'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752',
+                    'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
+                }
+                break;
+        }
+
         console.log(`${loglv().hey}${selflog} Creating group instance for ${world_id}`)
         vrchat.createInstance({
-            body: {
-                'worldId': world_id,
-                'type': 'group',
-                'region': 'use',
-                'displayName': '14a - World Hop',
-                'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
-                'groupAccessType': 'public',
-                'queueEnabled': true,
-                'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
-            }
+            body: instanceBody
         }).then(created_instance => {
-            // `&shortName=${created_instance.data.secureName}`
             startvrc(created_instance.data.location, false)
+            apiEmitter.emit('switch', localQueueList.length)
             console.log(`${loglv().log}${selflog} Auto-Close set for ${created_instance.data.closedAt}.`)
         }).catch(err => {
-            console.log(err)
+            oscChatBox(`instance create failed.\vTry another.`, 5)
+            console.log(`${loglv().warn}${selflog}` + err)
             fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
                 // err ? console.log(err); return : ''
                 if (data.includes(world_id)) {
@@ -475,7 +575,9 @@ async function startvrc(vrclocation, autoGo = false) {
     // direct == false ? fetchLogFile() : ''
 }
 
-setInterval(() => {
+console.log(`${loglv().hey}${selflog} First Audit scan at ${new Date(new Date().getTime() + 600_000).toTimeString()}`)
+var tenMinuteTick = 0
+setTimeout(() => {
     scanGroupAuditLogs()
 }, 600_000)
 
@@ -536,10 +638,18 @@ async function scanGroupAuditLogs() {
     await scanaudit(logOutput_9year, targetGroupLogID_9year);
     await scanaudit(logOutput_10year, targetGroupLogID_10year);
 
-    await scanSomnaGroupInstances(`grp_d8a28345-5a80-4f6d-854a-051f0b68bbc2`,"SLEEPERP")
-    await scanSomnaGroupInstances(`grp_f52018be-6721-43cd-abf9-37609f7bf0d5`,"SPSLEEP")
-    await scanSomnaGroupInstances(`grp_f6602b4e-43b8-4d54-9b61-77eaa0c05bd6`,"Somno Furs")
-    await scanSomnaGroupInstances(`grp_14ffbd54-fdc5-443c-91b8-cf13654486a1`,"Somnophilia")
+    if( tenMinuteTick == 6 ){
+        await updateBioWorldQueue()
+    }
+
+    // await scanSomnaGroupInstances(`grp_f6602b4e-43b8-4d54-9b61-77eaa0c05bd6`,"Somno Furs")
+    // await scanSomnaGroupInstances(`grp_14ffbd54-fdc5-443c-91b8-cf13654486a1`,"Somnophilia")
+
+    console.log(`${loglv().hey}${selflog} Next Audit scan at ${new Date(new Date().getTime() + 600_000).toTimeString()}`)
+    setTimeout(() => {
+        scanGroupAuditLogs()
+        tenMinuteTick >= 6 ? tenMinuteTick = 0 : tenMinuteTick++
+    }, 600_000)
 }
 
 async function requestAllOnlineFriends() {
@@ -583,13 +693,46 @@ logEmitter.on('propNameRequest', async (propID, vrcpropcount) => {
     let res = await vrchat.getProp({ 'path': { 'propId': 'prop_' + propID } })
     // console.log(`${loglv().debug}${selflog} ${res.data}`)
     if (res.data != undefined) {
-        vrcpropcount.Names[propID] = res.data.name
-        vrcpropcount.Counts[propID] = 1
-        console.log(`${loglv().hey}${selflog} Added ${vrcpropcount.Names[propID]} to the Items list`)
+        if (!vrcpropcount[propID]) {
+            vrcpropcount[propID] = { "name": "", "count": 0 }
+        }
+        vrcpropcount[propID].name = res.data.name
+        vrcpropcount[propID].count = 1
+        console.log(`${loglv().hey}${selflog} Added ${vrcpropcount[propID].name} to the Items list`)
         fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => { if (err) { console.log(err); return } })
     }
 })
 
+async function updateBioWorldQueue() {
+    return new Promise((resolve) => {
+        fs.readFile(worldQueueTxt, 'utf8', async (err, dataw) => {
+            let localQueueList = dataw.split('===')[0].split(`\r\n`)
+            console.log(`${loglv().hey}${selflog} Preping Bio for world queue update`)
+            if (localQueueList.length != 0) {
+                console.log(`${loglv().log}${selflog} Fetching current Bio`)
+                let { data: mybio } = await vrchat.getUser({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' } })
+                if (parseInt(mybio.bio.match(/Worlds in queue[:˸] (\d{1,4})/)[1]) != localQueueList.length) {
+                    console.log(`${loglv().log}${selflog} Updating Bio queue count: ${mybio.bio.match(/Worlds in queue[:˸] (\d{1,4})/)[1]} -> ${localQueueList.length}`)
+                    // console.log(`${loglv().debug}${selflog} ${mybio.bio}`)
+                    let mybioUpdated = mybio.bio.replace(/Worlds in queue[:˸] \d{1,4}/, 'Worlds in queue: ' + localQueueList.length)
+                    await vrchat.updateUser({
+                        'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' },
+                        'body': { 'bio': mybioUpdated }
+                    })
+
+                    // console.log(`${loglv().debug}${selflog} ${mybioUpdated}`)
+                    setTimeout(() => { resolve(true) }, 2000)
+                } else {
+                    console.log(`${loglv().log}${selflog} Bio already contains current queue count`)
+                    setTimeout(() => { resolve(true) }, 2000)
+                }
+            } else {
+                console.log(`${loglv().log}${selflog} world queue empty, Skiping`)
+                setTimeout(() => { resolve(true) }, 2000)
+            }
+        })
+    })
+}
 
 var vrcDataCache = {}
 function scanaudit(logoutput, groupID) {
@@ -657,11 +800,17 @@ function scanaudit(logoutput, groupID) {
                         actorHookImage = userData.currentAvatarImageUrl
                         console.log(`Avatar Pic ${userData.currentAvatarImageUrl}`)
                     }
+                    
                     userData.badges.forEach(udbd => {
                         if (udbd.badgeDescription.includes('Joined VRChat')) {
                             userBadgeYearNum = parseInt(udbd.badgeDescription.split('Joined VRChat ')[1].split(' ')[0])
                         }
                     })
+                    if( userBadgeYearNum == 0 ){
+                        console.log(`No year badge found? Falling back on Date Joined`)
+                        userBadgeYearNum = parseInt( new Date( Date.now() - userData.date_joined.getTime() ).toISOString().substring(0,4) - 1970 )
+                    }
+
                     userPlatform = userData.last_platform
                     userJoinDate = userData.date_joined.toISOString().split('T')[0]
                     if (userData.ageVerified == true) { userAgeVerified = userData.ageVerificationStatus } else { userAgeVerified = 'False' }
