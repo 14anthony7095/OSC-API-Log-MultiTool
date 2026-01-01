@@ -1,0 +1,1805 @@
+{
+    "Rainbow Ribbon": {
+        "_created_at": "2025-06-11T00:59:47.036Z",
+        "_updated_at": "2025-11-18T21:21:22.079Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "Show your Pride by waving this ribbon!",
+        "id": "prop_89be973f-9e1a-4260-8deb-211e32da8196",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_1181ab99-751d-4ee0-bfd5-2611386a5f1f/5/file",
+        "itemTemplate": {
+            "authorId": "usr_1012a9f0-b86c-4555-9e51-63f0dee03350",
+            "collections": [
+                "Pride Month 2025"
+            ],
+            "created_at": "2025-06-11T01:01:31.258Z",
+            "defaultAttributes": {},
+            "description": "Show your Pride by waving this ribbon!",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_c436c406-f8f1-4997-8bec-5b5e8a1015d8",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_1181ab99-751d-4ee0-bfd5-2611386a5f1f/5/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_1181ab99-751d-4ee0-bfd5-2611386a5f1f/5/file",
+                "propId": "prop_89be973f-9e1a-4260-8deb-211e32da8196"
+            },
+            "name": "Rainbow Ribbon",
+            "productId": "prod_7ac20d0b-7e00-41b9-b525-677b38fe8de9",
+            "status": "live",
+            "tags": [
+                "Pride 2025"
+            ],
+            "updated_at": "2025-09-04T18:52:15.478Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "Rainbow Ribbon",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_1181ab99-751d-4ee0-bfd5-2611386a5f1f/5/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_592a6a0f-516c-4dee-8f3b-df6a31849dd0/71/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AJEkQSHivlWR/V0/FM4onNME/C7pNC5KAlLvzs89o/SEnZJQTw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_0febf49a-9dd3-4d9d-a8de-4947e65b1dfd/16/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AEQPnlScaNH1xVovZcMAha5EY/l87md53gLHQ2SnjqRq4vIsZw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_3a438824-c59c-48c8-9f35-e1073cae7e04/14/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AG0se2WOpW2ext1tvs1MYIYRB0saVnXZT2MWSKbhknTXsx0YaA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 8,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "THE REFERENCE CUBE": {
+        "_created_at": "2025-06-07T00:02:39.014Z",
+        "_updated_at": "2025-11-18T21:21:10.976Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "STILL LISTENING...",
+        "id": "prop_829ba6f6-b837-49d9-b9a9-056b82103b58",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_903a3af2-4233-4698-808c-d9349e527f5d/9/file",
+        "itemTemplate": {
+            "authorId": "usr_85a18feb-e12d-4eee-a610-b8efc9fce2c4",
+            "collections": [],
+            "created_at": "2025-06-09T16:31:40.785Z",
+            "defaultAttributes": {},
+            "description": "IT KNOWS",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_642a8113-3798-4761-98e9-dc2c84adc960",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_903a3af2-4233-4698-808c-d9349e527f5d/9/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_903a3af2-4233-4698-808c-d9349e527f5d/9/file",
+                "propId": "prop_829ba6f6-b837-49d9-b9a9-056b82103b58"
+            },
+            "name": "THE REFERENCE CUBE",
+            "status": "live",
+            "tags": [],
+            "updated_at": "2025-09-23T23:20:18.379Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "THE REFERENCE CUBE",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 0,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_903a3af2-4233-4698-808c-d9349e527f5d/9/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_81949adc-1809-4fc3-a6f1-4f2e19f82f0f/6/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AGGPU8IpdPncTlw2VWexY/S/CrTqh0Cgrdh0j99+2qzRKRDiEw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_a6b380ec-d3e8-4cfb-b15b-cf873db400da/4/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AGSahJRwhcPRABXLyjXpzN5LSpR8jeNcbT3TZTfl2IdulIvAxQ==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_c991c050-8b43-4046-8182-24d068524ac5/27/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AEVyNSdX8K4g9CO6PwG7VLqJg1/dBcF7sUUTniuxpjcp8WqOEw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 2,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 1
+    },
+    "Bubble Blaster": {
+        "_created_at": "2025-07-21T23:42:10.875Z",
+        "_updated_at": "2025-11-18T21:20:50.650Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "Talox",
+        "categories": [],
+        "description": "Bubbles. BUBBLES!!",
+        "id": "prop_5c54ccdb-cafb-461b-b07f-91d189fc7b72",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_a1c5eb62-dfeb-4266-8e61-a89bbe19e725/1/file",
+        "itemTemplate": {
+            "authorId": "usr_7490e8b1-a41d-4b22-b2de-b1e0d2938e39",
+            "collections": [
+                "Summer 2025"
+            ],
+            "created_at": "2025-07-21T23:45:43.392Z",
+            "defaultAttributes": {},
+            "description": "Bubbles. BUBBLES!!",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_e79951e2-89b0-4973-bf9e-60fa5088a8aa",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_a1c5eb62-dfeb-4266-8e61-a89bbe19e725/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_a1c5eb62-dfeb-4266-8e61-a89bbe19e725/1/file",
+                "propId": "prop_5c54ccdb-cafb-461b-b07f-91d189fc7b72"
+            },
+            "name": "Bubble Blaster",
+            "status": "live",
+            "tags": [
+                "Summer 2025"
+            ],
+            "updated_at": "2025-09-23T23:20:37.046Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "Bubble Blaster",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_a1c5eb62-dfeb-4266-8e61-a89bbe19e725/1/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_65133a1a-2089-4c41-a30c-bb8084087603/8/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AKlc4zgXhxBItMu4tjYs4bGJjFPK8QeLD/m9hXWx8yYb7jPx8A==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_967516a9-26be-4ab7-8a54-a496d88b1605/6/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AAEY8YFAn4rTFBvCQWUHYOqrmCIaHA5+zQs/OLMTb56Xvjvizg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_6c299ab0-7d99-4320-9414-81d36aaf8996/6/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AFqINJGa4RbVzcIPgYavq5/oIezki2c5rajGWeIoSSLr3VNOgQ==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 8,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Mori Calliope Penlight": {
+        "_created_at": "2025-09-12T00:00:25.888Z",
+        "_updated_at": "2025-11-18T21:21:19.803Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "The Story Thus Far\r",
+        "id": "prop_79789b58-e020-4b2e-aa25-ba21a1938eec",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_5c2c811a-1b06-468d-bb78-a1c5baacc7ec/1/file",
+        "itemTemplate": {
+            "authorId": "usr_7490e8b1-a41d-4b22-b2de-b1e0d2938e39",
+            "collections": [],
+            "created_at": "2025-09-12T00:05:16.012Z",
+            "defaultAttributes": {},
+            "description": "The Story Thus Far\r",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_accbf7b7-80ce-4f3c-a8cf-3fcc108020b7",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_5c2c811a-1b06-468d-bb78-a1c5baacc7ec/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_5c2c811a-1b06-468d-bb78-a1c5baacc7ec/1/file",
+                "propId": "prop_79789b58-e020-4b2e-aa25-ba21a1938eec"
+            },
+            "name": "Mori Calliope Penlight",
+            "status": "live",
+            "tags": [
+                "Promo"
+            ],
+            "updated_at": "2025-09-13T19:08:53.340Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "Mori Calliope Penlight",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_5c2c811a-1b06-468d-bb78-a1c5baacc7ec/1/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_f22c48f0-0ec0-42cf-aa2c-8520c8a115cd/1/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AAt4+foUkqwHGtlfwdtEdt+NKrLbMkk6XIPJ9ar5sLkRgHBnnA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_b6bc1358-8f28-4160-926a-ce27ed29b5bb/1/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "ABZCOgQu823se9uzr6FitWtgwKnN60zQjVZkGR4P7dncxZtYzw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_14051cfe-16dd-4e94-931b-7a174f087605/1/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AKkyPuTtYHMNIIf+h2WkCWzChxeSjXpt33lodxWTYuJadfh1xw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 2,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Campfire": {
+        "_created_at": "2025-09-15T17:04:46.261Z",
+        "_updated_at": "2025-12-04T22:50:44.537Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "Get toasty.",
+        "id": "prop_49fec698-f0cb-475c-9bc3-8f24e1bcc4eb",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_10880ad6-dd90-411f-a7e5-6c7c19710551/1/file",
+        "itemTemplate": {
+            "authorId": "usr_ef110430-35b9-42ec-b606-ae4e51e1ac62",
+            "collections": [],
+            "created_at": "2025-09-15T18:15:23.074Z",
+            "defaultAttributes": {},
+            "description": "Get toasty.",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_1f11aa73-8f05-4d50-a1a8-c59074d03ce2",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_10880ad6-dd90-411f-a7e5-6c7c19710551/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_10880ad6-dd90-411f-a7e5-6c7c19710551/1/file",
+                "propId": "prop_49fec698-f0cb-475c-9bc3-8f24e1bcc4eb"
+            },
+            "name": "Campfire",
+            "status": "live",
+            "tags": [
+                "August 2025"
+            ],
+            "updated_at": "2025-10-08T19:19:16.045Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "Campfire",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 0,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_10880ad6-dd90-411f-a7e5-6c7c19710551/1/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_a81f2d70-e46f-43a6-b820-3f29246ad049/5/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "ABssmHwb8U/7r6pSq4vqOubJe+1R26+OWKeRUl3unOFL5D1+JA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_714ef869-9db7-4452-a415-f97467c01e7a/4/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AM09lkD85Ed3SEwBiIP1t0ov72BB+Pbl7C/V51mLJnOwQuBfLA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_8c0f8e3d-1e57-4cbe-aa49-2b9968616c45/3/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "ACkUE+2r9irTOnd9qNcRui9TMvcoNMeDwoiGu/zbupnrB63yWg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 8,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 1
+    },
+    "Marshmallow on a Stick": {
+        "_created_at": "2025-09-15T16:52:43.570Z",
+        "_updated_at": "2025-12-04T22:41:35.750Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "Don't burn it!",
+        "id": "prop_fb4e6b9e-ddd2-464c-8e44-cdba7f77eb5d",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_e9a8b13b-f31d-4af7-b5a5-a89305b103ac/1/file",
+        "itemTemplate": {
+            "authorId": "usr_ef110430-35b9-42ec-b606-ae4e51e1ac62",
+            "collections": [],
+            "created_at": "2025-09-15T18:26:38.156Z",
+            "defaultAttributes": {},
+            "description": "Don't burn it!",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_15cade9e-e11a-4509-aa93-7a1b8584d006",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_e9a8b13b-f31d-4af7-b5a5-a89305b103ac/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_e9a8b13b-f31d-4af7-b5a5-a89305b103ac/1/file",
+                "propId": "prop_fb4e6b9e-ddd2-464c-8e44-cdba7f77eb5d"
+            },
+            "name": "Marshmallow on a Stick",
+            "status": "live",
+            "tags": [
+                "August 2025"
+            ],
+            "updated_at": "2025-10-08T19:19:10.093Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "Marshmallow on a Stick",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_e9a8b13b-f31d-4af7-b5a5-a89305b103ac/1/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_afe42e2c-ace3-4396-91c5-267f8abcc0c5/5/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "ADxowXTPf9UNb38R7UGy612+qJUueomYgcN4WAgZvfXSpH76dg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_9bd6d37c-4efe-4dd9-a839-d265568bc38d/5/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AC9Q/I09UExLn0hHhV2FMZYD+TSxZkiiKtEYSeIcdqtZzraxpw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_3c3048d1-475d-4ba3-bd2c-f72df04da1b1/3/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "ACRGbZqRz2EfGrn5QybM8Xy+61ZKCcvWbXuHTV0kEd8lwGEj4g==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 8,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Candy Codex": {
+        "_created_at": "2025-10-03T23:45:49.302Z",
+        "_updated_at": "2025-11-18T21:21:00.079Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "The Candy Codex for Spookality 2025. Finish it for a badge!",
+        "id": "prop_213156fd-eb54-4c2c-8e12-cc840581ec73",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_53d54fa7-b630-4870-a5aa-34da7454adc1/2/file",
+        "itemTemplate": {
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2025-10-03T23:45:49.322Z",
+            "defaultAttributes": {
+                "candy1": {
+                    "defaultValue": "",
+                    "validator": {
+                        "type": "string"
+                    }
+                },
+                "candy2": {
+                    "defaultValue": "",
+                    "validator": {
+                        "type": "string"
+                    }
+                },
+                "candy3": {
+                    "defaultValue": "",
+                    "validator": {
+                        "type": "string"
+                    }
+                },
+                "candy4": {
+                    "defaultValue": "",
+                    "validator": {
+                        "type": "string"
+                    }
+                },
+                "candy5": {
+                    "defaultValue": "",
+                    "validator": {
+                        "type": "string"
+                    }
+                },
+                "candy6": {
+                    "defaultValue": "",
+                    "validator": {
+                        "type": "string"
+                    }
+                },
+                "candy7": {
+                    "defaultValue": "",
+                    "validator": {
+                        "type": "string"
+                    }
+                },
+                "candy8": {
+                    "defaultValue": "",
+                    "validator": {
+                        "type": "string"
+                    }
+                },
+                "collectedCount": {
+                    "defaultValue": 0,
+                    "validator": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "description": "The Candy Codex for Spookality 2025. Complete it by collecting candies from the Treats and Kath Companions before Spookality ends to unlock a badge!",
+            "equipSlots": [],
+            "flags": [
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_d47411a4-ec36-48b2-8e64-6b1c1e730e71",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_c0897a25-bab8-4166-8303-0f0ea74b3356/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_c0897a25-bab8-4166-8303-0f0ea74b3356",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_c0897a25-bab8-4166-8303-0f0ea74b3356/1/file",
+                "propId": "prop_213156fd-eb54-4c2c-8e12-cc840581ec73"
+            },
+            "name": "Candy Codex",
+            "productId": "prod_ebacd727-7d13-4e41-a1d3-beb88f826ac8",
+            "status": "live",
+            "tags": [
+                "prop",
+                "candy_hunt_2025_tracker",
+                "Spookality 2025"
+            ],
+            "updated_at": "2025-11-21T17:54:02.167Z",
+            "validateUserAttributes": true
+        },
+        "maxCountPerUser": 1,
+        "name": "Candy Codex",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_53d54fa7-b630-4870-a5aa-34da7454adc1/2/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_cf7b8819-803a-486c-83c4-3788c6eccfca/4/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AD5f7Ft+Fjz1GeKGtVEvf5Mc/23++wGhGhb4WxaUBcQpteEA6w==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_324c2dfd-daff-4324-9f16-60d23812d3e8/49/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "ANZ4Tj+d51qIsXT69uQ0xofr+PkPbiKK4IqEqo7K47f+hi/Iuw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_e94d4460-c197-4aed-9b98-13971ff74319/4/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AIkaqkcVP07U5mhauGTFM9eEfH1TdtQBSPWGGYB2kTsX0PJJvg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 118,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Treats": {
+        "_created_at": "2025-10-03T23:16:45.311Z",
+        "_updated_at": "2025-11-20T00:41:51.531Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "Treats, a Spookality Companion. …wait, where does the candy come from?",
+        "id": "prop_0b5e9595-e9e6-4f11-bd59-5ae6abe34f67",
+        "imageUrl": "https://api.vrchat.cloud/api/1/image/file_5dc7d87e-cfed-424c-ae91-47fb33b28366/2/256",
+        "itemTemplate": {
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2025-10-03T23:16:45.324Z",
+            "defaultAttributes": {},
+            "description": "Treats, a Spookality Companion. …wait, where does the candy come from?",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_f2d3dd49-e23b-45ec-990f-536ecd08a898",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_d7d75439-22c6-40c9-99f1-4abf74fe5ff1/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_d7d75439-22c6-40c9-99f1-4abf74fe5ff1",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_d7d75439-22c6-40c9-99f1-4abf74fe5ff1/1/file",
+                "propId": "prop_0b5e9595-e9e6-4f11-bd59-5ae6abe34f67"
+            },
+            "name": "Treats",
+            "productId": "prod_564f8e69-ba64-4665-a7a6-43b60b64bc32",
+            "status": "live",
+            "tags": [
+                "prop",
+                "candy_hunt_2025_cozy",
+                "Spookality 2025"
+            ],
+            "updated_at": "2025-11-21T17:52:14.459Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "Treats",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_5dc7d87e-cfed-424c-ae91-47fb33b28366/2/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_0919c01a-08ab-43af-b2c8-f6c17919caf8/3/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AEkaJJI8XICeADJnKv+RWWRUbw5rblJqo3jnjZnbeNHkKhdeWA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_79784f3a-7c95-46e5-bd17-7f706c65ae8f/80/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AJYtej5mqWcDwl/zdfqSP1D2HpxlsJqdPgONZt44rfl3sYzREg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_36566541-59d3-413c-878b-3124167d9533/4/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AGv13sEOxKqhqxyXepUOcCUNXM8/HQVKYVsp9KNZhZ/buoS0dA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 178,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Kath": {
+        "_created_at": "2025-10-03T23:11:08.760Z",
+        "_updated_at": "2025-11-20T00:39:48.583Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "Kath, a Spookality Companion. A relic, from a more civilized age.",
+        "id": "prop_57484479-1f1b-4a9c-986b-b0c86e1c0dda",
+        "imageUrl": "https://api.vrchat.cloud/api/1/image/file_d53307de-14fe-4cbc-bf74-55dab5bae2a7/3/256",
+        "itemTemplate": {
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2025-10-03T23:11:08.788Z",
+            "defaultAttributes": {
+                "accent": {
+                    "defaultValue": "#FFFFFF",
+                    "validator": {
+                        "type": "color"
+                    }
+                }
+            },
+            "description": "Kath, a Spookality Companion. A relic, from a more civilized age.",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_7083477a-40c0-4475-93a8-28238c1fc020",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_b1face7a-dc17-404a-8fe0-78762496b7c4/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_b1face7a-dc17-404a-8fe0-78762496b7c4",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_b1face7a-dc17-404a-8fe0-78762496b7c4/1/file",
+                "propId": "prop_57484479-1f1b-4a9c-986b-b0c86e1c0dda"
+            },
+            "name": "Kath",
+            "productId": "prod_f231075e-b9e1-441c-b00a-5db88d6a1ed9",
+            "status": "live",
+            "tags": [
+                "prop",
+                "candy_hunt_2025_spooky",
+                "Spookality 2025"
+            ],
+            "updated_at": "2025-11-21T17:53:36.418Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "Kath",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_d53307de-14fe-4cbc-bf74-55dab5bae2a7/3/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_5bcc8f69-f92f-4bd0-8c35-efcea3a9e998/53/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "APsy7serQ5j+4YRnLvqN1e7BEIX0H44fTwUN9s+ngXUOMYWo7w==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_8e49e880-8fb8-43f2-bedd-7caefac70d55/3/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "APAy+Bp4ytKDbm/RA5oP6YnpL85ZOpLJpAqrAlMmxt59k8ReuA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_fd0ba609-9a2d-4b71-b6ea-d053f1718d6f/3/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AIbQ7bfH5gaB/80l88gbtQafdbahmlHVgtChg0fyllkSIuwKmA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 124,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Bigscreen Beyond 2e: VRChat Edition": {
+        "_created_at": "2025-07-15T21:05:29.285Z",
+        "_updated_at": "2025-11-18T21:20:57.645Z",
+        "authorId": "usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469",
+        "authorName": "tupper",
+        "categories": [],
+        "description": "woah is that a bigscreen beyond",
+        "id": "prop_dae2be6b-9c3b-4783-948b-4ff46d3a14e5",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_76250daf-2267-4fdd-8944-a06b9c14472e/5/file",
+        "itemTemplate": {
+            "authorId": "usr_5cd9007b-1802-45fe-92e2-0b6617639344",
+            "collections": [],
+            "created_at": "2025-07-24T20:22:09.556Z",
+            "defaultAttributes": {},
+            "description": "woah is that a bigscreen beyond",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_e3c12462-78d7-4d50-be7c-0ca179e97a96",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_76250daf-2267-4fdd-8944-a06b9c14472e/5/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_76250daf-2267-4fdd-8944-a06b9c14472e/5/file",
+                "propId": "prop_dae2be6b-9c3b-4783-948b-4ff46d3a14e5"
+            },
+            "name": "Bigscreen Beyond 2e: VRChat Edition",
+            "status": "live",
+            "tags": [
+                "Bigscreen Beyond 2",
+                "Promo"
+            ],
+            "updated_at": "2025-09-04T18:59:15.782Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "Bigscreen Beyond 2e: VRChat Edition",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_76250daf-2267-4fdd-8944-a06b9c14472e/5/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_a95059a7-c5f9-42e5-bfa4-3e946c2d330e/2/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "ADkaQcMg2yi48kSzV27kg62HaFqHt1AJeJphYCQMCnQH5jO/bg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_6112fe42-c62c-4197-937d-79560423e91c/11/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "ANXZhzFcD9H0yVp6Lmre1aXB/2qifxZ0WzrXxcqV169XO2uuFw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 2,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Groan Tube": {
+        "_created_at": "2025-10-30T20:02:08.822Z",
+        "_updated_at": "2025-11-18T21:21:39.592Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "A Groan Tube. Flip it around.",
+        "id": "prop_0fd9deb0-6ca8-4c69-acbe-17035f93792b",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_88ca511b-1eaa-48f2-ad68-81574a0a54e6/4/file",
+        "itemTemplate": {
+            "authorId": "usr_ef110430-35b9-42ec-b606-ae4e51e1ac62",
+            "collections": [],
+            "created_at": "2025-11-03T22:53:04.901Z",
+            "defaultAttributes": {
+                "primary": {
+                    "defaultValue": "#68BAFF",
+                    "validator": {
+                        "type": "color"
+                    }
+                }
+            },
+            "description": "A Groan Tube. Flip it around.",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_f34897ff-9a96-4a5a-a739-fc76ebffd564",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_19f0efe7-3340-42b1-afed-a2596ca940fd/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_19f0efe7-3340-42b1-afed-a2596ca940fd",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_19f0efe7-3340-42b1-afed-a2596ca940fd/1/file",
+                "propId": "prop_0fd9deb0-6ca8-4c69-acbe-17035f93792b"
+            },
+            "name": "Groan Tube",
+            "status": "live",
+            "tags": [],
+            "updated_at": "2025-11-06T20:09:05.137Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "Groan Tube",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_88ca511b-1eaa-48f2-ad68-81574a0a54e6/4/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_eb0cb679-6b4b-4d9c-bd88-5ccec9ed1bb0/5/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "ANKdBlA1kYtO4QAyNdVpnQSINd1lYdj6a5gHycTA7K6bB/VUGw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_70ead87f-1631-4bea-bc39-2a99f2fe7867/24/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AOYYaMCEqgdpbrj0rORWwd6SnBj0c44VlcP1EeNlJqbaOTPKmg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_85337ad5-0c11-4204-8b7c-4303108ae46d/4/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "ALcumpfl1B5dK+pd0itCizp4HTRbJKUdij2Zn7TL6quZm/7/tg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 78,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Flask of Effervescence": {
+        "_created_at": "2025-10-22T15:37:31.938Z",
+        "_updated_at": "2025-11-18T21:21:33.768Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "",
+        "id": "prop_e9d0bc1f-f7fd-4886-abec-d299745b2264",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_e4116ebb-e1e1-4955-8dc4-c3b444dc6bdb/2/file",
+        "itemTemplate": {
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2025-10-22T15:37:32.082Z",
+            "defaultAttributes": {},
+            "description": "A swirling, magical concoction contained in an ornate bottle. The colors keep changing…",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_d7c4d47b-591d-4013-819c-ebaf6c9698bf",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_a19f1724-2a0e-4c01-8c68-549b7e0bde16/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_a19f1724-2a0e-4c01-8c68-549b7e0bde16",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_a19f1724-2a0e-4c01-8c68-549b7e0bde16/1/file",
+                "propId": "prop_e9d0bc1f-f7fd-4886-abec-d299745b2264"
+            },
+            "name": "Flask of Effervescence",
+            "productId": "prod_44ec43f4-9909-40ca-9a29-cf854647aa7e",
+            "status": "live",
+            "tags": [
+                "prop"
+            ],
+            "updated_at": "2025-11-21T17:54:14.109Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "Flask of Effervescence",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_e4116ebb-e1e1-4955-8dc4-c3b444dc6bdb/2/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_4b43954f-a006-4470-9254-0e013d1e42a7/7/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AAAPmjt7H9kbH/23CS3wTumWCvnyeKIBvd6XlngbTxbgSsGYrg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_f6013550-a283-48f7-8423-79e8c5f1c02e/51/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AIUpkL0TtS2gnCBbvSBDfpMfC3WOpvSN4OeVlQCIVGA4CGq+iw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_4fb7d809-e62a-470f-b1d0-9e0793f48be9/9/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AFDSFRMDHGgKUD3kInHjLxZzInBvKULcy7W0r1+qJCRKRyq00Q==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 138,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "VRChat Penlight": {
+        "_created_at": "2025-10-15T20:25:11.368Z",
+        "_updated_at": "2025-11-18T21:21:31.459Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "A color-changing penlight. Cycle through multiple colors.",
+        "id": "prop_3e81ff20-b64a-4ecb-9429-bd076a96fcf8",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_928bf70a-1187-432c-9d16-c83a95060f82/2/file",
+        "itemTemplate": {
+            "authorId": "usr_ef110430-35b9-42ec-b606-ae4e51e1ac62",
+            "collections": [],
+            "created_at": "2025-10-21T15:30:46.257Z",
+            "defaultAttributes": {},
+            "description": "A color-changing penlight. Cycle through multiple colors.",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_bc315a45-df13-47cb-8018-171cab5b23d4",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_f4e0c1fe-888b-4c5a-a5c5-2807f2ff329e/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_f4e0c1fe-888b-4c5a-a5c5-2807f2ff329e",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_f4e0c1fe-888b-4c5a-a5c5-2807f2ff329e/1/file",
+                "propId": "prop_3e81ff20-b64a-4ecb-9429-bd076a96fcf8"
+            },
+            "name": "VRChat Penlight",
+            "productId": "prod_7f8e0d21-a60c-4378-ab12-90010a45d1cd",
+            "status": "live",
+            "tags": [],
+            "updated_at": "2025-11-05T17:51:14.559Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "VRChat Penlight",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_928bf70a-1187-432c-9d16-c83a95060f82/2/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_bd83c947-86c9-40bf-be78-e76da6564391/8/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AMYTYeWf1I+/dM6XGzPAp7rbrkAiF+fIewBxnoGcH8f0s+O0Vw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_b43869cc-83e5-4bcc-a6eb-1d0c97ec06bb/18/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AEywylREJCKoD03gNzl2wnS56VOGRyfpbK2PshRQNrZoLpXvDA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_78cba242-64b0-4368-82a2-c876186ff759/8/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "ANBEOSkymOzCBNdBK/9s/SK3XiFYKuWaJTr8ErWrKeA3aGAenA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 77,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Consumable Cube": {
+        "_created_at": "2025-10-29T21:59:09.961Z",
+        "_updated_at": "2025-11-18T21:21:38.407Z",
+        "authorId": "usr_74293fc2-103d-4b78-83fd-15986ffa75a4",
+        "authorName": "orels4",
+        "categories": [],
+        "description": "",
+        "id": "prop_81ce8d80-72d8-4f60-9d6b-689a8340f55d",
+        "imageUrl": "https://api.vrchat.cloud/api/1/image/file_529192dd-0ea6-40ab-91b9-8f7507ba3b2f/1/256",
+        "itemTemplate": {
+            "authorId": "usr_74293fc2-103d-4b78-83fd-15986ffa75a4",
+            "collections": [],
+            "created_at": "2025-10-29T21:59:09.993Z",
+            "defaultAttributes": {},
+            "description": "Unstable Reference Cube. When placed in a world and activated, it is permanently destroyed.",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "trashable",
+                "cloneable",
+                "archivable",
+                "quantifiable",
+                "consumable",
+                "quantifiable_allow_zero"
+            ],
+            "id": "invt_31fb9268-a100-4b90-8903-e4b14dcd8cd1",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_e792a253-beb5-40e5-a061-42b43228df06/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_e792a253-beb5-40e5-a061-42b43228df06",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_e792a253-beb5-40e5-a061-42b43228df06/1/file",
+                "propId": "prop_81ce8d80-72d8-4f60-9d6b-689a8340f55d"
+            },
+            "name": "Unstable Reference Cube",
+            "productId": "prod_885c362b-a8a2-4e88-9e1a-48b3043ed724",
+            "status": "live",
+            "tags": [
+                "prop"
+            ],
+            "updated_at": "2025-11-10T23:36:36.833Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "Consumable Cube",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 0,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_529192dd-0ea6-40ab-91b9-8f7507ba3b2f/1/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_271d284f-7a08-4a68-b04e-fe6c4304fe57/13/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AAQHc/E/I2LwzEERtDfgoQ6su6j/FxQInc24J0Sk6tjjxH9Pdg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_72541b0e-1f44-4249-932a-ac8c40f5dcef/2/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AHRwLQY5mmgnq5lr9D519e96e06tAJqsssSbaAWh9aio8NARvQ==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_af60454e-2d89-4f1b-9ee2-8b454349b8eb/2/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "ACsLRUIiMGKSij86cUESamevcYqqPGYy/tNiFpnzSORanY1v9g==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 37,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 1
+    },
+    "Open Flight Prop Port Test": {
+        "_created_at": "2025-08-07T23:40:59.734Z",
+        "_updated_at": "2025-11-18T21:20:49.476Z",
+        "authorId": "usr_88231635-2b28-4700-a94a-12a9a77c7619",
+        "authorName": "Toby VRC",
+        "categories": [],
+        "description": "",
+        "id": "prop_afbc0df4-da97-4036-bb84-b4513350fd2a",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_24c02f3b-ac7b-4898-aacf-ca808ba7ca2b/1/file",
+        "itemTemplate": {
+            "authorId": "usr_6f57b273-4aaa-4177-a6d9-8b05363c26a0",
+            "collections": [],
+            "created_at": "2025-08-15T16:26:32.801Z",
+            "defaultAttributes": {},
+            "description": "",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_a2fc2ee6-44fb-4490-b1bb-005a49921037",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_24c02f3b-ac7b-4898-aacf-ca808ba7ca2b/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_24c02f3b-ac7b-4898-aacf-ca808ba7ca2b/1/file",
+                "propId": "prop_afbc0df4-da97-4036-bb84-b4513350fd2a"
+            },
+            "name": "Open Flight Prop Port Test",
+            "status": "live",
+            "tags": [
+                "internal"
+            ],
+            "updated_at": "2025-09-04T18:53:31.310Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "Open Flight Prop Port Test",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_24c02f3b-ac7b-4898-aacf-ca808ba7ca2b/1/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_a3029997-6549-4941-94c0-624afdd4da2f/13/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AMLxpz/9qsi5aJ2yHbm/8ei0Yt8w63LHaC1NajSu+VXfs1vMlg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 4,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "VketChan Photo Frame": {
+        "_created_at": "2025-12-03T19:49:27.917Z",
+        "_updated_at": "2025-12-12T01:05:00.689Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "NOT AN ACTUAL CAMERA! VketChan Photo Frame is a placeable decorative item to liven up your photographs. Take photo with VketChan 01, 02, and Vket-Nyan anywhere!",
+        "id": "prop_0640994c-0b8a-404b-84d0-0c6620e79911",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_694ce5a6-051a-43dd-82e7-fad7982b6ae3/2/file",
+        "maxCountPerUser": 1,
+        "name": "VketChan Photo Frame",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_694ce5a6-051a-43dd-82e7-fad7982b6ae3/2/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_d3da62e3-0c6e-40b0-9610-62eb45b092d5/10/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AKbfQXumX3+3V00mYv3aNHsSnVZgZv4iWHWSUfk5MCbLVxqV4w==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_98732f92-e0de-4d53-b04a-faeaf7d2754d/1/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AMM4h/i8H+34Ff00h1pUulAudXDewYN7xrAJv9DTPM/Gcca+WQ==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_2ecfcb91-842f-4091-88bc-f59acd5f8a6e/1/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AJ2RvXpay1R5wm2AtknPX8Ab/9fYQHw8Ulu5WkbYZVN5zPAbEg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 28,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "SnowPen": {
+        "_created_at": "2025-11-17T20:55:03.502Z",
+        "_updated_at": "2025-12-16T18:47:23.411Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "",
+        "id": "prop_062e8001-d338-4dd1-b3c7-ecfb4f30eb1c",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_f0e670cf-db4b-4856-9cfd-0a07ac29f5ee/2/file",
+        "itemTemplate": {
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2025-11-17T20:55:03.510Z",
+            "defaultAttributes": {},
+            "description": "An icicle! It leaves a trail of snow when used.\n",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "trashable",
+                "cloneable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_2c2aab9f-8042-40da-af41-9788c2bd53b0",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_12a99e9f-f208-46b9-b878-00a0796312bf/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_12a99e9f-f208-46b9-b878-00a0796312bf",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_12a99e9f-f208-46b9-b878-00a0796312bf/1/file",
+                "propId": "prop_062e8001-d338-4dd1-b3c7-ecfb4f30eb1c"
+            },
+            "name": "Frosted Scribe",
+            "productId": "prod_b64dffd2-8447-4c69-8934-8e18e682819d",
+            "status": "live",
+            "tags": [
+                "prop",
+                "autogenerated"
+            ],
+            "updated_at": "2025-12-09T21:24:41.705Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "SnowPen",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_f0e670cf-db4b-4856-9cfd-0a07ac29f5ee/2/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_5ab07636-8f40-48a4-9f07-5ef4a113fe6e/64/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AN6tKEQOg4z2JEy++PQCt4Khy54nBVa1CiHNbZkJ8JR1o6EE5w==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_11140261-6cf8-45a8-bf05-6c9a0878bf92/6/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AKPHoPMUWAKA3clXnXBB1EDctK+JQuDhqhmbcO3Bjg8qmAghAA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_a63cfa41-592a-4ead-9924-42ccfc6d2a52/7/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "ACuTQnb1WID0UdmaGGD9z7+RTKfoUYLbV7RLBiLZT+JI6EZyQQ==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 158,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Portable Winterizer": {
+        "_created_at": "2025-12-11T00:41:32.080Z",
+        "_updated_at": "2025-12-11T00:49:55.645Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "",
+        "id": "prop_b121c206-666e-4a61-ba8b-5315d2303276",
+        "imageUrl": "https://api.vrchat.cloud/api/1/image/file_9129b8bc-6bbb-4f3f-943b-ee2fe4e28a12/1/256",
+        "maxCountPerUser": 1,
+        "name": "Portable Winterizer",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 0,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_9129b8bc-6bbb-4f3f-943b-ee2fe4e28a12/1/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_4c6eb69f-8b5b-448b-8970-aba4dcb94c58/1/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AD/zAulUMQl103k4TEv7i09AWX1KyFs+ns+NBVq+MaJd5V2dnA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_225fdcf7-9846-46ce-94fe-ecd9f7cf6937/1/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AP+R8vLrXsB9HzisJgXq/plemMU3fLzP5+bpzDB6mgcp9sNyPw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_3e18ce2a-bf73-46d6-bf0e-a8c8a5a6af20/1/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AKdpnJqRHCA68dQDs0rHloxMa9ORnutKe63PdZfZlZOvLysfyQ==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 8,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 1
+    },
+    "PropGlider Test": {
+        "_created_at": "2025-07-19T02:10:27.453Z",
+        "_updated_at": "2025-11-18T21:21:20.934Z",
+        "authorId": "usr_7490e8b1-a41d-4b22-b2de-b1e0d2938e39",
+        "authorName": "Aev VRC",
+        "categories": [],
+        "description": "",
+        "id": "prop_16531e5b-9f97-4bc3-b0c6-f6446c8563c6",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_64e52eb7-8cbd-4680-97e4-4bb321083d97/1/file",
+        "itemTemplate": {
+            "authorId": "usr_7490e8b1-a41d-4b22-b2de-b1e0d2938e39",
+            "collections": [],
+            "created_at": "2025-07-19T03:11:44.329Z",
+            "defaultAttributes": {},
+            "description": "",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_b1da34ce-f0e0-4c31-9374-0f66b9b3e9f4",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_64e52eb7-8cbd-4680-97e4-4bb321083d97/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_64e52eb7-8cbd-4680-97e4-4bb321083d97/1/file",
+                "propId": "prop_16531e5b-9f97-4bc3-b0c6-f6446c8563c6"
+            },
+            "name": "PropGlider Test",
+            "status": "live",
+            "tags": [
+                "internal"
+            ],
+            "updated_at": "2025-07-22T23:36:04.682Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "PropGlider Test",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_64e52eb7-8cbd-4680-97e4-4bb321083d97/1/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_424bd93e-9674-4b8c-a015-8ea6303062a4/13/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "ALgxlYUu1Vj8HZ6udVq0ANVaOs8+eCkpIIzg/+PpBKX+a4UwqQ==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 2,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Throw-n-Go": {
+        "_created_at": "2025-07-25T18:16:43.359Z",
+        "_updated_at": "2025-11-18T21:21:03.575Z",
+        "authorId": "usr_88231635-2b28-4700-a94a-12a9a77c7619",
+        "authorName": "Toby VRC",
+        "categories": [],
+        "description": "",
+        "id": "prop_8ac42f15-14fa-4438-97df-9c10b654e75e",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_375f14d7-05b0-43d1-9cf1-0f38518d8429/1/file",
+        "itemTemplate": {
+            "authorId": "usr_6f57b273-4aaa-4177-a6d9-8b05363c26a0",
+            "collections": [],
+            "created_at": "2025-07-26T01:58:08.933Z",
+            "defaultAttributes": {},
+            "description": "",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable"
+            ],
+            "id": "invt_fc05cc7a-8aa4-4995-9411-b62c303b964c",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_375f14d7-05b0-43d1-9cf1-0f38518d8429/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_375f14d7-05b0-43d1-9cf1-0f38518d8429/1/file",
+                "propId": "prop_8ac42f15-14fa-4438-97df-9c10b654e75e"
+            },
+            "name": "Throw-n-Go",
+            "status": "live",
+            "tags": [
+                "internal"
+            ],
+            "updated_at": "2025-09-04T18:55:25.383Z",
+            "validateUserAttributes": false
+        },
+        "maxCountPerUser": 1,
+        "name": "Throw-n-Go",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_375f14d7-05b0-43d1-9cf1-0f38518d8429/1/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_34002fd8-661e-4b6c-a92d-973c028ea072/2/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AIT6ZeILjqsjrCWI79NBCxadN1mt3paqS8jLCyU2yjvbpvzRQA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 2,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "2026 Glasses on a Stick": {
+        "_created_at": "2025-12-19T10:46:47.470Z",
+        "_updated_at": "2025-12-19T10:50:07.772Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "Festive NYE glasses!",
+        "id": "prop_bd6395d2-8bf9-4aa8-bda9-954f355f332d",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_25f8059b-3c63-48dd-9ed5-d659bc12dd85/1/file",
+        "maxCountPerUser": 1,
+        "name": "2026 Glasses on a Stick",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_25f8059b-3c63-48dd-9ed5-d659bc12dd85/1/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_414539ac-9637-49b1-83bc-6a26114e00b2/1/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AL1miNHMbqJJomtqND/Rs2Nvxl934O8zhIPs/sDaEPgH+GQrRA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_513ce03a-ee56-47e9-a744-2a1e2d36fd28/1/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AFn8qk7/nOcx4pxN7n75yAGyzvHtzkqrvqJQS4NyEWqLLBhvTQ==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_80629e11-01d9-489a-a8ea-e6e2f4b68679/1/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AFdZJRWYUOaFdqLgJupMqaF7zWB3NMq3sjTpAldQkejKbQ00Jw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 6,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Party Popper": {
+        "_created_at": "2025-12-19T10:26:59.242Z",
+        "_updated_at": "2025-12-19T20:50:10.274Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "When activated, launches an explosion of confetti!",
+        "id": "prop_d974e56d-443e-4409-99c2-f5c9e5705d5b",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_7ee1afa6-a47e-47c8-9a23-08c8f90dc6ca/2/file",
+        "maxCountPerUser": 1,
+        "name": "Party Popper",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_7ee1afa6-a47e-47c8-9a23-08c8f90dc6ca/2/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_859202bf-5ee0-47bd-af85-326e55ab1dd3/2/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AJW7FbaXDsQyJ5ofQiGCNsKFQK/4T9CG43orbJV/BXdIqINP5Q==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_af30c995-bae0-49d7-8ed6-97435d4b827e/2/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AF2tXOkxHoNTKdXr7grGYlemRMxNL+LDStWQyKIZiQqwBRbXfg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_61c11f70-1030-4a41-99c3-8b82c7079481/3/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AG5NJAhXIdtW38YYb0+nXZmaKoQZ1LAh3Wl7iuRloOONeEkZUg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 16,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Fortune Box": {
+        "_created_at": "2025-12-16T23:20:25.129Z",
+        "_updated_at": "2025-12-18T21:12:45.687Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "",
+        "id": "prop_a1573c82-9767-4b42-a45d-4050e42a92b9",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_7bef798d-22c7-4c5a-8d94-98bb5f5318f8/1/file",
+        "maxCountPerUser": 1,
+        "name": "Fortune Box",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_7bef798d-22c7-4c5a-8d94-98bb5f5318f8/1/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_f92efe2e-9eed-4353-89c6-3cad027183eb/13/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AFcv4fV1i9KFcp1vIhcQUo3sMl2n8oFh8KonNDPWxLp3UF/HBw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_cc6ffa7e-5b85-4ec9-a277-303f5e997b72/10/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AE/ncNeJpUGEndl6g2LQs2PonUWH9ILxSh49X1HkBgIt6E4uYw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_de6d91c8-ffd8-4ecf-9db1-5a1e8fafab5c/8/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "ACh/3SNnTr6OmE5ft+X/2KlXe+77AnJPt65Pa00IxGLre8Rq6w==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 63,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Gold-plated Lighter": {
+        "_created_at": "2025-12-19T10:37:58.459Z",
+        "_updated_at": "2025-12-19T20:17:21.071Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "Need a light?",
+        "id": "prop_fb94d182-ff62-4290-835c-8a2e4944fb5d",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_b9ebb468-7c61-4589-9d30-70d7cc6f0c04/2/file",
+        "maxCountPerUser": 1,
+        "name": "Gold-plated Lighter",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_b9ebb468-7c61-4589-9d30-70d7cc6f0c04/2/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_d3637af3-4cb7-4d39-8dde-778cd2643687/2/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AFe878JnDlMQhPqZjQ+GPkMaB7Njtss0ZlbzN1xXIcTCvEpnuA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_2745e949-5bdb-484e-9ea5-9250f2dc0c83/2/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AKaEA1Yo7l09wl0Zb7OnnJhi4IVzMevoFug1kzZ9z5vU+JX8kQ==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_306f1ef1-6b85-4b21-a0d1-85942d9f341b/2/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "ADbX9sTfQJlaZY0De8X17vjcNxGNfYRcU/mKwbXpYsV1ntDqvQ==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 13,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Blazing Sparkler": {
+        "_created_at": "2025-12-19T09:56:56.553Z",
+        "_updated_at": "2025-12-19T22:59:34.234Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "Light it up! Lasts around 45 seconds before it burns out.",
+        "id": "prop_c7f8c49f-f982-4d8c-8ab2-549b2fe8b4f8",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_e2c3c3be-6d48-446d-ab27-5c55f1282961/1/file",
+        "maxCountPerUser": 1,
+        "name": "Blazing Sparkler",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_e2c3c3be-6d48-446d-ab27-5c55f1282961/1/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_05d563e6-e032-4d9b-9d6c-40626c94cf58/2/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AAyjxHrETIWfOi5hMPs6EOvbWkRE5EtKQiIV/wLlXY5FdY5gNw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_08e67468-34f5-4317-8e8b-de154fb065e7/3/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "ADUl6jNu/JnAK3wL6qc5sWlFhAvOADwLS+LF1aULNJxujK0txw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_5b9d99a9-1aa0-47e5-bf1a-1bc345cfa61c/3/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AMMM4XfNiAKbg145d2cujDk3r+ND+W2CmK5U+G4D80aapdp5Mw==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 17,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Roman Candle": {
+        "_created_at": "2025-12-19T10:09:03.012Z",
+        "_updated_at": "2025-12-19T22:11:13.274Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "Blasts fireballs!",
+        "id": "prop_ce118c16-53d9-4d56-bcb2-717057eca102",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_7068dcbb-ed88-4237-9c17-9fbd786c9109/2/file",
+        "maxCountPerUser": 1,
+        "name": "Roman Candle",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_7068dcbb-ed88-4237-9c17-9fbd786c9109/2/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_f3fcead6-dd81-403b-b4ad-389412bc15eb/4/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AA3LbZPbqWt5De4nW0/ahbBiJP2h+M8pew/YmDGeZB6wUrqn/Q==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_b5bde124-f043-4c9b-8e58-176957a6013d/5/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AJmzHyHAm/hyIJHuXavHFO5fdkOi/pCiMZP8m9/Dabkm1olrJg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_4fc02377-7fb5-4aa6-8192-d26794261b21/4/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "AE5/mAm3468sP9iZr2W5QdzW2mLAfLLQNvqWSUlgW95YhB2KKA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 27,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    "Fiery Sky Fireworks Show": {
+        "_created_at": "2025-12-19T10:16:25.361Z",
+        "_updated_at": "2025-12-19T10:22:03.120Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "A fireworks display… in a box!",
+        "id": "prop_cb3cad70-5354-4ce6-810b-9e0364264e2f",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_d911f4d4-7d83-4d47-b2b6-4daa95c914f0/1/file",
+        "maxCountPerUser": 1,
+        "name": "Fiery Sky Fireworks Show",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 0,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_d911f4d4-7d83-4d47-b2b6-4daa95c914f0/1/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_27bb35d9-79c7-4b9a-ab1f-fc7b1e6c3931/1/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "AC9z+3PN1AYjBz6XWUoJl67v1iC4IU7M3lNqcXor+5JNDXhdvQ==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_f00ffd8e-47a7-49b7-9332-418103d85f90/1/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AOGip52anMzjWNyE08eu1C34TlpoG7Z6t9KyWLUyDQElpQgbFg==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_4b4a9cee-499f-40d2-999d-1230be4cc6c8/1/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "ALJz55gYYniACcVHLd3M+w82kZIMeSaMFsZMOajnRhNl/SVi1w==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 7,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 1
+    }
+}

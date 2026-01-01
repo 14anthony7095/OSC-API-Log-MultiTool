@@ -10,10 +10,9 @@ kill vrchat function with a timer in secs
 */
 //	--	Libraries	--
 const { loglv, vrckiller } = require('./config.js')
-const { isFullLaunch } = require('../index.js');
-const { oscEmitter, oscSend, oscChatBox } = require('./Interface_osc_v1.js');
+const { oscEmitter } = require('./Interface_osc_v1.js');
 const find = require('find-process');
-const { fetchLogFile, logEmitter } = require('./Interface_vrc-Log.js');
+const { fetchLogFile, logEmitter, eventGameClose } = require('./Interface_vrc-Log.js');
 
 //	--	Global Vars	--
 let selflog = `\x1b[0m[\x1b[31mTaskKiller\x1b[0m]`
@@ -36,13 +35,12 @@ function killprep() {
 		// 	}
 		// 	vrchatprocessidArr = list[0].pid
 		// 	//setTimeout(()=>{ fetchLogFile() },60_000)
-		// 	if (isFullLaunch == true) { require('./bedtimeProtocol.js') }
 		// }
 		if (list.length > 0) {
 			console.log(`${loglv().log}${selflog} VRChat's process ID is ${list[0].pid}`)
 			vrchatprocessid = list[0].pid
 			//setTimeout(()=>{ fetchLogFile() },60_000)
-			if (isFullLaunch == true) { require('./bedtimeProtocol.js') }
+			require('./bedtimeProtocol.js')
 		} else {
 			console.log(`${loglv().hey}${selflog} VRChat not running.. Will check again when avatar change is detected`)
 		}
@@ -60,6 +58,7 @@ function killvrc(delay) {
 		try { process.kill(vrchatprocessid) } catch (e) { console.log(e) }
 		console.log(`${loglv().log}${selflog} Resetting process ID target to NULL`)
 		vrchatprocessid = null
+		eventGameClose()
 	}, delay * 1000)
 }
 exports.killvrc = killvrc;

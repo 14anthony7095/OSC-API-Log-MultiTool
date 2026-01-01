@@ -21,9 +21,9 @@ const vrchat = new VRChat({
     },
     authentication: {
         credentials: {
-            username: process.env["VRCHAT_USERNAME"],
-            password: process.env["VRCHAT_PASSWORD"],
-            totpSecret: process.env["VRCHAT_TOTPSECRET"]
+            username: process.env["VRC_ACC_LOGIN_1"],
+            password: process.env["VRC_ACC_PASSWORD_1"],
+            totpSecret: process.env["VRC_ACC_TOTPSECRET_1"]
         }
     }
 });
@@ -100,30 +100,30 @@ function genaratePortalLibrary() {
         console.log(`[0%] Loaded world database file`)
         let worldJson = JSON.parse(data)
         Object.keys(worldJson).forEach(key => { totalCount = totalCount + worldJson[key].length })
-        await scan(worldJson.myworlds, 1)
-        await scan(worldJson.games_activity, 2)
-        await scan(worldJson.private_worlds, 3)
-        await scan(worldJson.worldhop_legacy, 4)
-
-        await scan(worldJson.worldhop_01_jan, 5)
-        await scan(worldJson.worldhop_02_feb, 6)
-        await scan(worldJson.worldhop_03_mar, 7)
-        await scan(worldJson.worldhop_04_apr, 8)
-        await scan(worldJson.worldhop_05_may, 9)
-        await scan(worldJson.worldhop_06_june, 10)
-        await scan(worldJson.worldhop_07_july, 11)
-        await scan(worldJson.worldhop_08_aug, 12)
-        await scan(worldJson.worldhop_09_sep, 13)
-        await scan(worldJson.worldhop_10_oct, 14)
-        await scan(worldJson.worldhop_11_nov, 15)
-        await scan(worldJson.worldhop_12_dec, 16)
-
-        await scan(worldJson.personal_collection, 17)
-        await scan(worldJson.friends_only, 18)
+        let indexcount = 1
+        await scan(worldJson.myworlds, indexcount);indexcount++
+        await scan(worldJson.games_activity, indexcount);indexcount++
+        await scan(worldJson.private_worlds, indexcount);indexcount++
+        await scan(worldJson.worldhop_legacy, indexcount);indexcount++
+        await scan(worldJson.worldhop_2025, indexcount);indexcount++
+        await scan(worldJson.worldhop_01_jan, indexcount);indexcount++
+        await scan(worldJson.worldhop_02_feb, indexcount);indexcount++
+        await scan(worldJson.worldhop_03_mar, indexcount);indexcount++
+        await scan(worldJson.worldhop_04_apr, indexcount);indexcount++
+        await scan(worldJson.worldhop_05_may, indexcount);indexcount++
+        await scan(worldJson.worldhop_06_june, indexcount);indexcount++
+        await scan(worldJson.worldhop_07_july, indexcount);indexcount++
+        await scan(worldJson.worldhop_08_aug, indexcount);indexcount++
+        await scan(worldJson.worldhop_09_sep, indexcount);indexcount++
+        await scan(worldJson.worldhop_10_oct, indexcount);indexcount++
+        await scan(worldJson.worldhop_11_nov, indexcount);indexcount++
+        await scan(worldJson.worldhop_12_dec, indexcount);indexcount++
+        await scan(worldJson.personal_collection, indexcount);indexcount++
+        await scan(worldJson.friends_only, indexcount);indexcount++
 
         let writeString = {
             "ShowPrivateWorld": true, "ReverseCategorys": false, "Roles": [
-                { "RoleName": "Friend", "DisplayNames": ["Lhun", "Manolo", "TheTacticion", "Gorange", "Turtlesnack256", "Escondan", "Breakfasto", "Nycelly", "Sagedabluemage", "Krantu", "ThunderClaw", process.env["VRC_ACC_NAME_2"], "Asagao_", "ApexGamingVR", "Zan X", "Maxi_", "Rezobyte", "Jeror7", "BluCloudy", "Lou Lou Waifu", "Skull_korn", "Chriin", "Melting3D", "ColdWinter0", "Shadowriver", "＝Grim＝", "Nestorboy", "Coaldran", "Ablemon", "Estefanoida", "Strange Petals", "B̴litz", "Zenolith", "Riku Satori", "Axolava", "Bloomin'", "Molly_Dreemurr", "Air In", "TummyTime", "Shiro Fuun", "Marino", "Kushogade", "Yugenki", "14anthony7097", "Kanokochan", "FrostyHase", "AzureNightOwl", "Swingly", "GoshImDowNowGG", "DrBlackRat", "Aesthiore", "Kainet", "Meowiie", "Ranirr", "sweetmetadata", "14anthony7069", "DrAbubu", "Wishdream", "ArtGhostt", "stereofoxmuviz", "Tabi Rita", "OJRmk1", "Chickenbreadlp", "Pyrii", "KatNX", "Supershy24 59d7", "Sunny_Bounder", "Speculabundus", "Flare_Blitz", "FUNTIME_FLEXIRO", "Dragon Stardust", "Shymity", "RoriCandyDemon", "Furality", "miam520", "NoirOvis", "dragonos130", "MMDREWIND", "CATMANDEAF", "BigOreoUwU", "TheFakeBlaze", "JusAri", "KangarooKisser", "Mishuuu", "Vigiloannalis", "Absumsocietas", "I'm_READY", "DementedGiggles", "RaineBow6", "LujiBoujee", "~Eros", "DarkBlueTail", "John_JLB", "itsBiffy", "SooShey", "Mr․Clasherton", "VantablackWolf", "Pyrosshade", "SirNate519", "Cmdr_mantis308", "․Lex․", "Sphoosel", "ShadowBun", "Pein is Styxus", "savvydigitigrades", "Luna-The-Bunny", "0P4 X45", "PatchkinBunny", "TheAyteYo", "E․N․T․E․R", "loki_bad", "ConsMayVary"] },
+                { "RoleName": "Friend", "DisplayNames": ["TheTacticion","Gorange","Breakfasto","Nycelly","Sagedabluemage","Krantu","ThunderClaw","Manolo","Asagao_","ApexGamingVR","Zan X","Maxi_","Rezobyte","Jeror7","BluCloudy","Lou Lou Waifu","Skull_korn","Chriin","Melting3D","ColdWinter0","Shadowriver","＝Grim＝","Nestorboy","Coaldran","Ablemon","Estefanoida","Strange Petals","B̴litz","Zenolith","Riku Satori","Axolava","Lhun","Bloomin'","Molly_Dreemurr","Air In","TummyTime","Shiro Fuun","Marino","Kushogade","Yugenki","14anthony7097","FrostyHase","AzureNightOwl","Swingly","GoshImDowNowGG","DrBlackRat","Aesthiore","Kainet","Meowiie","Ranirr","sweetmetadata","14anthony7069","Wishdream","artGhostt","stereofoxmuviz","Tabi Rita","OJRmk1","Chickenbreadlp","Pyrii","KatNX","Supershy24 59d7","Sunny_Bounder","Flare_Blitz","FUNTIME_FLEXIRO","Shymity","RoriCandyDemon","miam520","NimbleRed","dragonos130","MMDREWIND","CATMANDEAF","BigOreoUwU","TheFakeBlaze","JusAri","KangarooKisser","Mishuuu","I'm_READY","DementedGiggles","RaineBow6","LujiBoujee","~Eros","John_JLB","itsBiffy","SooShey","Mr․Clasherton","VantablackWolf","Pyrosshade","SirNate519","Sphoosel","Pein is Styxus","savvydigitigrades","PatchkinBunny","E․N․T․E․R","loki_bad","ConsMayVary","SweetKitsune","Eevonn","KingIchigo101","NanaruFalina","TaKObell75","Skonker","King Muffin","aurycat","KrakkaCafe","Mobile_Sprout","14anthony7096","JimMcBubbles","Slipdash","Corbelle","BunnyBun589d","DRAChe_","Aeizu","Sakura Sachiko","AmyWemy","Snake Dog","Beepsi","ZUK01V","Shnarff","Buckiez"] },
                 { "RoleName": "Me", "DisplayNames": ["14anthony7069", "14anthony7095", "14anthony7096", "14anthony7097"] }
             ],
             "Categorys": [
@@ -131,6 +131,7 @@ function genaratePortalLibrary() {
                 { "Category": "Games & Activity", "Worlds": gameWorldsArray },
                 { "Category": "Private Worlds", "Worlds": privateWorldsArray },
                 { "Category": "World Hop (Legacy)", "Worlds": worldHopFindLegacy },
+                { "Category": "World Hop (2025)", "Worlds": worldHopFindLegacy },
                 { "Category": "World Hop (1-Jan)", "Worlds": worldHopFinds01Array },
                 { "Category": "World Hop (2-Feb)", "Worlds": worldHopFinds02Array },
                 { "Category": "World Hop (3-Mar)", "Worlds": worldHopFinds03Array },

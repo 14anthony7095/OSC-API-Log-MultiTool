@@ -144,3 +144,4 @@ vite.config.ts.timestamp-*
 /input.txt
 /a_format json.json
 /worldThumbnails/dl/
+/datasets/vrcA.json

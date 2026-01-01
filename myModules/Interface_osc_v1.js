@@ -8,7 +8,7 @@
 //	--	Libraries	--
 const { loglv, useChatBox } = require('./config.js')
 var { logOscIn, logOscOut } = require('./config.js')
-const { deviceIP, isFullLaunch } = require('../index.js')
+const { deviceIP } = require('../index.js')
 let selflog = `\x1b[0m[\x1b[34mOSC\x1b[0m]`
 var osc = require('osc');
 var udpPort = new osc.UDPPort({ localAddress: '127.0.0.1', localPort: 9100 })
@@ -17,6 +17,7 @@ const { cmdEmitter } = require('./input.js');
 const { playNote } = require('./interface_midi.js')
 const { PiShock, PiShockAll } = require('./Interface_PS.js');
 const { toUnicode } = require('punycode');
+const fs = require('fs');
 const { EventEmitter } = require('events');
 const oscEmitter = new EventEmitter();
 exports.oscEmitter = oscEmitter;
@@ -46,6 +47,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'osc' && args[0] == 'db2') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2]), parseFloat(args[3])) }
 	if (cmd == 'osc' && args[0] == 'db3') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2]), parseFloat(args[3]), parseFloat(args[4])) }
 	if (cmd == 'osc' && args[0] == 'say') { oscChatBox(raw.slice(8).toString()) }
+	if (cmd == 'osc' && args[0] == 'send') { oscSend('/avatar/parameters/'+args[1], JSON.parse(args[2]) ) }
 	// if( cmd == 'cctv' ){
 	// 	if( args[0] == 'stop' ){
 	// 		clearInterval(nanaPartyCCTVtimer)
@@ -302,6 +304,10 @@ oscEmitter.on('osc', (address, value) => {
 		}
 	}
 
+	if( address == vrcap + 'd20/d20_Menu' && value == 1 ){
+		PiShockAll(50,2)
+	}
+
 	if (address == vrcap + '14a/osc/menuX') { menuX = value }
 	if (address == vrcap + '14a/osc/menuY') { menuY = value }
 	if (address == vrcap + '14a/osc/menuX' || address == vrcap + '14a/osc/menuY') {
@@ -330,12 +336,22 @@ oscEmitter.on('osc', (address, value) => {
 function clamp(input) { return Math.round(Math.max(0, Math.min(127, input))) }
 function clamp2(input) { return Math.round(Math.max(0, Math.min(15, input))) }
 
+var lastCameraPos
 udpPort.on("message", function (msg, rinfo) {
 	// console.log(msg);
 	// console.log(msg['args'][0]);
 	//console.log("Remote info is: ", rinfo);
 
 	oscEmitter.emit('osc', msg['address'], msg['args'][0]);
+
+	if (msg['address'] == `/usercamera/Pose`) {
+		lastCameraPos = msg['args']
+		// console.log(`${loglv().debug} storing: ${msg['args']}`)
+	}
+	if (msg['address'] == `/usercamera/Mode` && msg['args'][0] == 2) {
+		// console.log(`${loglv().debug} saving to file: ${lastCameraPos}`)
+		fs.appendFile('datasets/cameraPositions.txt', `\r\n${lastCameraPos}`, 'utf-8', (err) => { if (err) { console.log(err) } })
+	}
 
 	if (msg['address'] == '/avatar/change') {
 		var avatarId = msg['args'][0]
@@ -345,6 +361,7 @@ udpPort.on("message", function (msg, rinfo) {
 		if (avatarId == `avtr_21cbf284-0c09-423c-9973-5cd41dccd308`) { oscSend(vrcap + `LL/Menu/IsUnlocked`, 1 == 1) }
 		if (avatarId == `avtr_2a9a9021-2b82-4564-bb63-2d96deb6a6d7`) { oscSend(vrcap + `Patreon-NDA`, 1 == 1) }
 		if (avatarId == `avtr_94237663-3ed4-48fd-b29d-b3d6b174e004`) { oscSend(vrcap + `VF100_SecurityLockSync`, 1 == 1) }
+		oscSend(vrcap+"   locked",false)
 		oscSend(vrcap + `14a/osc/14anthony7095`, true)
 	}
 	if (msg['address'] == vrcap + 'toolGunHolster_Angle') { return }
@@ -388,9 +405,7 @@ udpPort.on("ready", function () {
 	oscEmitter.emit('ready', true);
 	console.log(`${loglv().log}${selflog} Ready..`)
 
-	if (isFullLaunch == true) {
 		require('./Interface_vrc-Api.js')
-		// require('./Interface_websocket-server.js')
 		// require('./interface_midi.js')
 
 		// require('./osc_PingSystem.js') // OSC
@@ -406,5 +421,4 @@ udpPort.on("ready", function () {
 
 		require('./Interface_vrc-Log.js') // OSC+ , Twitch
 
-	}
-});
+	});

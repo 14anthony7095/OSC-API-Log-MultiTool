@@ -30,6 +30,7 @@ function start() {
 		// console.log(`setting 13 to 0`)
 		OSCDataBurst(13, parseFloat(0))
 		workload(count)
+		
 	}).catch((err) => { workload(0, 'Lost Connection') })
 
 	counterTimer = setInterval(() => {
@@ -52,8 +53,25 @@ function stop() {
 }
 
 var worldcount_mem = 0
-apiEmitter.on('switch', (data) => {
-	if (data >= 1) {
+apiEmitter.on('switch', (data, type) => {
+	/* if (data >= 1 && type == 'population') {
+		stop()
+		if (isWorlding == false) {
+			isWorlding = true
+			worldcount_mem = data
+			// console.log(`setting 13 to true`)
+			OSCDataBurst(13, parseFloat(1))
+			workload(worldcount_mem)
+			worldTimer = setInterval(() => {
+				// console.log(`setting 13 to true`)
+				OSCDataBurst(13, parseFloat(1))
+				workload(worldcount_mem)
+			}, 10000)
+		} else if (isWorlding == true) {
+			worldcount_mem = data
+		}
+	} else  */
+	 if (data >= 1) {
 		stop()
 		if (isWorlding == false) {
 			isWorlding = true

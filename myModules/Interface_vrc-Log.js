@@ -13,6 +13,8 @@ var fs = require('fs')
 var ytdl = require('ytdl-core');
 const fetch = require('node-fetch');
 const say = require('say');
+const { VRChat } = require("vrchat");
+const { KeyvFile } = require("keyv-file");
 const EventEmitter = require('events');
 const { cmdEmitter } = require('./input.js');
 const { PiShock, PiShockAll } = require('./Interface_PS.js');
@@ -21,14 +23,40 @@ const logEmitter = new EventEmitter
 exports.logEmitter = logEmitter;
 require('dotenv').config()
 
+var vrchat = new VRChat({
+	application: {
+		name: "Api-Osc-Interface",
+		version: "1.2",
+		contact: process.env["CONTACT_EMAIL"]
+	},
+	authentication: {
+		credentials: {
+			username: process.env["VRC_ACC_LOGIN_1"],
+			password: process.env["VRC_ACC_PASSWORD_1"],
+			totpSecret: process.env["VRC_ACC_TOTPSECRET_1"]
+		}
+	},
+	keyv: new KeyvFile({ filename: "./datasets/vrcA.json" })
+	/* 
+		1   95
+		2   96
+		3   97
+		4   98 / 69
+		5   Spec
+	*/
+});
+
 let selflog = `\x1b[0m[\x1b[32mVRC_Log\x1b[0m]`
 var path = 'C:/Users/14anthony7095/AppData/LocalLow/VRChat/VRChat/'
 var tarFile = 'nothing'
 var tarFilePath = 'nothing'
 var playersInInstance = []
+var membersInInstance = []
 var playersInstanceObject = []
 var playerHardLimit = 99
 var playerRatio = 0.5
+var memberRatio = 0.5
+var G_autoNextWorldHop = false
 
 //	--	On Load	--
 console.log(`${loglv().log}${selflog} Loaded -> ${loglv(printAllLogs)}printAllLogs${loglv().reset} , ${loglv(ChatVideoURL)}ChatVideoURL${loglv().reset} , ${loglv(ChatVideoTitle)}ChatVideoTitle${loglv().reset}`)
@@ -40,13 +68,15 @@ cmdEmitter.on('cmd', (cmd, args) => {
 -	log vidtitle [true/false]
 -	log printall [true/false]
 -	log queue [true/false]
--	log speed [true/false]`)
+-	log speed [true/false]
+-	explore autonext [true/false]`)
 	}
 	if (cmd == 'log' && args[0] == 'vidurl') { ChatVideoURL = JSON.parse(args[1]) }
 	if (cmd == 'log' && args[0] == 'vidtitle') { ChatVideoTitle = JSON.parse(args[1]) }
 	if (cmd == 'log' && args[0] == 'printall') { printAllLogs = JSON.parse(args[1]) }
 	if (cmd == 'log' && args[0] == 'queue') { ChatAvyQueue = JSON.parse(args[1]) }
 	if (cmd == 'log' && args[0] == 'speed') { ChatDownSpeed = JSON.parse(args[1]) }
+	if (cmd == 'explore' && args[0] == 'autonext') { G_autoNextWorldHop = JSON.parse(args[1]) }
 
 	if (cmd == 'twitch' && args[0] == 'alwaysrun') { ttvAlwaysRun = args[1] }
 	if (cmd == 'twitch' && args[0] == 'join') { ttvFetchFrom = 2; setTimeout(() => { joinChannel(args[1].toString()) }, 100) }
@@ -143,34 +173,6 @@ function readLogFile(cooldownSkip) {
 		//console.log(`${loglv().debug}${selflog} ${lastChecked} Reading Log`)
 		cooldown = true
 
-		// Replace with createReadStream
-		// const readStream = fs.createReadStream( tarFilePath, { encoding: 'utf8' });
-		// readStream.on('data', (chunk) => {
-		//   	// Process the chunk of data
-		// 	var newDataPerLine = chunk.replace(/^\s*\n/gm, "").trim().split('\n')
-		// 	currentLength = newDataPerLine.length
-		// 	// console.log( newDataPerLine )
-		// 	// varibles to check for within the line scan
-		// 	newDataPerLine.slice( currentLength - previousLength ).forEach((line,index)=>{
-		// 		if( line.length != 0 ){
-		// 			console.log(`${loglv().debug}${selflog} ${line}`)
-		// 			outputLogLines(index, newDataPerLine.length-1, line);
-		// 		}
-		// 	})
-		// });
-		// readStream.on('end', () => {
-		// 	previousLength = currentLength
-		// 	setTimeout(()=>{
-		// 		if( lastChecked < lastUpdated ){ readLogFile(true) }
-		// 		else{ cooldown = false }
-		// 	},logCooldown*1000)
-		//   console.log('File read complete');
-		// });
-		// readStream.on('error', (err) => {
-		//   // Handle errors
-		//   console.error(err);
-		// });
-
 		fs.readFile(tarFilePath, 'utf8', (err, data) => {
 			if (err) { console.log(err); return }
 			dataNE = data.replace(/^\s*\n/gm, "").trim()
@@ -219,13 +221,13 @@ var tonRoundType = ''
 var tonAvgStartWait = []
 var tonRoundReadyTime = 0
 var worldQueueTxt = './datasets/worldQueue.txt'
-var worldID = ``
+var G_worldID = ``
 var worldID_Closed = false
 oscSend('/avatar/parameters/log/instance_closed', false)
-var groupID = ``
+var G_groupID = ``
 var instanceType = ''
 
-function getInstanceGroupID() { return groupID }
+function getInstanceGroupID() { return G_groupID }
 exports.getInstanceGroupID = getInstanceGroupID;
 function average(array) {
 	if (array.length == 0) { return 0 }
@@ -261,14 +263,14 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 
 	if (line.includes(`[VRCX] VideoPlay(PopcornPalace) `)) { eventPopcornPalace(line.split('[VRCX] VideoPlay(PopcornPalace) ')[1]) }
 
-	if (line.includes(`VRCNP: Received URL`) && groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+	if (line.includes(`VRCNP: Received URL`) && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 		// require('child_process').execSync(`"C:\\Users\\14Anthony7095\\Documents\\14aOSC-API-Log\\bin\\vrcPressGoOnWorldPage.exe"`)
 	}
 
 
 
 	// Terrors of Nowhere
-	if (worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd') {
+	if (G_worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd') {
 		// if (line.includes(`[DEATH][14anthony7095]`)) { PiShockAll(30, 1) }
 		if (line.includes(`Round type is`)) {
 			tonRoundType = line.split('Round type is ')[1]
@@ -284,9 +286,9 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 			console.log(`${loglv().log}${selflog} [TON] Intermission.. Ready to start next round.`)
 			tonRoundReadyTime = Date.now()
 			let avgStartDisplay = new Date(average(tonAvgStartWait)).toISOString()
-			
-			OSCDataBurst(12, parseFloat( ( parseInt(avgStartDisplay.substring(14, 16)) * 60 + parseInt(avgStartDisplay.substring(17, 19)) ) / 255 ) )
-			
+
+			OSCDataBurst(12, parseFloat((parseInt(avgStartDisplay.substring(14, 16)) * 60 + parseInt(avgStartDisplay.substring(17, 19))) / 255))
+
 			tonAvgStartWait.length > 1 ? oscChatBox(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}`, 12) : oscChatBox(`~Round ready to start`, 10)
 		}
 		if (line.includes(`Everything recieved, looks good`)) {
@@ -371,6 +373,8 @@ function queueInstanceDataBurst() {
 	OSCDataBurst(9, parseFloat((playerHardLimit > 80 ? 80 : playerHardLimit) < 10 ? (playerHardLimit > 80 ? 80 : playerHardLimit) : (playerHardLimit > 80 ? 80 : playerHardLimit).toString()[0]) / 10)
 	OSCDataBurst(10, parseFloat((playerHardLimit > 80 ? 80 : playerHardLimit) < 10 ? 10 : (playerHardLimit > 80 ? 80 : playerHardLimit).toString()[1]) / 10)
 	OSCDataBurst(11, parseFloat(playerRatio))
+	// membersInInstance.length
+	// memberRatio
 }
 
 oscEmitter.on('avatar', (avtrID) => {
@@ -381,13 +385,13 @@ oscEmitter.on('avatar', (avtrID) => {
 	].includes(avtrID)) {
 		queueInstanceDataBurst()
 		oscSend('/avatar/parameters/log/instance_closed', worldID_Closed)
-		applyGroupLogo(groupID)
+		applyGroupLogo(G_groupID)
 	}
 });
 
-setInterval(()=>{
+setInterval(() => {
 	queueInstanceDataBurst()
-},10_000)
+}, 10_000)
 
 var movieShowNameLast = ''
 function eventPopcornPalace(json) {
@@ -496,10 +500,24 @@ function eventGameClose() {
 		lastSetUserStatus = ''
 		logEmitter.emit('setstatus', '')
 	}
-	groupID = ''
+	G_groupID = ''
 	worldID_Closed = false
 	tonAvgStartWait = []
+
+	let buildLog = `${loglv().log}${selflog}`
+	if (ttvFetchFrom == 1 && urlType == 'twitch') {
+		buildLog += ` Resetting Twitch target channel`
+		switchChannel(process.env["VRC_ACC_NAME_1"])
+		if (lastVideoURL != '') { buildLog += ` &` }
+	}
+	if (lastVideoURL != '') {
+		buildLog += ` Clearing Video-URL history`
+		lastVideoURL = ''
+		seenVideoURLs = []
+	}
+	console.log(buildLog)
 }
+exports.eventGameClose = eventGameClose;
 
 var vrcpropcount = {
 	'prop_id': {
@@ -526,12 +544,12 @@ function eventHeadingToWorld(logOutputLine) {
 	clearTimeout(worldHopTimeout)
 	clearTimeout(worldHopTimeoutHour)
 
-	worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
-	console.log(`${loglv().debug}${selflog} World ID ${worldID}`)
+	G_worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
+	console.log(`${loglv().debug}${selflog} World ID ${G_worldID}`)
 
 	if (logOutputLine.includes(`~group(grp_`)) {
-		groupID = /grp_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
-		console.log(`${loglv().debug}${selflog} Group ID ${groupID}`)
+		G_groupID = /grp_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
+		console.log(`${loglv().debug}${selflog} Group ID ${G_groupID}`)
 		if (logOutputLine.includes(`~groupAccessType(plus)`)) {
 			instanceType = `groupPlus`
 		} else if (logOutputLine.includes(`~groupAccessType(public)`)) {
@@ -540,7 +558,7 @@ function eventHeadingToWorld(logOutputLine) {
 			instanceType = `group`
 		}
 	} else {
-		groupID = ''
+		G_groupID = ''
 		if (logOutputLine.includes(`~private(`)) {
 			instanceType = `invite`
 		} else if (logOutputLine.includes(`~canRequestInvite`)) {
@@ -558,6 +576,11 @@ function eventHeadingToWorld(logOutputLine) {
 
 var worldjointimestamp = 0
 function eventJoinWorld() {
+	setTimeout(()=>{
+		if( playersInInstance.length == 1 && G_autoNextWorldHop == true && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce' ){
+			logEmitter.emit('nextworld',true)
+		}
+	},120_000)
 	worldHopTimeout = setTimeout(() => {
 		say.speak(`Been in world for too long. Proceed to next in queue`, 'Microsoft David Desktop', 1.0, (err) => {
 			if (err) { return console.error(`${loglv().warn}${selflog} say.js error: ` + err) }
@@ -573,28 +596,29 @@ function eventJoinWorld() {
 
 	worldjointimestamp = Date.now()
 	playersInInstance = []
+	membersInInstance = []
 	playersInstanceObject = []
 
 	fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
-		if (data.includes(worldID) && worldID != '') {
-			fs.writeFile(worldQueueTxt, data.replace(`${worldID}\r\n`, ''), (err) => {
+		if (data.includes(G_worldID) && G_worldID != '') {
+			fs.writeFile(worldQueueTxt, data.replace(`${G_worldID}\r\n`, ''), (err) => {
 				if (err) { console.log(err) }
-				console.log(`${loglv().debug}${selflog} ${worldID} was successfully purged from queue`)
+				console.log(`${loglv().debug}${selflog} ${G_worldID} was successfully purged from queue`)
 			})
 		}
 	})
 }
 
 function eventInstanceClosed() {
-	if (worldID != 'wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5' && groupID != 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+	if (G_worldID != 'wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5' && G_groupID != 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 		lastSetUserStatus = 'Instance is closed'
 		logEmitter.emit('setstatus', 'Instance is closed')
-	} else if (groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+	} else if (G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 		if (lastSetUserStatus != `Exploring World Queue`) {
 			lastSetUserStatus = `Exploring World Queue`
 			logEmitter.emit('setstatus', `Exploring World Queue`)
 		}
-		logEmitter.emit('nextworld', 'instanceClosed')
+		logEmitter.emit('nextworld',false)
 	}
 	worldID_Closed = true
 	oscSend('/avatar/parameters/log/instance_closed', true)
@@ -642,13 +666,13 @@ function eventPlayerInitialized(logOutputLine) {
 	if (playerDisplayName != undefined) {
 		console.log(`${loglv().log}${selflog} Player Joined: ` + playerDisplayName)
 		logEmitter.emit('playerJoin', playerDisplayName)
-		if (worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd' &&
+		if (G_worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd' &&
 			[`invite`, `invitePlus`, `friends`, `friendsPlus`].includes(instanceType) &&
 			Date.now() > (worldjointimestamp + 120_000)) {
 			oscChatBox(`~Someone is joining if you want to wait for them: ${playerDisplayName}`)
 		}
 
-		if (groupID == 'grp_cacf2dd8-8958-4412-be78-dedd798e6df4' && playerDisplayName != '14anthony7095') {
+		if (G_groupID == 'grp_cacf2dd8-8958-4412-be78-dedd798e6df4' && playerDisplayName != '14anthony7095') {
 			logEmitter.emit('scanPlayerStatus4Ban', playerDisplayName)
 		}
 
@@ -657,7 +681,7 @@ function eventPlayerInitialized(logOutputLine) {
 
 		playerRatio = playersInInstance.length / playerHardLimit
 
-		if ( Date.now() > (worldjointimestamp + 10000) ) {
+		if (Date.now() > (worldjointimestamp + 10000)) {
 			queueInstanceDataBurst()
 		}
 
@@ -698,21 +722,45 @@ function eventPlayerInitialized(logOutputLine) {
 	}
 }
 
-function eventPlayerJoin(logOutputLine) {
+var hassaidcooldown = false
+async function eventPlayerJoin(logOutputLine) {
 	var playerDisplayName = logOutputLine.split('[Behaviour] OnPlayerJoined ')[1]
 
 	if (playerDisplayName != undefined) {
-		var playerID = /(?:\([0-z]{10}\))|(?:\(usr_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}\))/.exec(playerDisplayName)[0]
+		var playerID = /(?:\([0-z]{10}\))|(?:\(usr_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}\))/.exec(playerDisplayName)[0].replace(/\(/, '').replace(/\)/, '')
 
 		playerDisplayName = playerDisplayName.replace(/ \(usr_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}\)/, '')
 
 		// Append UserID to tracked player
 		let pioIndex = playersInstanceObject.findIndex(playersInstanceObject => playersInstanceObject.name == playerDisplayName)
+
+		/* if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
+			// groupID
+			memberRatio = membersInInstance.length / playersInInstance.length
+			let isUserPartOfGroup = await vrchat.getUserGroups({ 'path': { 'userId': playerID } })
+			if (isUserPartOfGroup.data.find(e => e.groupId == G_groupID) != undefined) {
+				playersInstanceObject[pioIndex].groupMember = true
+				membersInInstance.push(playerDisplayName)
+			} else {
+				playersInstanceObject[pioIndex].groupMember = false
+			}
+
+			if (hassaidcooldown == false) {
+				hassaidcooldown = true
+				console.log(`${loglv().log}${selflog} There are now ${membersInInstance.length} / ${playersInInstance.length} group members in the instance. [${memberRatio}]`)
+				setTimeout(() => {
+					hassaidcooldown = false
+					memberRatio = membersInInstance.length / playersInInstance.length
+					console.log(`${loglv().log}${selflog} There are now ${membersInInstance.length} / ${playersInInstance.length} group members in the instance. [${parseFloat(memberRatio)}]`)
+				}, 1000);
+			}
+		} */
+
 		try {
-			playersInstanceObject[pioIndex].id = playerID.replace(/\(/, '').replace(/\)/, '')
+			playersInstanceObject[pioIndex].id = playerID
 		} catch (error) {
 			console.log(`${loglv().hey}${selflog} playerTracker Object got UserID before PlayerName - ${error}`)
-			playersInstanceObject.push({ 'name': playerDisplayName, 'id': playerID.replace(/\(/, '').replace(/\)/, '') })
+			playersInstanceObject.push({ 'name': playerDisplayName, 'id': playerID })
 		}
 	}
 }
@@ -730,10 +778,17 @@ function eventPlayerLeft(logOutputLine) {
 		playersInInstance = playersInInstance.filter(name => name != playerDisplayName)
 		playersInstanceObject = playersInstanceObject.filter(playersInstanceObject => playersInstanceObject.name !== playerDisplayName)
 		playerRatio = playersInInstance.length / playerHardLimit
+		/* if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
+			membersInInstance = membersInInstance.filter(name => name != playerDisplayName)
+			memberRatio = membersInInstance.length / playersInInstance.length
+		} */
 
 		queueInstanceDataBurst()
 
 		console.log(`${loglv().log}${selflog} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
+		/* if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
+			console.log(`${loglv().log}${selflog} There are now ${membersInInstance.length} / ${playersInInstance.length} group members in the instance. [ ${memberRatio} ]`)
+		} */
 		// logEmitter.emit('playerLeft', playerDisplayName, playerID, playersInInstance)
 
 		if (playerDisplayName == getCurrentAccountInUse().name) {
