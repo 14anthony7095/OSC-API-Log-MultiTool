@@ -76,6 +76,7 @@ var myWorldsArray = []
 var gameWorldsArray = []
 var privateWorldsArray = []
 var worldHopFindLegacy = []
+var worldHopFind2025 = []
 
 var worldHopFinds01Array = []
 var worldHopFinds02Array = []
@@ -119,11 +120,9 @@ function genaratePortalLibrary() {
         await scan(worldJson.worldhop_11_nov, indexcount);indexcount++
         await scan(worldJson.worldhop_12_dec, indexcount);indexcount++
         await scan(worldJson.personal_collection, indexcount);indexcount++
-        await scan(worldJson.friends_only, indexcount);indexcount++
 
         let writeString = {
             "ShowPrivateWorld": true, "ReverseCategorys": false, "Roles": [
-                { "RoleName": "Friend", "DisplayNames": ["TheTacticion","Gorange","Breakfasto","Nycelly","Sagedabluemage","Krantu","ThunderClaw","Manolo","Asagao_","ApexGamingVR","Zan X","Maxi_","Rezobyte","Jeror7","BluCloudy","Lou Lou Waifu","Skull_korn","Chriin","Melting3D","ColdWinter0","Shadowriver","＝Grim＝","Nestorboy","Coaldran","Ablemon","Estefanoida","Strange Petals","B̴litz","Zenolith","Riku Satori","Axolava","Lhun","Bloomin'","Molly_Dreemurr","Air In","TummyTime","Shiro Fuun","Marino","Kushogade","Yugenki","14anthony7097","FrostyHase","AzureNightOwl","Swingly","GoshImDowNowGG","DrBlackRat","Aesthiore","Kainet","Meowiie","Ranirr","sweetmetadata","14anthony7069","Wishdream","artGhostt","stereofoxmuviz","Tabi Rita","OJRmk1","Chickenbreadlp","Pyrii","KatNX","Supershy24 59d7","Sunny_Bounder","Flare_Blitz","FUNTIME_FLEXIRO","Shymity","RoriCandyDemon","miam520","NimbleRed","dragonos130","MMDREWIND","CATMANDEAF","BigOreoUwU","TheFakeBlaze","JusAri","KangarooKisser","Mishuuu","I'm_READY","DementedGiggles","RaineBow6","LujiBoujee","~Eros","John_JLB","itsBiffy","SooShey","Mr․Clasherton","VantablackWolf","Pyrosshade","SirNate519","Sphoosel","Pein is Styxus","savvydigitigrades","PatchkinBunny","E․N․T․E․R","loki_bad","ConsMayVary","SweetKitsune","Eevonn","KingIchigo101","NanaruFalina","TaKObell75","Skonker","King Muffin","aurycat","KrakkaCafe","Mobile_Sprout","14anthony7096","JimMcBubbles","Slipdash","Corbelle","BunnyBun589d","DRAChe_","Aeizu","Sakura Sachiko","AmyWemy","Snake Dog","Beepsi","ZUK01V","Shnarff","Buckiez"] },
                 { "RoleName": "Me", "DisplayNames": ["14anthony7069", "14anthony7095", "14anthony7096", "14anthony7097"] }
             ],
             "Categorys": [
@@ -131,7 +130,7 @@ function genaratePortalLibrary() {
                 { "Category": "Games & Activity", "Worlds": gameWorldsArray },
                 { "Category": "Private Worlds", "Worlds": privateWorldsArray },
                 { "Category": "World Hop (Legacy)", "Worlds": worldHopFindLegacy },
-                { "Category": "World Hop (2025)", "Worlds": worldHopFindLegacy },
+                { "Category": "World Hop (2025)", "Worlds": worldHopFind2025 },
                 { "Category": "World Hop (1-Jan)", "Worlds": worldHopFinds01Array },
                 { "Category": "World Hop (2-Feb)", "Worlds": worldHopFinds02Array },
                 { "Category": "World Hop (3-Mar)", "Worlds": worldHopFinds03Array },
@@ -144,8 +143,7 @@ function genaratePortalLibrary() {
                 { "Category": "World Hop (10-Oct)", "Worlds": worldHopFinds10Array },
                 { "Category": "World Hop (11-Nov)", "Worlds": worldHopFinds11Array },
                 { "Category": "World Hop (12-Dec)", "Worlds": worldHopFinds12Array },
-                { "Category": "Personal Collection", "Worlds": personalCollectionArray, "PermittedRoles": ["Me"] },
-                { "Category": "Friends Only", "Worlds": friendsOnlyWorldsArray, "PermittedRoles": ["Friend", "Me"] }
+                { "Category": "Personal Collection", "Worlds": personalCollectionArray, "PermittedRoles": ["Me"] }
             ]
         }
         fs.writeFile('./worldThumbnails/output/worlds.json', JSON.stringify(writeString), (err) => {
