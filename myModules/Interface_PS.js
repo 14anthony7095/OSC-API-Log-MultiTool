@@ -1,6 +1,6 @@
 const fetch = require("node-fetch");
 const { loglv } = require("./config");
-require('dotenv').config()
+require('dotenv').config({'quiet':true})
 
 var deviceCodes= ['0']
 deviceCodes.push( process.env["PISHOCK_DEVICE1"], process.env["PISHOCK_DEVICE2"], process.env["PISHOCK_DEVICE3"])

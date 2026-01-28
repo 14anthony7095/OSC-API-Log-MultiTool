@@ -5,7 +5,7 @@ const WebSocket = require('ws');
 const { PiShockAll } = require('./Interface_PS.js');
 let selflog = `\x1b[0m[\x1b[31mHeart-Rate Monitor\x1b[0m]`
 console.log(`${loglv().log}${selflog} Loaded`)
-require('dotenv').config()
+require('dotenv').config({'quiet':true})
 
 var hrmRandomizer;
 var hrmLinar;

@@ -46,8 +46,10 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'osc' && args[0] == 'db') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2])) }
 	if (cmd == 'osc' && args[0] == 'db2') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2]), parseFloat(args[3])) }
 	if (cmd == 'osc' && args[0] == 'db3') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2]), parseFloat(args[3]), parseFloat(args[4])) }
-	if (cmd == 'osc' && args[0] == 'say') { oscChatBox(raw.slice(8).toString()) }
-	if (cmd == 'osc' && args[0] == 'send') { oscSend('/avatar/parameters/'+args[1], JSON.parse(args[2]) ) }
+	if (cmd == 'osc' && args[0] == 'say') {
+		oscChatBoxV2(raw.slice(8).toString(), undefined, false, false, false, true)
+	}
+	if (cmd == 'osc' && args[0] == 'send') { oscSend('/avatar/parameters/' + args[1], JSON.parse(args[2])) }
 	// if( cmd == 'cctv' ){
 	// 	if( args[0] == 'stop' ){
 	// 		clearInterval(nanaPartyCCTVtimer)
@@ -74,6 +76,9 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	// 	},60_000)
 	// }
 	if (cmd == 'osc' && args[0] == 'kat') { oscSendKATmsg(sendStringKAT = raw.slice(8 + ((args[1] || "false").length + 1) + ((args[2] || "3").length + 1)).toString() + ' ', clearBefore = JSON.parse(args[1] || "false"), displayColor = parseInt(args[2] || "3")) }
+	if (cmd == 'osc' && args[0] == 'serial') {
+		OSCBinaryBurst(args[1], 200, 400)
+	}
 	if (cmd == 'osc' && args[0] == 'chat') {
 		if (args[1] == 'tall') {
 			oscChatBox(`0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0`)
@@ -97,6 +102,7 @@ var bucket = 4
 var timerActive = false
 var timerstart;
 var timerend;
+var chatboxQueue = []
 
 function oscChatTyping(active) {
 	udpPort.send({
@@ -108,57 +114,60 @@ function oscChatTyping(active) {
 }
 exports.oscChatTyping = oscChatTyping;
 
-
-function oscChatBox(say, sec_to_clear) {
-	if (useChatBox == false) { return }
-
-	if (bucket <= 0) {
-		console.log(`${loglv().warn}${selflog} Sending messages to fast [TimeLeft: ${(timerend - Date.now()) / 1000}sec ]`)
-		return
+function oscChatBoxV2(I_say = "~", I_display_time = 5000, I_highPriority = false, I_auto_clear = false, isLoop = false, I_playAudio = false) {
+	let firstLong = 0
+	if (isLoop == false) {
+		oscChatTyping(1)
+		if (I_highPriority == true) {
+			let msgsplit = I_say.match(/.{0,144}\S(?=$|\s)/g)
+			chatboxQueue.length == 0 ? firstLong = msgsplit.length : 0
+			for (const seg in msgsplit) {
+				chatboxQueue.unshift({ "message": msgsplit[seg], "display_time_ms": I_display_time, "auto_clear": I_auto_clear, "play_audio": I_playAudio })
+			}
+			// })
+			// chatboxQueue.unshift({ "message": I_say, "display_time_ms": I_display_time, "auto_clear": I_auto_clear })
+		} else {
+			let msgsplit = I_say.match(/.{0,144}\S(?=$|\s)/g)
+			chatboxQueue.length == 0 ? firstLong = msgsplit.length : 0
+			for (const seg in msgsplit) {
+				chatboxQueue.push({ "message": msgsplit[seg], "display_time_ms": I_display_time, "auto_clear": I_auto_clear, "play_audio": I_playAudio })
+			}
+			// })
+			// console.log(chatboxQueue)
+			// chatboxQueue.push({ "message": I_say, "display_time_ms": I_display_time, "auto_clear": I_auto_clear })
+		}
 	}
 
-	if (timerActive == false) {
-		timerstart = Date.now()
-		timerend = timerstart + 6000
-		timerActive = true
+	// console.log(chatboxQueue.length)
+
+	if (chatboxQueue.length < 2 + firstLong || isLoop == true) {
+
+		udpPort.send({ address: "/chatbox/input", args: [chatboxQueue[0].message.slice(0, 144), true, chatboxQueue[0].play_audio] }, deviceIP, remotePort);
+		console.log(`${loglv().debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m]${chatboxQueue[0].play_audio == true ? '🔊' : '🔇'} ${chatboxQueue[0].message.slice(0, 144)}`)
+
+		// console.log(`${loglv().debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m] Delay`+Math.max(5000, chatboxQueue[0].display_time_ms))		
+
 		setTimeout(() => {
-			timerActive = false
-			bucket = 4
-			//console.log(`${loglv().debug}${selflog} ChatBox RateLimiter Reset`)
-		}, 6000)
+			if (chatboxQueue.length == 1 && chatboxQueue[0].auto_clear == true) { udpPort.send({ address: "/chatbox/input", args: [``, true, chatboxQueue[0].play_audio] }, deviceIP, remotePort); }
+			chatboxQueue.shift()
+			if (chatboxQueue.length != 0) {
+				oscChatBoxV2(undefined, undefined, undefined, undefined, true)
+			} else {
+				// console.log(`${loglv().debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m] Idle.`)
+				oscChatTyping(0)
+			}
+		}, Math.max(1500, chatboxQueue[0].display_time_ms, (chatboxQueue[0].message.slice(0, 144).split(" ").length / 150) * 60_000));
+
+	} else {
+		oscChatTyping(1)
+		console.log(`${loglv().debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m] Busy: Adding to Queue`)
 	}
-	bucket--
-
-	//console.log(`${loglv().debug}${selflog} \x1b[33m/chatbox/input\x1b[0m: `+say.slice(0,144))
-	//,{ type: "i", value: 0 } MessageSentSFX
-
-	udpPort.send({
-		address: "/chatbox/input",
-		args: [
-			say.slice(0, 144),
-			true,
-			false
-		]
-	}, deviceIP, remotePort);
-	if (logOscOut == true) { console.log(`\x1b[33m<- ${selflog} \x1b[33m/chatbox/input\x1b[0m: ` + say.slice(0, 144)) }
-	if (sec_to_clear >= 1) {
-		setTimeout(() => {
-			udpPort.send({
-				address: "/chatbox/input",
-				args: [
-					``,
-					true,
-					false
-				]
-			}, deviceIP, remotePort);
-		}, sec_to_clear * 1000);
-	}
-
-	//oscChatTyping(0)
-
 }
-exports.oscChatBox = oscChatBox;
-// console.log( String.fromCharCode(1) )
+exports.oscChatBoxV2 = oscChatBoxV2
+
+// Legacy Bridge
+function oscChatBox(say, clearTime) { oscChatBoxV2(say, (clearTime || 0) * 1000, false, clearTime >= 1) }
+exports.oscChatBox = oscChatBox
 
 
 function oscSend(a, v) {
@@ -174,12 +183,47 @@ function oscSend(a, v) {
 exports.oscSend = oscSend;
 
 var dataBurst = []
+var binaryBurstQueue = []
 var dataBurstmKAT = []
 const katChars = [` `, `!`, `"`, `#`, `$`, `%`, `&`, `'`, `(`, `)`, `*`, `+`, `,`, `-`, `.`, `/`, `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `:`, `;`, `<`, `=`, `>`, `?`, `@`, `A`, `B`, `C`, `D`, `E`, `F`, `G`, `H`, `I`, `J`, `K`, `L`, `M`, `N`, `O`, `P`, `Q`, `R`, `S`, `T`, `U`, `V`, `W`, `X`, `Y`, `Z`, `[`, `\\`, `]`, `^`, `_`, `\``, `a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, `j`, `k`, `l`, `m`, `n`, `o`, `p`, `q`, `r`, `s`, `t`, `u`, `v`, `w`, `x`, `y`, `z`, `{`, `|`, `}`, `~`]
 //function remapKat(value) { return -1 + value * 2 / 254/ 127.0 }
 
-var isBurstingData = false
-function OSCDataBurst(in_addr, in_dataA) {
+
+async function OSCBinaryBurst(serializedBinary = 11111111, pulseClkHold = 200, bitGapDelay = 400, isLoop = false) {
+	if (isLoop == false) { binaryBurstQueue.push(serializedBinary) }
+	if (binaryBurstQueue.length < 2 || isLoop == true) {
+		console.log(`${loglv().debug}${selflog} [Serial-Burst] Sending ${binaryBurstQueue[0]}...`)
+		for (const bit in binaryBurstQueue[0]) {
+			// console.log(`${loglv().debug}${selflog} [Serial-Burst] bit ${binaryBurstQueue[0][bit]}`)
+			await sendSerializedBinary(parseInt(binaryBurstQueue[0][bit]), bit == binaryBurstQueue[0].length - 1)
+			if (bit == binaryBurstQueue[0].length - 1) {
+				binaryBurstQueue.shift()
+				if (binaryBurstQueue.length != 0) {
+					setTimeout(() => { OSCBinaryBurst(undefined, pulseClkHold, bitGapDelay, true) }, bitGapDelay)
+				} else {
+					console.log(`${loglv().debug}${selflog} [Serial-Burst] Idle.`)
+				}
+			}
+		}
+		async function sendSerializedBinary(bit, lastbit) {
+			return new Promise((resolve, reject) => {
+				oscSend(vrcap + '14a/osc/data', bit == 1);
+				oscSend(vrcap + '14a/osc/sync', lastbit);
+				oscSend(vrcap + '14a/osc/clk', true);
+				setTimeout(() => {
+					oscSend(vrcap + '14a/osc/clk', false);
+					setTimeout(() => { resolve(true) }, bitGapDelay)
+				}, pulseClkHold);
+			})
+		};
+	} else {
+		console.log(`${loglv().debug}${selflog} [Serial-Burst] Busy: Adding to Queue`)
+	}
+}
+exports.OSCBinaryBurst = OSCBinaryBurst
+
+
+async function OSCDataBurst(in_addr, in_dataA, isLoop = false) {
 	/*
 	Usage Chart
 	0	Null Space / No Selection
@@ -197,34 +241,28 @@ function OSCDataBurst(in_addr, in_dataA) {
 	12	ToN-Wait-Time: 0 - 4:15 Float
 	13	MCounter: display mode indicator
 	*/
-	//console.log(`${loglv().debug}${selflog} [DataBurst] Adding buffer data ${data1}, ${data2}, ${data3} to Slot ${slot}`)
-	dataBurst.push({ 'addr': in_addr, 'dataA': in_dataA })
-
-	if (isBurstingData == false) {
-		isBurstingData = true
-		setTimeout(() => {
-			sendOscDataBurst()
-		}, 200)
-	}
-}
-function sendOscDataBurst() {
-	//isBurstingData = true
-	// console.log(`${loglv().debug}${selflog} [DataBurst] Sending data ${dataBurst[0].dataA} to Address ${dataBurst[0].addr}`)
-	oscSend(vrcap + 'oscAddr', dataBurst[0].addr)
-	oscSend(vrcap + 'oscDataA', dataBurst[0].dataA)
-	setTimeout(() => {
-		// console.log(`${loglv().debug}${selflog} Shifting`)
+	if (isLoop == false) { dataBurst.push({ 'addr': in_addr, 'dataA': in_dataA }) }
+	if (dataBurst.length < 2 || isLoop == true) {
+		// console.log(`${loglv().debug}${selflog} [OSCDataBurst] Sending ${JSON.stringify(dataBurst[0])}`)
+		await sendOSCDataBurst_v2(dataBurst[0].addr, dataBurst[0].dataA)
 		dataBurst.shift()
-		// console.log(`${loglv().debug}${selflog} Still more?`)
-		if (dataBurst.length > 0) {
-			sendOscDataBurst()
+		if (dataBurst.length != 0) {
+			setTimeout(() => { OSCDataBurst(undefined, undefined, true) }, 200)
 		} else {
-			// console.log(`${loglv().debug}${selflog} [DataBurst] Idling`)
-			isBurstingData = false
 			oscSend(vrcap + 'oscAddr', 0)
 			oscSend(vrcap + 'oscDataA', 1)
+			// console.log(`${loglv().debug}${selflog} [OSCDataBurst] Idle.`)
 		}
-	}, 200)
+		async function sendOSCDataBurst_v2(addr, dataA) {
+			return new Promise((resolve, reject) => {
+				oscSend(vrcap + 'oscAddr', addr)
+				oscSend(vrcap + 'oscDataA', dataA)
+				setTimeout(() => { resolve(true) }, 200)
+			})
+		};
+	} else {
+		// console.log(`${loglv().debug}${selflog} [OSCDataBurst] Busy: Adding to Queue`)
+	}
 }
 exports.OSCDataBurst = OSCDataBurst;
 
@@ -304,8 +342,8 @@ oscEmitter.on('osc', (address, value) => {
 		}
 	}
 
-	if( address == vrcap + 'd20/d20_Menu' && value == 1 ){
-		PiShockAll(50,2)
+	if (address == vrcap + 'd20/d20_Menu' && value == 1) {
+		PiShockAll(50, 2)
 	}
 
 	if (address == vrcap + '14a/osc/menuX') { menuX = value }
@@ -361,7 +399,7 @@ udpPort.on("message", function (msg, rinfo) {
 		if (avatarId == `avtr_21cbf284-0c09-423c-9973-5cd41dccd308`) { oscSend(vrcap + `LL/Menu/IsUnlocked`, 1 == 1) }
 		if (avatarId == `avtr_2a9a9021-2b82-4564-bb63-2d96deb6a6d7`) { oscSend(vrcap + `Patreon-NDA`, 1 == 1) }
 		if (avatarId == `avtr_94237663-3ed4-48fd-b29d-b3d6b174e004`) { oscSend(vrcap + `VF100_SecurityLockSync`, 1 == 1) }
-		oscSend(vrcap+"   locked",false)
+		oscSend(vrcap + "   locked", false)
 		oscSend(vrcap + `14a/osc/14anthony7095`, true)
 	}
 	if (msg['address'] == vrcap + 'toolGunHolster_Angle') { return }
@@ -405,20 +443,20 @@ udpPort.on("ready", function () {
 	oscEmitter.emit('ready', true);
 	console.log(`${loglv().log}${selflog} Ready..`)
 
-		require('./Interface_vrc-Api.js')
-		// require('./interface_midi.js')
+	require('./Interface_vrc-Api.js')
+	// require('./interface_midi.js')
 
-		// require('./osc_PingSystem.js') // OSC
-		require('./osc_Chessboard-logic.js') // OSC
-		require('./Interface_twitch.js') // OSC
-		require('./osc_AfkClock.js') // OSC
-		// require('./osc_HeartRate.js') // OSC
-		require('./osc_AutoClicker.js') // OSC
-		require('./osc_Av3-menu-helper.js') // OSC
-		// require('./osc_32display.js') // OSC
-		require('./sys_taskKill.js') // OSC , LOG
-		require('./osc_vrcPopulation.js') // OSC , API (directly)
+	// require('./osc_PingSystem.js') // OSC
+	require('./osc_Chessboard-logic.js') // OSC
+	require('./Interface_twitch.js') // OSC
+	require('./osc_AfkClock.js') // OSC
+	// require('./osc_HeartRate.js') // OSC
+	require('./osc_AutoClicker.js') // OSC
+	require('./osc_Av3-menu-helper.js') // OSC
+	// require('./osc_32display.js') // OSC
+	require('./sys_taskKill.js') // OSC , LOG
+	require('./osc_vrcPopulation.js') // OSC , API (directly)
 
-		require('./Interface_vrc-Log.js') // OSC+ , Twitch
+	require('./Interface_vrc-Log.js') // OSC+ , Twitch
 
-	});
+});

@@ -8,7 +8,7 @@
 
 // TODO: make config watched for changes and emit to other modules to fetch changes via a function-return
 
-require('dotenv').config()
+require('dotenv').config({'quiet':true})
 
 // ---	OSC Dependant	---
 // Quest 2 related
@@ -39,8 +39,8 @@ exports.QuestIP = "192.168.2.140" // Work
 		// == ttvChatBox
 
 		// Videoplayer URL in Chatbox
-		var ChatVideoURL = true
-		var ChatVideoTitle = true
+		var ChatVideoURL = false
+		var ChatVideoTitle = false
 
 		// Image and String Download URL in Chatbox
 		exports.ChatImageStringURL = false

@@ -30,7 +30,7 @@ function start() {
 		// console.log(`setting 13 to 0`)
 		OSCDataBurst(13, parseFloat(0))
 		workload(count)
-		
+
 	}).catch((err) => { workload(0, 'Lost Connection') })
 
 	counterTimer = setInterval(() => {
@@ -71,7 +71,7 @@ apiEmitter.on('switch', (data, type) => {
 			worldcount_mem = data
 		}
 	} else  */
-	 if (data >= 1) {
+	if (data >= 1) {
 		stop()
 		if (isWorlding == false) {
 			isWorlding = true
@@ -102,7 +102,7 @@ apiEmitter.on('switch', (data, type) => {
 // function wait(seconds) { return new Promise((resolve, reject) => { setTimeout(() => { resolve(true) }, seconds * 1000) }) }
 
 
-function workload(playerCount) {
+async function workload(playerCount) {
 
 	/* 	
 VRO: 1 2 3 4 5 6
@@ -141,5 +141,10 @@ Int Double DATA handling
 	digitLen >= 3 ? OSCDataBurst(4, parseInt(digitSeg[3]) / 10) : OSCDataBurst(4, parseFloat(1))
 	digitLen >= 2 ? OSCDataBurst(5, parseInt(digitSeg[4]) / 10) : OSCDataBurst(5, parseFloat(1))
 	digitLen >= 1 ? OSCDataBurst(6, parseInt(digitSeg[5]) / 10) : OSCDataBurst(6, parseFloat(1))
+
+
+	
+
+
 
 }

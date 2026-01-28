@@ -1,11 +1,11 @@
 
 var { loglv, msgVerbose, twitchChannels, ttvAlwaysRun, useChatBox, ttvChatBox, ttvFetchFrom, saltyMode, ttvFetchFrom } = require('./config.js')
-const { oscReady, oscSend, oscChatBox, oscEmitter, oscChatTyping } = require('./Interface_osc_v1.js');
+const { oscReady, oscSend, oscChatBox, oscEmitter, oscChatTyping, oscChatBoxV2 } = require('./Interface_osc_v1.js');
 
 const tmi = require('tmi.js');
 const say = require('say');
 const { cmdEmitter } = require('./input.js');
-require('dotenv').config()
+require('dotenv').config({'quiet':true})
 
 //	--	Global Vars	--
 let selflog = `\x1b[0m[\x1b[35mTwitch.tv\x1b[0m]`
@@ -193,12 +193,12 @@ function stop() {
 }
 
 
-if (useChatBox == true) { oscChatTyping(0) }
+// if (useChatBox == true) { oscChatTyping(0) }
 function saySpeak() {
 	isTalking = true
 	console.log(chatBuffer[0].log)
 	if (useChatBox == true && ttvChatBox == true) {
-		oscChatBox(`~${chatBuffer[0].osc.slice(0, 144)}`)
+		oscChatBoxV2(`~${chatBuffer[0].osc}`,undefined,false,false,false,false)
 	}
 
 	oscSend('/avatar/parameters/ToN_ColorR', parseFloat(chatBuffer[0].color.split(',')[0]) )
@@ -228,15 +228,15 @@ function saySpeak() {
 				clearingBuffer = true
 				chatBuffer = []
 				oscSend('/avatar/parameters/ToN_IsStarted', false)
-				oscChatBox('')
+				// oscChatBox('')
 				if (msgVerbose >= 3) { msgVerbose = 2 }
 				setTimeout(() => { clearingBuffer = false }, 1000);
 			} else if (chatBuffer.length > 0 && clearingBuffer == false) {
 				saySpeak()
 			} else {
 				if (useChatBox == true) {
-					oscChatBox('')
-					oscChatTyping(0)
+					// oscChatBox('')
+					// oscChatTyping(0)
 				}
 			}
 		}, 1000)
@@ -285,7 +285,7 @@ client.on("message", (channel, userstate, message, self) => {
 ${loglv().log}${selflog} \x1b[33m${partalmsgpercent}% of message was not shown in ChatBox${loglv().reset}`
 			}
 
-			if (useChatBox == true) { oscChatTyping(1) }
+			// if (useChatBox == true) { oscChatTyping(1) }
 
 			chatBuffer.push({
 				'say': userstate["display-name"] + ' said ' + message,

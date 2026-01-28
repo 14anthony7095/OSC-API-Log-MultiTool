@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 const { Webhook, MessageBuilder } = require('discord-webhook-node');
 const { loglv } = require('./config');
-require('dotenv').config()
+require('dotenv').config({'quiet':true})
 
 // Home DISCORD below - all others
 const hook_Self = new Webhook(process.env["WEBHOOK_HOME"]);
@@ -51,14 +51,9 @@ var messageQueue = []
 
 function hookSelector(grpID, embedMessage) {
     switch (grpID) {
-        case 'grp_75bcbc95-361e-4d90-9752-5a2d7bc270a3':
-            hook_Self.setUsername('Leash Children')
-            hook_Self.setAvatar('https://cdn.discordapp.com/attachments/1118629754178904084/1442569079331356702/image.png')
-            hook_Self.send(embedMessage).catch((err) => { console.log(err) })
-            break;
         case 'grp_cdb7c49d-9a90-4b17-8137-ff17bc624c6c':
             hook_Self.setUsername('Weebs N Furries')
-            hook_Self.setAvatar('https://cdn.discordapp.com/attachments/1118629754178904084/1442569761857998938/image.png')
+            hook_Self.setAvatar('https://cdn.discordapp.com/attachments/1363600318029627602/1465174032142831809/image.png')
             hook_Self.send(embedMessage).catch((err) => { console.log(err) })
             break;
        case 'grp_e483cc04-a610-471f-90eb-ec4eda8420be':

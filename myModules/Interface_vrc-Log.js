@@ -7,44 +7,19 @@
 */
 // Libraries
 var { loglv, printAllLogs, ChatVideoURL, ChatVideoTitle, ttvAlwaysRun, ttvFetchFrom, ChatImageStringURL, ChatDownSpeed, logStickers, downloadStickers } = require('./config.js')
-var { oscSend, oscChatBox, OSCDataBurst, oscEmitter } = require('./Interface_osc_v1.js')
+var { oscSend, oscChatBox, OSCDataBurst, oscEmitter, oscChatBoxV2 } = require('./Interface_osc_v1.js')
 var { switchChannel, joinChannel, leaveChannel } = require('./Interface_twitch.js');
 var fs = require('fs')
 var ytdl = require('ytdl-core');
 const fetch = require('node-fetch');
 const say = require('say');
-const { VRChat } = require("vrchat");
-const { KeyvFile } = require("keyv-file");
 const EventEmitter = require('events');
 const { cmdEmitter } = require('./input.js');
 const { PiShock, PiShockAll } = require('./Interface_PS.js');
 const { config } = require('process');
 const logEmitter = new EventEmitter
 exports.logEmitter = logEmitter;
-require('dotenv').config()
-
-var vrchat = new VRChat({
-	application: {
-		name: "Api-Osc-Interface",
-		version: "1.2",
-		contact: process.env["CONTACT_EMAIL"]
-	},
-	authentication: {
-		credentials: {
-			username: process.env["VRC_ACC_LOGIN_1"],
-			password: process.env["VRC_ACC_PASSWORD_1"],
-			totpSecret: process.env["VRC_ACC_TOTPSECRET_1"]
-		}
-	},
-	keyv: new KeyvFile({ filename: "./datasets/vrcA.json" })
-	/* 
-		1   95
-		2   96
-		3   97
-		4   98 / 69
-		5   Spec
-	*/
-});
+require('dotenv').config({'quiet':true})
 
 let selflog = `\x1b[0m[\x1b[32mVRC_Log\x1b[0m]`
 var path = 'C:/Users/14anthony7095/AppData/LocalLow/VRChat/VRChat/'
@@ -222,10 +197,12 @@ var tonAvgStartWait = []
 var tonRoundReadyTime = 0
 var worldQueueTxt = './datasets/worldQueue.txt'
 var G_worldID = ``
+var G_currentLocation = ''
 var worldID_Closed = false
 oscSend('/avatar/parameters/log/instance_closed', false)
 var G_groupID = ``
 var instanceType = ''
+var lastSetUserStatus = ''
 
 function getInstanceGroupID() { return G_groupID }
 exports.getInstanceGroupID = getInstanceGroupID;
@@ -491,6 +468,7 @@ function applyGroupLogo(gID) {
 	}
 }
 
+
 function eventGameClose() {
 	clearTimeout(worldHopTimeout)
 	clearTimeout(worldHopTimeoutHour)
@@ -538,14 +516,17 @@ function eventPropSpawned(propID) {
 	}
 }
 
-
-var lastSetUserStatus = ''
+function getSelfLocation(){ return G_currentLocation }
+exports.getSelfLocation = getSelfLocation;
 function eventHeadingToWorld(logOutputLine) {
 	clearTimeout(worldHopTimeout)
 	clearTimeout(worldHopTimeoutHour)
 
 	G_worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
 	console.log(`${loglv().debug}${selflog} World ID ${G_worldID}`)
+
+	// 2026.01.27 14:20:50 Debug      -  [Behaviour] Destination set: wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5:65895~hidden(usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752)~region(use)
+	G_currentLocation = 'wrld_'+logOutputLine.split('wrld_')[1]
 
 	if (logOutputLine.includes(`~group(grp_`)) {
 		G_groupID = /grp_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
@@ -598,6 +579,8 @@ function eventJoinWorld() {
 	playersInInstance = []
 	membersInInstance = []
 	playersInstanceObject = []
+
+
 
 	fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
 		if (data.includes(G_worldID) && G_worldID != '') {
@@ -734,27 +717,9 @@ async function eventPlayerJoin(logOutputLine) {
 		// Append UserID to tracked player
 		let pioIndex = playersInstanceObject.findIndex(playersInstanceObject => playersInstanceObject.name == playerDisplayName)
 
-		/* if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
-			// groupID
-			memberRatio = membersInInstance.length / playersInInstance.length
-			let isUserPartOfGroup = await vrchat.getUserGroups({ 'path': { 'userId': playerID } })
-			if (isUserPartOfGroup.data.find(e => e.groupId == G_groupID) != undefined) {
-				playersInstanceObject[pioIndex].groupMember = true
-				membersInInstance.push(playerDisplayName)
-			} else {
-				playersInstanceObject[pioIndex].groupMember = false
-			}
-
-			if (hassaidcooldown == false) {
-				hassaidcooldown = true
-				console.log(`${loglv().log}${selflog} There are now ${membersInInstance.length} / ${playersInInstance.length} group members in the instance. [${memberRatio}]`)
-				setTimeout(() => {
-					hassaidcooldown = false
-					memberRatio = membersInInstance.length / playersInInstance.length
-					console.log(`${loglv().log}${selflog} There are now ${membersInInstance.length} / ${playersInInstance.length} group members in the instance. [${parseFloat(memberRatio)}]`)
-				}, 1000);
-			}
-		} */
+		if( playerDisplayName == '14anthony7095'){
+			logEmitter.emit('joinedworld', G_worldID)
+		}
 
 		try {
 			playersInstanceObject[pioIndex].id = playerID
@@ -872,7 +837,7 @@ function videoUrlResolver(videourl) {
 
 	//	--- Print Video URL ---
 	console.log(`${loglv().log}${selflog} Video URL: ${videourl}`)
-	if (ChatVideoURL == true) { oscChatBox(`~VideoURL:\v${videourl}`, 5) }
+	if (ChatVideoURL == true) { oscChatBoxV2(`~VideoURL:\v${videourl}`,5,true,true) }
 
 	//	---	Twitch Channel URL Resolver	---
 	if (videourl.includes('twitch.tv/') && !videourl.includes('twitch.tv/videos')) {
@@ -925,7 +890,7 @@ function videoUrlResolver(videourl) {
 			.then((data) => {
 				setTimeout(() => {
 					console.log(`${loglv().log}${selflog} Video Title: ${data.videoDetails.title}`)
-					if (ChatVideoTitle == true) { oscChatBox(`~VideoTitle:\v` + data.videoDetails.title, 2) }
+					if (ChatVideoTitle == true) { oscChatBoxV2(`~VideoTitle:\v` + data.videoDetails.title, 2,true,true) }
 				}, 2000)
 			})
 			.catch((err) => {

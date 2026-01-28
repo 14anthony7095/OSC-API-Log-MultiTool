@@ -8,7 +8,7 @@
 // Libraries
 const { VRChat } = require("vrchat");
 const fs = require('fs');
-require('dotenv').config()
+require('dotenv').config({'quiet':true})
 
 let selflog = `\x1b[0m[\x1b[33mVRC_API\x1b[0m]`
 console.log(`${selflog} Loaded`)
@@ -190,22 +190,20 @@ function genaratePortalLibrary() {
                             case 2: gameWorldsArray.push(dataPush); break;
                             case 3: privateWorldsArray.push(dataPush); break;
                             case 4: worldHopFindLegacy.push(dataPush); break;
-
-                            case 5: worldHopFinds01Array.push(dataPush); break;
-                            case 6: worldHopFinds02Array.push(dataPush); break;
-                            case 7: worldHopFinds03Array.push(dataPush); break;
-                            case 8: worldHopFinds04Array.push(dataPush); break;
-                            case 9: worldHopFinds05Array.push(dataPush); break;
-                            case 10: worldHopFinds06Array.push(dataPush); break;
-                            case 11: worldHopFinds07Array.push(dataPush); break;
-                            case 12: worldHopFinds08Array.push(dataPush); break;
-                            case 13: worldHopFinds09Array.push(dataPush); break;
-                            case 14: worldHopFinds10Array.push(dataPush); break;
-                            case 15: worldHopFinds11Array.push(dataPush); break;
-                            case 16: worldHopFinds12Array.push(dataPush); break;
-
-                            case 17: personalCollectionArray.push(dataPush); break;
-                            case 18: friendsOnlyWorldsArray.push(dataPush); break;
+                            case 5: worldHopFind2025.push(dataPush); break;
+                            case 6: worldHopFinds01Array.push(dataPush); break;
+                            case 7: worldHopFinds02Array.push(dataPush); break;
+                            case 8: worldHopFinds03Array.push(dataPush); break;
+                            case 9: worldHopFinds04Array.push(dataPush); break;
+                            case 10: worldHopFinds05Array.push(dataPush); break;
+                            case 11: worldHopFinds06Array.push(dataPush); break;
+                            case 12: worldHopFinds07Array.push(dataPush); break;
+                            case 13: worldHopFinds08Array.push(dataPush); break;
+                            case 14: worldHopFinds09Array.push(dataPush); break;
+                            case 15: worldHopFinds10Array.push(dataPush); break;
+                            case 16: worldHopFinds11Array.push(dataPush); break;
+                            case 17: worldHopFinds12Array.push(dataPush); break;
+                            case 18: personalCollectionArray.push(dataPush); break;
                             default: break;
                         }
 

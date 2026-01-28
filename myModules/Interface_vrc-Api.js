@@ -34,14 +34,14 @@ const { undiscoveredEvent,
     groupUpdate } = require('./interace_WebHook.js')
 const fs = require('fs');
 const { cmdEmitter } = require('./input.js');
-const { oscEmitter, oscChatBox, oscSend } = require('./Interface_osc_v1.js');
+const { oscEmitter, oscChatBox, oscSend, oscChatBoxV2 } = require('./Interface_osc_v1.js');
 const say = require('say')
-const { logEmitter, getPlayersInInstance, getPlayersInstanceObject, getCurrentAccountInUse, fetchLogFile, getInstanceGroupID } = require('./Interface_vrc-Log.js');
+const { logEmitter, getPlayersInInstance, getPlayersInstanceObject, getCurrentAccountInUse, fetchLogFile, getInstanceGroupID, getSelfLocation } = require('./Interface_vrc-Log.js');
 const { VRChat } = require("vrchat");
 const { KeyvFile } = require("keyv-file");
 const { WebSocket } = require("ws");
-require('dotenv').config()
-const { EventEmitter } = require('events');
+require('dotenv').config({ 'quiet': true })
+const { EventEmitter, once } = require('events');
 const apiEmitter = new EventEmitter();
 exports.apiEmitter = apiEmitter;
 
@@ -61,16 +61,19 @@ var vrchat = new VRChat({
             password: process.env["VRC_ACC_PASSWORD_1"],
             totpSecret: process.env["VRC_ACC_TOTPSECRET_1"]
         }
-    },
-    keyv: new KeyvFile({ filename: "./datasets/vrcA.json" })
+    }
+    // ,keyv: new KeyvFile({ filename: "./datasets/vrcA.json" })
     /* 
         1   95
         2   96
         3   97
         4   98 / 69
-        5   Spec
+        5   Wonder
+        6   WatchDog
+        7   Absent
     */
 });
+
 
 
 // Global Vars
@@ -82,6 +85,7 @@ exports.vrcIsOpen = vrcIsOpen
 var lastFetchGroupLogs;
 var currentUser;
 var authcookie;
+var userAutoAcceptWhiteList = []
 var worldQueueTxt = './datasets/worldQueue.txt'
 var exploreMode = false
 var explorePrivacyLevel = 0
@@ -96,6 +100,10 @@ fs.readFile('./lastFetchGroupLogs.txt', 'utf8', (err, data) => {
     setTimeout(() => {
         main()
     }, 1000)
+})
+fs.readFile('./datasets/autoAcceptWhitelist.txt', 'utf8', (err, data) => {
+    if (err) { console.log(err); return }
+    userAutoAcceptWhiteList = data.split('\r\n')
 })
 
 cmdEmitter.on('cmd', (cmd, args) => {
@@ -112,6 +120,7 @@ cmdEmitter.on('cmd', (cmd, args) => {
     if (cmd == 'rep' && args[0] == 'scan') { getGroupRepsForInstance() }
     if (cmd == 'years' && args[0] == 'close') { switchYearGroupsClosed() }
     if (cmd == 'years' && args[0] == 'open') { switchYearGroupsReOpen() }
+    if (cmd == 'preload') { worldAutoPreloadQueue(args[0].split(',')) }
 })
 
 function sleep(time) {
@@ -201,14 +210,63 @@ async function main() {
     if (auth.ok == true) {
         authToken = auth.token
         // console.log(authToken)
-
         socket_VRC_API_Connect()
-
-
         // sendBoop('usr_e86f244d-31ba-4d25-9f82-65b91bf21aee', 'inv_eb8fed52-3198-43d7-bea4-ed2f2c02f9e6')
         // await getAllInventory(0)
     }
 }
+
+
+async function worldAutoPreloadQueue(worldList = []) {
+    console.log(`${loglv().log}${selflog} [Auto World Preload] Starting, have ${worldList.length} worlds to go through`)
+    for (const wrd in worldList) {
+        await joinWorld(worldList[wrd])
+        if (wrd == worldList.length - 1) {
+            console.log(`${loglv().hey}${selflog} [Auto World Preload] Finished, can close VRC if want.`)
+            oscChatBoxV2(`Automatic Preload has finished \v Can close VRC if want.`, 30)
+        }
+    }
+    async function joinWorld(world) {
+        return new Promise((resolve, reject) => {
+            console.log(`${loglv().hey}${selflog} [Auto World Preload] Creating Preload Instance for ${world}`)
+            vrchat.createInstance({
+                body: {
+                    'worldId': world,
+                    'type': 'hidden',
+                    'region': 'use',
+                    'displayName': 'PreVisit Check',
+                    'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752'
+                }
+            }).then(created_instance => {
+                startvrc(created_instance.data.location, true)
+            }).catch((err) => {
+                console.log(`${loglv().warn}${selflog}` + err)
+            })
+            once(logEmitter, 'joinedworld').then((worldId) => {
+                if (world == worldId) {
+                    setTimeout(() => {
+                        resolve(true);
+                        /* oscSend('/usercamera/Mode', 1)
+                        oscSend('/usercamera/Pose',undefined)
+                        oscSend('/usercamera/Zoom', 30)
+                        setTimeout(() => {
+                            oscSend('/usercamera/Capture', true)
+                            setTimeout(() => {
+                                oscSend('/usercamera/Capture', false)
+                                oscSend('/usercamera/Close', true)
+                                setTimeout(() => {
+                                    oscSend('/usercamera/Close', false)
+                                    resolve(true);
+                                }, 1000)
+                            }, 1000)
+                        }, 1000) */
+                    }, 10000)
+                }
+            })
+        })
+    }
+}
+
 
 var socket_VRC_API
 var cacheWS = {}
@@ -234,12 +292,53 @@ function socket_VRC_API_Connect() {
         catch (error) { wsContent = JSON.parse(line).content }
 
         switch (JSON.parse(line).type) {
-            // case 'notification': break;
+            case 'notification':
+                if (wsContent.type == 'requestInvite') {
+                    console.log(`${loglv().log}${selflogWS} [InviteRequest] ${wsContent.senderUsername} has Requested an Invite.`);
+
+                    if (userAutoAcceptWhiteList.includes(wsContent.senderUsername)) {
+                        let instanceId = getSelfLocation()
+                        if (instanceId == undefined) {
+                            let res = await vrchat.getCurrentUser()
+                            if (res.data.presence.world != 'offline') {
+                                await vrchat.inviteUser({ 'path': { 'userId': wsContent.senderUserId }, 'body': { 'instanceId': res.data.presence.world + ":" + res.data.presence.instance, 'messageSlot': 0 } })
+                            } else { await vrchat.respondInvite({ 'body': { 'responseSlot': 0 }, 'path': { 'notificationId': wsContent.id } }) }
+                        } else {
+                            await vrchat.inviteUser({ 'path': { 'userId': wsContent.senderUserId }, 'body': { 'instanceId': instanceId, 'messageSlot': 0 } })
+                        }
+                    }
+                } else {
+                    console.log(`${loglv().log}${selflogWS} [InviteRequest]`);
+                    console.log(wsContent);
+                }
+                break;
+
             // case 'response-notification': break;
             // case 'see-notification': break;
             // case 'hide-notification': break;
             // case 'clear-notification': break;
-            // case 'notification-v2': break;
+            case 'notification-v2':
+                if (wsContent.type == 'boop') {
+                    console.log(`${loglv().log}${selflogWS} [${JSON.parse(line).type}] ${wsContent.message} ${JSON.stringify(wsContent.details)}`)
+                } else if (wsContent.type == 'group.announcement') {
+                    // El Alba instance open announcement
+                    if (wsContent.data.groupId == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+                        let res = await vrchat.getGroupInstances({ 'path': { 'groupId': 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' } })
+                        if (res.data != undefined) {
+                            if (res.data.length > 0) {
+                                console.log(`${loglv().log}${selflogWS} [${JSON.parse(line).type}] ${wsContent.data.title} ${res.data[0].location}`)
+                                startvrc(res.data[0].location, true)
+                            }
+                        } else {
+                            console.log(`${loglv().hey}${selflogWS} [${JSON.parse(line).type}] ${wsContent.data.title} ${res.error.message}`)
+                        }
+                    }
+                } else {
+                    console.log(`${loglv().log}${selflogWS} [${JSON.parse(line).type}]`);
+                    console.log(wsContent);
+                }
+                break;
+
             // case 'notification-v2-update': break;
             // case 'notification-v2-delete': break;
             // case 'content-refresh': break;
@@ -639,7 +738,7 @@ async function inviteOnlineWorlds_Loop(world_id) {
     }
 }
 
-function inviteLocalQueue(I_autoNext=false) {
+function inviteLocalQueue(I_autoNext = false) {
     fs.readFile(worldQueueTxt, 'utf8', async (err, data) => {
         // err ? console.log(err); return : ''
         let localQueueList = data.split('===')[0].split(`\r\n`)
@@ -780,19 +879,20 @@ async function startvrc(vrclocation, autoGo = false) {
     // require('child_process').execSync(`"C:\\Program Files (x86)\\Steam\\steamapps\\common\\VRChat\\start_protected_game.exe" --no-vr --profile=${profileIndex} "vrchat://launch/?ref=14aOSCAPI.app&id=${vrclocation}&attach=${parseInt(direct)}"`)
     // direct == false ? fetchLogFile() : ''
 }
+exports.startvrc = startvrc;
 
-console.log(`${loglv().hey}${selflog} First Audit scan at ${new Date(new Date().getTime() + 600_000).toTimeString()}`)
 var tenMinuteTick = 0
+console.log(`${loglv().hey}${selflog} First Audit scan at ${new Date(new Date().getTime() + 600_000).toTimeString()}`)
 setTimeout(() => {
     scanGroupAuditLogs()
 }, 600_000)
+
 
 async function scanGroupAuditLogs() {
     console.log(`${loglv().log}${selflog} Scanning through audit logs.`)
 
     // var targetGroupLogID_NHI = 'grp_3473d54b-8e10-4752-9548-d77a092051a4' // Nanachi's Hollow Inn
     var targetGroupLogID_14aHop = 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce' // 14aHop
-    var targetGroupLogID_Leash = 'grp_75bcbc95-361e-4d90-9752-5a2d7bc270a3' // LeashChildren
     // var targetGroupLogID_14aClone = 'grp_b7f14d28-d1cb-4441-8c1a-3632675293ec' // 14aClone
     var targetGroupLogID_WEFURS = 'grp_cdb7c49d-9a90-4b17-8137-ff17bc624c6c' // WEFURS
 
@@ -810,7 +910,6 @@ async function scanGroupAuditLogs() {
 
     // const { data: logOutput_NHI } = await vrchat.getGroupAuditLogs({ path: { groupId: targetGroupLogID_NHI }, query: { n: 100, offset: 0, startDate: lastFetchGroupLogs } })
     const { data: logOutput_14aHop } = await vrchat.getGroupAuditLogs({ path: { groupId: targetGroupLogID_14aHop }, query: { n: 100, offset: 0, startDate: lastFetchGroupLogs } })
-    const { data: logOutput_Leash } = await vrchat.getGroupAuditLogs({ path: { groupId: targetGroupLogID_Leash }, query: { n: 100, offset: 0, startDate: lastFetchGroupLogs } })
     // const { data: logOutput_14aClone } = await vrchat.getGroupAuditLogs({ path: { groupId: targetGroupLogID_14aClone }, query: { n: 100, offset: 0, startDate: lastFetchGroupLogs } })
     const { data: logOutput_WEFURS } = await vrchat.getGroupAuditLogs({ path: { groupId: targetGroupLogID_WEFURS }, query: { n: 100, offset: 0, startDate: lastFetchGroupLogs } })
 
@@ -831,7 +930,6 @@ async function scanGroupAuditLogs() {
 
     // await scanaudit(logOutput_NHI, targetGroupLogID_NHI);
     await scanaudit(logOutput_14aHop, targetGroupLogID_14aHop);
-    await scanaudit(logOutput_Leash, targetGroupLogID_Leash);
     // await scanaudit(logOutput_14aClone, targetGroupLogID_14aClone);
     await scanaudit(logOutput_WEFURS, targetGroupLogID_WEFURS);
 
@@ -850,8 +948,12 @@ async function scanGroupAuditLogs() {
         await updateBioWorldQueue()
     }
 
-    // await scanSomnaGroupInstances(`grp_f6602b4e-43b8-4d54-9b61-77eaa0c05bd6`,"Somno Furs")
-    // await scanSomnaGroupInstances(`grp_14ffbd54-fdc5-443c-91b8-cf13654486a1`,"Somnophilia")
+    // Updating friend Whitelist
+    fs.readFile('./datasets/autoAcceptWhitelist.txt', 'utf8', (err, data) => {
+        if (err) { console.log(err); return }
+        userAutoAcceptWhiteList = data.split('\r\n')
+    })
+
 
     console.log(`${loglv().hey}${selflog} Next Audit scan at ${new Date(new Date().getTime() + 600_000).toTimeString()}`)
     setTimeout(() => {
@@ -927,7 +1029,7 @@ async function switchYearGroupsClosed() {
         ]
 
         for (const item in FC_yearGroups) {
-            console.log(`${loglv().hey}${selflog} Closing Access to "${item+1} Year${(item+1) > 1 ? 's':''} of VRC Collector" group`)
+            console.log(`${loglv().hey}${selflog} Closing Access to "${item + 1} Year${(item + 1) > 1 ? 's' : ''} of VRC Collector" group`)
             await vrchat.updateGroup({ 'path': { 'groupId': FC_yearGroups[item] }, 'body': { 'joinState': 'request' } })
             await sleep(10000)
         }
@@ -952,7 +1054,7 @@ async function switchYearGroupsReOpen() {
         ]
 
         for (const item in FC_yearGroups) {
-            console.log(`${loglv().hey}${selflog} Opening Access to "${item+1} Year${(item+1) > 1 ? 's':''} of VRC Collector" group`)
+            console.log(`${loglv().hey}${selflog} Opening Access to "${item + 1} Year${(item + 1) > 1 ? 's' : ''} of VRC Collector" group`)
             await vrchat.updateGroup({ 'path': { 'groupId': FC_yearGroups[item] }, 'body': { 'joinState': 'open' } })
             await sleep(10000)
         }

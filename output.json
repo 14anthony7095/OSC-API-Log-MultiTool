@@ -1801,5 +1801,51 @@
         "version": 7,
         "visibilityType": "everyone",
         "worldPlacementMask": 1
+    },
+    "Snow Blaster": {
+        "_created_at": "2025-12-02T21:46:48.821Z",
+        "_updated_at": "2025-12-03T23:42:53.096Z",
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "categories": [],
+        "description": "Brrrrrrrr",
+        "id": "prop_036389b7-3c9d-4e0d-96d1-f23cb195e76b",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_1e2ee01b-b9fa-4c19-b14d-b2f701a295cd/3/file",
+        "maxCountPerUser": 1,
+        "name": "Snow Blaster",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_1e2ee01b-b9fa-4c19-b14d-b2f701a295cd/3/256",
+        "unityPackages": [
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_bb3824e3-281c-40e0-a96f-86e4b4f2df55/22/file",
+                "assetVersion": 1,
+                "platform": "standalonewindows",
+                "propSignature": "ALoKHFSDkUsdHiubH4eo2mfPdouTrPw8Y0nrK6tWJ7MtLY645A==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_e5dc9883-9a21-4b80-a3eb-ca8df6b0c50a/2/file",
+                "assetVersion": 1,
+                "platform": "android",
+                "propSignature": "AL8dT78K9eT4TPakMFMAUJ6qi4E7eLYq/mzHho1ukzzQ1OeHpA==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            },
+            {
+                "assetUrl": "https://api.vrchat.cloud/api/1/file/file_9ccd2dda-fb3b-443e-bb7f-2fb5573f233f/2/file",
+                "assetVersion": 1,
+                "platform": "ios",
+                "propSignature": "ALHEbU9Sch9i5JO61b8B1+esW1O7xu+n5Da95VB89Zm9Q91A6A==",
+                "unityVersion": "2022.3.22f1",
+                "variant": "standard"
+            }
+        ],
+        "version": 57,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
     }
 }

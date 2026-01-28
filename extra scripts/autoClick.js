@@ -1,5 +1,5 @@
-var config = require('./config.js')
-var oscm = require('./oscManager.js');
+
+var oscm = require('./myModules/autoClick.js');
 let selflog = `\x1b[0m(AutoClicker\x1b[0m)`
 console.log(`${config.ll(2)}${selflog} Loaded`)
 
