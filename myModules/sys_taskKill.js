@@ -23,27 +23,31 @@ console.log(`${loglv().log}${selflog} Loaded -> ${loglv(vrckiller)}${vrckiller}$
 killprep()
 
 //	--	Functions	--
-function killprep() {
-	console.log(`${loglv().log}${selflog} Looking up VRChat's process ID`)
-	find('name', "VRChat.exe", true).then((list, err) => {
-		if (err) console.error(err);
-		// if (list.length > 1) {
-		// 	console.log(`${loglv().log}${selflog} VRChat's process ID is ${list[0].pid}`)
-		// 	vrchatprocessidArr
-		// 	for (let x = 0; x < list.length; x++) {
-		// 		list[x].pid
-		// 	}
-		// 	vrchatprocessidArr = list[0].pid
-		// 	//setTimeout(()=>{ fetchLogFile() },60_000)
-		// }
-		if (list.length > 0) {
-			console.log(`${loglv().log}${selflog} VRChat's process ID is ${list[0].pid}`)
-			vrchatprocessid = list[0].pid
-			//setTimeout(()=>{ fetchLogFile() },60_000)
-			require('./bedtimeProtocol.js')
-		} else {
-			console.log(`${loglv().hey}${selflog} VRChat not running.. Will check again when avatar change is detected`)
-		}
+async function killprep() {
+	return new Promise((resolve, reject) => {
+		console.log(`${loglv().log}${selflog} Looking up VRChat's process ID`)
+		find('name', "VRChat.exe", true).then((list, err) => {
+			if (err) console.error(err);
+			// if (list.length > 1) {
+			// 	console.log(`${loglv().log}${selflog} VRChat's process ID is ${list[0].pid}`)
+			// 	vrchatprocessidArr
+			// 	for (let x = 0; x < list.length; x++) {
+			// 		list[x].pid
+			// 	}
+			// 	vrchatprocessidArr = list[0].pid
+			// 	//setTimeout(()=>{ fetchLogFile() },60_000)
+			// }
+			if (list.length > 0) {
+				console.log(`${loglv().log}${selflog} VRChat's process ID is ${list[0].pid}`)
+				vrchatprocessid = list[0].pid
+				resolve(true)
+				//setTimeout(()=>{ fetchLogFile() },60_000)
+				require('./bedtimeProtocol.js')
+			} else {
+				console.log(`${loglv().hey}${selflog} VRChat not running.. Will check again when avatar change is detected`)
+				resolve(false)
+			}
+		})
 	})
 }
 function killvrc(delay) {

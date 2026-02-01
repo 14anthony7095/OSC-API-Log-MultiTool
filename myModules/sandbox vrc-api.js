@@ -11,27 +11,14 @@ const { VRChat } = require("vrchat");
 const { KeyvFile } = require("keyv-file");
 const fs = require('fs');
 const { distance, closestMatch } = require("closest-match");
+// const { logEmitter } = require("./Interface_vrc-Log.js");
 require('dotenv').config({ 'quiet': true })
 
 
 let selflog = `\x1b[0m[\x1b[33mVRC_API\x1b[0m]`
 console.log(`${loglv().log}${selflog} Loaded`)
 
-var vrchat = new VRChat({
-    application: {
-        name: "Api-Osc-Interface_DEV",
-        version: "1.2-DEV",
-        contact: process.env["CONTACT_EMAIL"]
-    },
-    authentication: {
-        credentials: {
-            username: process.env["VRC_ACC_LOGIN_1"],
-            password: process.env["VRC_ACC_PASSWORD_1"],
-            totpSecret: process.env["VRC_ACC_TOTPSECRET_1"]
-        }
-    },
-    keyv: new KeyvFile({ filename: "./datasets/vrcA.json" }),
-});
+var vrchat = new VRChat({ application: { name: "Api-Osc-Interface_DEV", version: "1.2-DEV", contact: process.env["CONTACT_EMAIL"] }, authentication: { credentials: { username: process.env["VRC_ACC_LOGIN_1"], password: process.env["VRC_ACC_PASSWORD_1"], totpSecret: process.env["VRC_ACC_TOTPSECRET_1"] } }, keyv: new KeyvFile({ filename: "./datasets/vrcA.json" }) });
 
 
 var vrcpropcount = {
@@ -59,15 +46,15 @@ var worldlist = [
 ]
 
 // maindev()
-function maindev(){
-      var dict = ['01 - Akiho Nagase V2','Haishima test','Ana Birb','Jay Seth （CC）']
-      var selectedAvy = 'Jay Seth (Color Change)'
+function maindev() {
+    var dict = ['01 - Akiho Nagase V2', 'Haishima test', 'Ana Birb', 'Jay Seth （CC）']
+    var selectedAvy = 'Jay Seth (Color Change)'
 
-      console.log(selectedAvy+`\n`)
-      for( const item in dict){
-        console.log( dict[item]+` = `+distance(selectedAvy,dict[item]) )
-      }
-      console.log( `\n`+closestMatch(selectedAvy,dict) )
+    console.log(selectedAvy + `\n`)
+    for (const item in dict) {
+        console.log(dict[item] + ` = ` + distance(selectedAvy, dict[item]))
+    }
+    console.log(`\n` + closestMatch(selectedAvy, dict))
 
 }
 
@@ -76,34 +63,69 @@ async function main() {
     const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
     console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
 
-    const endpointstring = 'analysis/file_7fad4f3f-7e25-4ead-ac6f-c870d572e202/18/security'
 
-// 2026.01.28 01:35:17 Debug      -  [Behaviour] Switching Yugenki to avatar 01 - Akiho Nagase V2
-// 2026.01.28 01:35:17 Debug      -  [Behaviour] Switching Emily The Maow to avatar Haishima test
-// 2026.01.28 01:35:17 Debug      -  [Behaviour] Switching AnaG0at to avatar Ana Birb
-// 2026.01.28 01:35:17 Debug      -  [Behaviour] Switching RexarBrox bb49 to avatar Jay Seth （CC）
+    // 2026.01.28 01:35:17 Debug      -  [Behaviour] Switching Yugenki to avatar 01 - Akiho Nagase V2
 
-// [Behaviour] Switching USER_DISPLAYNAME to avatar AVATAR_NAME
-// [API] Requesting Get analysis/FILE_ID/FILE_VERISON/security {{}} retryCount: 2
+    // [Behaviour] Switching USER_DISPLAYNAME to avatar AVATAR_NAME
+    // [API] Requesting Get analysis/FILE_ID/FILE_VERISON/security {{}} retryCount: 2
 
-    let res2 = await vrchat.getFile({'path':{'fileId':endpointstring.slice(9, 50)}})
-    console.log(res2.data)
-    if(res2.data.extension == '.vrca'){
-        let res = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': endpointstring.slice(9, 50), 'versionId': parseInt(endpointstring.slice(51).split('/')[0]) } })
-        console.log(res.data)
-        console.log( res.data.performanceRating == 'VeryPoor' ? 'VeryPoor Avatar detected' : res.data.performanceRating )
-    }
+
 
 
 }
 
+function formatBytes(bytes, decimals = 1) {
+    return new Promise((resolve, reject) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        resolve(parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i])
+    })
+}
 
-async function getAvatarThumbnail(I_target, I_proxy) {
-    let data = await getMutualFriends('usr_5e849d21-ae9c-4fd6-8a55-9ffa83728a80')
-    let data2 = await getMutualFriends('usr_5aa49463-57a7-4be9-a7c5-83acd9522e23')
-    let dataFavG = await vrchat.getFavoriteGroups({ 'query': { 'n': 100, 'offset': 0, 'ownerId': 'usr_5e849d21-ae9c-4fd6-8a55-9ffa83728a80' } })
-    var favWorlds = dataFavG.data.filter(e => e.type == 'world')
-    console.log(favWorlds)
+var userAvatars = []
+/* logEmitter.on('avatarchange', (username, avatarname) => {
+    console.log(`${avatarname} worn by ${username}`)
+
+    let search = userAvatars.find(e => e.user == username)
+    if (search == undefined) {
+        userAvatars.push({ "user": username, "avatar": avatarname })
+    } else {
+        userAvatars[ userAvatars.indexOf(search) ] = { "user": username, "avatar": avatarname }
+    }
+
+    console.log(userAvatars)
+}) */
+/* logEmitter.on('fileanalysis', async (fileid, fileversion) => {
+    let res = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } })
+    if (res.data.avatarStats || res.data.performanceRating) {
+        // console.log('File is Avatar')
+        let getName = await vrchat.getFile({ 'path': { 'fileId': fileid } })
+        res.data["name"] = getName.data.name.slice(9).split(' - Asset bundle - ')[0]
+        let filesize = await formatBytes(res.data.fileSize)
+        console.log(`${filesize} ${res.data.performanceRating} ${res.data.name}`)
+        closestMatch(res.data.name, userAvatars.find(e=>e.avatarname) )
+    }
+}) */
+
+
+async function fileCheck(fileid, fileversion) {
+    // let res = await vrchat.getFile({ 'path': { 'fileId': fileid, 'versionId': fileversion } });console.log(res)
+    let res2 = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } });console.log(res2)
+}
+// fileCheck('file_d71306cc-d216-410d-b9be-e9f7ec42f8cf', 2)
+
+
+getAvatarThumbnail()
+async function getAvatarThumbnail() {
+    let filter = ['KangarooKisser']
+    let res = await getMutualFriends('usr_d79cf307-8e27-445b-85ef-8e9632217ddd')
+    // console.log(res)
+    // file_165709d6-51ab-4b11-b81a-2dddfb2a16a9
+    var filtered = res.filter(e => filter.includes(e.displayName))
+    console.log(filtered)
 }
 
 async function discordWorldList(worldIdArr = ['']) {
@@ -171,7 +193,7 @@ async function getMutualFriends(vrcuserid) {
 
         var request = await fetch(vrcapihttp + '' + vrcapiEndpoint, getReq)
         var data = await request.json()
-        console.log(data)
+        // console.log(data)
         resolve(data)
     })
 }

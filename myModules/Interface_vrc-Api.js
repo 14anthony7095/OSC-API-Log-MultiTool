@@ -246,20 +246,6 @@ async function worldAutoPreloadQueue(worldList = []) {
                 if (world == worldId) {
                     setTimeout(() => {
                         resolve(true);
-                        /* oscSend('/usercamera/Mode', 1)
-                        oscSend('/usercamera/Pose',undefined)
-                        oscSend('/usercamera/Zoom', 30)
-                        setTimeout(() => {
-                            oscSend('/usercamera/Capture', true)
-                            setTimeout(() => {
-                                oscSend('/usercamera/Capture', false)
-                                oscSend('/usercamera/Close', true)
-                                setTimeout(() => {
-                                    oscSend('/usercamera/Close', false)
-                                    resolve(true);
-                                }, 1000)
-                            }, 1000)
-                        }, 1000) */
                     }, 10000)
                 }
             })
@@ -294,15 +280,18 @@ function socket_VRC_API_Connect() {
         switch (JSON.parse(line).type) {
             case 'notification':
                 if (wsContent.type == 'requestInvite') {
-                    console.log(`${loglv().log}${selflogWS} [InviteRequest] ${wsContent.senderUsername} has Requested an Invite.`);
+                    console.log(`${loglv().log}${selflogWS} [InviteRequest] ${wsContent.senderUsername} has Requested an Invite.${userAutoAcceptWhiteList.includes(wsContent.senderUsername) == true ? ' (✅ Whitelisted )' : ''}`);
 
                     if (userAutoAcceptWhiteList.includes(wsContent.senderUsername)) {
+                        // Requester is Whitelisted
                         let instanceId = getSelfLocation()
-                        if (instanceId == undefined) {
+                        if (instanceId == undefined || instanceId == '') {
                             let res = await vrchat.getCurrentUser()
                             if (res.data.presence.world != 'offline') {
                                 await vrchat.inviteUser({ 'path': { 'userId': wsContent.senderUserId }, 'body': { 'instanceId': res.data.presence.world + ":" + res.data.presence.instance, 'messageSlot': 0 } })
-                            } else { await vrchat.respondInvite({ 'body': { 'responseSlot': 0 }, 'path': { 'notificationId': wsContent.id } }) }
+                            } else {
+                                await vrchat.respondInvite({ 'body': { 'responseSlot': 0 }, 'path': { 'notificationId': wsContent.id } })
+                            }
                         } else {
                             await vrchat.inviteUser({ 'path': { 'userId': wsContent.senderUserId }, 'body': { 'instanceId': instanceId, 'messageSlot': 0 } })
                         }
@@ -320,22 +309,9 @@ function socket_VRC_API_Connect() {
             case 'notification-v2':
                 if (wsContent.type == 'boop') {
                     console.log(`${loglv().log}${selflogWS} [${JSON.parse(line).type}] ${wsContent.message} ${JSON.stringify(wsContent.details)}`)
-                } else if (wsContent.type == 'group.announcement') {
-                    // El Alba instance open announcement
-                    if (wsContent.data.groupId == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
-                        let res = await vrchat.getGroupInstances({ 'path': { 'groupId': 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' } })
-                        if (res.data != undefined) {
-                            if (res.data.length > 0) {
-                                console.log(`${loglv().log}${selflogWS} [${JSON.parse(line).type}] ${wsContent.data.title} ${res.data[0].location}`)
-                                startvrc(res.data[0].location, true)
-                            }
-                        } else {
-                            console.log(`${loglv().hey}${selflogWS} [${JSON.parse(line).type}] ${wsContent.data.title} ${res.error.message}`)
-                        }
-                    }
+
                 } else {
-                    console.log(`${loglv().log}${selflogWS} [${JSON.parse(line).type}]`);
-                    console.log(wsContent);
+                    console.log(`${loglv().log}${selflogWS} [${JSON.parse(line).type}]`); console.log(wsContent);
                 }
                 break;
 
@@ -865,21 +841,24 @@ function getVisitsCount() {
 exports.getVisitsCount = getVisitsCount;
 
 const { default: open } = require('open');
-async function startvrc(vrclocation, autoGo = false) {
+async function startvrc(vrclocation, autoGo = false, openToHome = false) {
     // vrcIsOpen = true
-    // require('child_process').execSync(`"C:\\Program Files (x86)\\Steam\\steamapps\\common\\VRChat\\start_protected_game.exe" --no-vr --profile=${profileIndex} "vrchat://launch/?ref=vrchat.com&id=${vrclocation}&attach=${parseInt(direct)}"`)
-
-    await open(`vrchat://launch/?ref=vrchat.com&id=${vrclocation}&attach=1`)
-    if (autoGo == true) {
-        setTimeout(() => {
-            require('child_process').execSync(`"C:\\Users\\14Anthony7095\\Documents\\14aOSC-API-Log\\bin\\vrcPressGoOnWorldPage.exe"`)
-        }, 2000);
+    if (openToHome == true) {
+        require('child_process').execSync(`"C:\\Program Files (x86)\\Steam\\steamapps\\common\\VRChat\\start_protected_game.exe" --no-vr`)
+    } else {
+        await open(`vrchat://launch/?ref=vrchat.com&id=${vrclocation}&attach=1`)
+        if (autoGo == true) {
+            setTimeout(() => {
+                require('child_process').execSync(`"C:\\Users\\14Anthony7095\\Documents\\14aOSC-API-Log\\bin\\vrcPressGoOnWorldPage.exe"`)
+            }, 2000);
+        }
     }
     // await open(`vrchat://launch/?ref=vrchat.com&id=${vrclocation}&attach=${parseInt(direct)}`, {arguments: ['--no-vr']})
     // require('child_process').execSync(`"C:\\Program Files (x86)\\Steam\\steamapps\\common\\VRChat\\start_protected_game.exe" --no-vr --profile=${profileIndex} "vrchat://launch/?ref=14aOSCAPI.app&id=${vrclocation}&attach=${parseInt(direct)}"`)
     // direct == false ? fetchLogFile() : ''
 }
 exports.startvrc = startvrc;
+
 
 var tenMinuteTick = 0
 console.log(`${loglv().hey}${selflog} First Audit scan at ${new Date(new Date().getTime() + 600_000).toTimeString()}`)
@@ -1011,6 +990,10 @@ logEmitter.on('propNameRequest', async (propID, vrcpropcount) => {
         console.log(`${loglv().hey}${selflog} Added ${vrcpropcount[propID].name} to the Items list`)
         fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => { if (err) { console.log(err); return } })
     }
+})
+logEmitter.on('headingToWorld', async (I_worldID) => {
+    let res = await vrchat.getWorld({ 'path': { 'worldId': I_worldID } })
+    apiEmitter.emit('fetchedDistThumbnail', res.data.imageUrl, res.data.name.slice(0, 50))
 })
 
 async function switchYearGroupsClosed() {

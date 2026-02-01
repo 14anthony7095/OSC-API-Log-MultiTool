@@ -323,8 +323,6 @@ function oscSend6(addr, v1, v2, v3, v4, v5, v6) {
 }
 exports.oscSend6 = oscSend6;
 
-var PiS_duration = 0
-var PiS_power = 0
 var menuX = 0
 var menuY = 0
 oscEmitter.on('ready', (ready) => { });
@@ -334,14 +332,7 @@ oscEmitter.on('osc', (address, value) => {
 	// /avatar/parameters/14a/testParameter
 	if (address.includes(`/14a/oscsrc/`)) { oscSend(vrcap + '14a/' + address.split('/14a/oscsrc/')[1], value) }
 
-	if (address == vrcap + `PiS_duration`) { PiS_duration = value }
-	if (address == vrcap + `PiS_power`) { PiS_power = value }
-	if (address == vrcap + `Contacts/PiActivate` && value == false) {
-		if (PiS_duration >= 1 && PiS_power >= 1) {
-			PiShockAll(PiS_power, PiS_duration)
-		}
-	}
-
+	// Trigger PiShock when rolling a Nat 1 on the D20
 	if (address == vrcap + 'd20/d20_Menu' && value == 1) {
 		PiShockAll(50, 2)
 	}
@@ -398,11 +389,11 @@ udpPort.on("message", function (msg, rinfo) {
 		console.log(`${loglv().log}${selflog} Avatar Changed: ${avatarId}`)
 		if (avatarId == `avtr_21cbf284-0c09-423c-9973-5cd41dccd308`) { oscSend(vrcap + `LL/Menu/IsUnlocked`, 1 == 1) }
 		if (avatarId == `avtr_2a9a9021-2b82-4564-bb63-2d96deb6a6d7`) { oscSend(vrcap + `Patreon-NDA`, 1 == 1) }
-		if (avatarId == `avtr_94237663-3ed4-48fd-b29d-b3d6b174e004`) { oscSend(vrcap + `VF100_SecurityLockSync`, 1 == 1) }
+		oscSend(vrcap + `VF100_SecurityLockSync`, 1 == 1)
 		oscSend(vrcap + "   locked", false)
 		oscSend(vrcap + `14a/osc/14anthony7095`, true)
 	}
-	if (msg['address'] == vrcap + 'toolGunHolster_Angle') { return }
+	// if (msg['address'] == vrcap + 'toolGunHolster_Angle') { return }
 	if (logOscIn == true) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
 	// if (msg['address'].includes('/usercamera/')) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
 });
@@ -456,6 +447,8 @@ udpPort.on("ready", function () {
 	// require('./osc_32display.js') // OSC
 	require('./sys_taskKill.js') // OSC , LOG
 	require('./osc_vrcPopulation.js') // OSC , API (directly)
+
+	require('./interface_OBS.cjs')
 
 	require('./Interface_vrc-Log.js') // OSC+ , Twitch
 

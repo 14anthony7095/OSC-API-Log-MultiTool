@@ -19,7 +19,7 @@ const { PiShock, PiShockAll } = require('./Interface_PS.js');
 const { config } = require('process');
 const logEmitter = new EventEmitter
 exports.logEmitter = logEmitter;
-require('dotenv').config({'quiet':true})
+require('dotenv').config({ 'quiet': true })
 
 let selflog = `\x1b[0m[\x1b[32mVRC_Log\x1b[0m]`
 var path = 'C:/Users/14anthony7095/AppData/LocalLow/VRChat/VRChat/'
@@ -239,6 +239,12 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 	if (line.includes(`[VRCItems] Item prop_`)) { eventPropSpawned(line.split('prop_')[1].split(' ')[0]) }
 
 	if (line.includes(`[VRCX] VideoPlay(PopcornPalace) `)) { eventPopcornPalace(line.split('[VRCX] VideoPlay(PopcornPalace) ')[1]) }
+
+
+	if (line.includes(`[API] Requesting Get analysis/`)) {
+		const fileAPIreq = line.split(`[API] Requesting Get analysis/`)[1].split('/')
+		logEmitter.emit('fileanalysis', fileAPIreq[0], parseInt(fileAPIreq[1]))
+	}
 
 	if (line.includes(`VRCNP: Received URL`) && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 		// require('child_process').execSync(`"C:\\Users\\14Anthony7095\\Documents\\14aOSC-API-Log\\bin\\vrcPressGoOnWorldPage.exe"`)
@@ -516,7 +522,7 @@ function eventPropSpawned(propID) {
 	}
 }
 
-function getSelfLocation(){ return G_currentLocation }
+function getSelfLocation() { return G_currentLocation }
 exports.getSelfLocation = getSelfLocation;
 function eventHeadingToWorld(logOutputLine) {
 	clearTimeout(worldHopTimeout)
@@ -525,8 +531,10 @@ function eventHeadingToWorld(logOutputLine) {
 	G_worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
 	console.log(`${loglv().debug}${selflog} World ID ${G_worldID}`)
 
+	logEmitter.emit('headingToWorld', G_worldID)
+
 	// 2026.01.27 14:20:50 Debug      -  [Behaviour] Destination set: wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5:65895~hidden(usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752)~region(use)
-	G_currentLocation = 'wrld_'+logOutputLine.split('wrld_')[1]
+	G_currentLocation = 'wrld_' + logOutputLine.split('wrld_')[1]
 
 	if (logOutputLine.includes(`~group(grp_`)) {
 		G_groupID = /grp_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
@@ -557,11 +565,11 @@ function eventHeadingToWorld(logOutputLine) {
 
 var worldjointimestamp = 0
 function eventJoinWorld() {
-	setTimeout(()=>{
-		if( playersInInstance.length == 1 && G_autoNextWorldHop == true && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce' ){
-			logEmitter.emit('nextworld',true)
+	setTimeout(() => {
+		if (playersInInstance.length == 1 && G_autoNextWorldHop == true && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+			logEmitter.emit('nextworld', true)
 		}
-	},120_000)
+	}, 120_000)
 	worldHopTimeout = setTimeout(() => {
 		say.speak(`Been in world for too long. Proceed to next in queue`, 'Microsoft David Desktop', 1.0, (err) => {
 			if (err) { return console.error(`${loglv().warn}${selflog} say.js error: ` + err) }
@@ -601,7 +609,7 @@ function eventInstanceClosed() {
 			lastSetUserStatus = `Exploring World Queue`
 			logEmitter.emit('setstatus', `Exploring World Queue`)
 		}
-		logEmitter.emit('nextworld',false)
+		logEmitter.emit('nextworld', false)
 	}
 	worldID_Closed = true
 	oscSend('/avatar/parameters/log/instance_closed', true)
@@ -717,7 +725,7 @@ async function eventPlayerJoin(logOutputLine) {
 		// Append UserID to tracked player
 		let pioIndex = playersInstanceObject.findIndex(playersInstanceObject => playersInstanceObject.name == playerDisplayName)
 
-		if( playerDisplayName == '14anthony7095'){
+		if (playerDisplayName == '14anthony7095') {
 			logEmitter.emit('joinedworld', G_worldID)
 		}
 
@@ -789,6 +797,7 @@ function eventPlayerAvatarSwitch(logOutputLine) {
 	let avatarswitchedto = logOutputLine.split(`to avatar `)[1].trim()
 
 	console.log(`${loglv().log}${selflog} [AvatarChange]: ${playerswitching} switching to (${avatarswitchedto})`)
+	logEmitter.emit('avatarchange', playerswitching, avatarswitchedto)
 
 }
 
@@ -837,7 +846,7 @@ function videoUrlResolver(videourl) {
 
 	//	--- Print Video URL ---
 	console.log(`${loglv().log}${selflog} Video URL: ${videourl}`)
-	if (ChatVideoURL == true) { oscChatBoxV2(`~VideoURL:\v${videourl}`,5,true,true) }
+	if (ChatVideoURL == true) { oscChatBoxV2(`~VideoURL:\v${videourl}`, 5, true, true) }
 
 	//	---	Twitch Channel URL Resolver	---
 	if (videourl.includes('twitch.tv/') && !videourl.includes('twitch.tv/videos')) {
@@ -890,7 +899,7 @@ function videoUrlResolver(videourl) {
 			.then((data) => {
 				setTimeout(() => {
 					console.log(`${loglv().log}${selflog} Video Title: ${data.videoDetails.title}`)
-					if (ChatVideoTitle == true) { oscChatBoxV2(`~VideoTitle:\v` + data.videoDetails.title, 2,true,true) }
+					if (ChatVideoTitle == true) { oscChatBoxV2(`~VideoTitle:\v` + data.videoDetails.title, 2, true, true) }
 				}, 2000)
 			})
 			.catch((err) => {
