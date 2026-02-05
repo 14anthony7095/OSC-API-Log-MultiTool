@@ -477,9 +477,12 @@ function applyGroupLogo(gID) {
 
 function eventGameClose() {
 	clearTimeout(worldHopTimeout)
+	worldHopTimeout = null
 	clearTimeout(worldHopTimeoutHour)
+	worldHopTimeoutHour = null
 	console.log(`${loglv().hey}${selflog} VRChat has Closed.`)
 	logEmitter.emit('stopworld', '')
+	logEmitter.emit('gameclose', '')
 	if (worldID_Closed == true && lastSetUserStatus == 'Instance is closed') {
 		lastSetUserStatus = ''
 		logEmitter.emit('setstatus', '')
@@ -526,7 +529,9 @@ function getSelfLocation() { return G_currentLocation }
 exports.getSelfLocation = getSelfLocation;
 function eventHeadingToWorld(logOutputLine) {
 	clearTimeout(worldHopTimeout)
+	worldHopTimeout = null
 	clearTimeout(worldHopTimeoutHour)
+	worldHopTimeoutHour = null
 
 	G_worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
 	console.log(`${loglv().debug}${selflog} World ID ${G_worldID}`)
@@ -766,6 +771,7 @@ function eventPlayerLeft(logOutputLine) {
 
 		if (playerDisplayName == getCurrentAccountInUse().name) {
 			clearTimeout(worldHopTimeout)
+			worldHopTimeout = null
 			cooldownUrl = true
 			if (worldID_Closed == true) {
 				if (lastSetUserStatus != `Exploring World Queue`) {

@@ -434,13 +434,13 @@ udpPort.on("ready", function () {
 	oscEmitter.emit('ready', true);
 	console.log(`${loglv().log}${selflog} Ready..`)
 
-	require('./Interface_vrc-Api.js')
+	// require('./Interface_vrc-Api.js')
 	// require('./interface_midi.js')
-
+	
 	// require('./osc_PingSystem.js') // OSC
 	require('./osc_Chessboard-logic.js') // OSC
-	require('./Interface_twitch.js') // OSC
 	require('./osc_AfkClock.js') // OSC
+	require('./Interface_twitch.js') // OSC
 	// require('./osc_HeartRate.js') // OSC
 	require('./osc_AutoClicker.js') // OSC
 	require('./osc_Av3-menu-helper.js') // OSC

@@ -18,38 +18,44 @@ async function main() {
         });
         console.log(`Connected to server ${obsWebSocketVersion} (using RPC ${negotiatedRpcVersion})`)
         connected = true
+
+        obs.once('ExitStarted', () => {
+            connected = false
+            console.log('OBS started shutdown');
+            obs.disconnect()
+            setTimeout(() => { main() }, 300000)
+        });
+
     } catch (error) {
         connected = false
         console.error('Failed to connect', error.code, error.message);
+        setTimeout(() => { main() }, 300000)
     }
-
-    obs.once('ExitStarted', () => {
-        connected = false
-        console.log('OBS started shutdown');
-        obs.disconnect()
-    });
-
 }
 main()
 
+function getOBSstate() { return connected }
+exports.getOBSstate = getOBSstate
 
 logEmitter.on('headingToWorld', async () => {
-    if (connected = true) {
+    if (connected == true) {
         await obs.callBatch([{ requestType: 'SetCurrentProgramScene', requestData: { sceneName: 'vrc_switchingWorlds' } }])
     }
 })
 
-apiEmitter.on('fetchedDistThumbnail', (url, name) => {
-    fs.writeFile('./assets/obs-worldImage.html', `<html><img style="width: 100%;height: 100%;" src="${url}"></html>`, 'utf8', (err) => { if (err) { console.log(err) }
-        if (connected = true) {
+apiEmitter.on('fetchedDistThumbnail', (url, name, authorname) => {
+    fs.writeFile('./assets/obs-worldImage.html', `<html><img style="width: 100%;height: 100%;" src="${url}"></html>`, 'utf8', (err) => {
+        if (err) { console.log(err) }
+        if (connected == true) {
             obs.callBatch([{ requestType: 'PressInputPropertiesButton', requestData: { inputName: 'WebImage', propertyName: 'refreshnocache' } }])
         }
     })
     fs.writeFile('./assets/obs-world-name.txt', name, 'utf8', (err) => { if (err) { console.log(err) } })
+    fs.writeFile('./assets/obs-world-author.txt', `By: ${authorname}`, 'utf8', (err) => { if (err) { console.log(err) } })
 })
 
 logEmitter.on('joinedworld', () => {
-    if (connected = true) {
+    if (connected == true) {
         obs.callBatch([{ requestType: 'SetCurrentProgramScene', requestData: { sceneName: 'vrc_inWorld' } }])
     }
 })

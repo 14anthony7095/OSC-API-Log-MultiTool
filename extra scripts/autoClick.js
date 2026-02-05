@@ -19,5 +19,6 @@ oscm.oscdata.on('oscdata', (data) => {
 	}
 	if( data.address == '/avatar/parameters/rightHand' && data.value != 1 ){
 		clearInterval(autoClock)
+		autoClock = null
 	}
 })

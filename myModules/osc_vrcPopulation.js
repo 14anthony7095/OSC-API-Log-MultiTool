@@ -50,6 +50,7 @@ function stop() {
 		console.log(`${loglv().log}${selflog} Stopping.`)
 	}
 	clearInterval(counterTimer)
+	counterTimer = null
 }
 
 var worldcount_mem = 0
@@ -91,6 +92,7 @@ apiEmitter.on('switch', (data, type) => {
 		isWorlding = false
 		start()
 		clearInterval(worldTimer)
+		worldTimer = null
 	}
 })
 

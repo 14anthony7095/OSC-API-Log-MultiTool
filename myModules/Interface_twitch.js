@@ -5,7 +5,7 @@ const { oscReady, oscSend, oscChatBox, oscEmitter, oscChatTyping, oscChatBoxV2 }
 const tmi = require('tmi.js');
 const say = require('say');
 const { cmdEmitter } = require('./input.js');
-require('dotenv').config({'quiet':true})
+require('dotenv').config({ 'quiet': true })
 
 //	--	Global Vars	--
 let selflog = `\x1b[0m[\x1b[35mTwitch.tv\x1b[0m]`
@@ -82,6 +82,7 @@ oscEmitter.on('osc', (address, value) => {
 })
 
 
+
 function start() {
 	isActive = true
 	console.log(`${loglv().log}${selflog} Starting..`)
@@ -95,9 +96,9 @@ function start() {
 	}
 	oscSend('/avatar/parameters/ttvIsTalking', false)
 	oscSend('/avatar/parameters/ToN_IsStarted', false)
-	oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156) )
-	oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901) )
-	oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137) )
+	oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156))
+	oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901))
+	oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137))
 }
 
 
@@ -122,9 +123,9 @@ function switchChannel(newChannel) {
 			isActive = true
 			isttvRunning = true
 			oscSend('/avatar/parameters/ttvIsTalking', false)
-			oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156) )
-			oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901) )
-			oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137) )
+			oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156))
+			oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901))
+			oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137))
 		}).catch(err => {
 			console.log(`${loglv().warn}${selflog}`, err)
 		})
@@ -178,9 +179,9 @@ function rejoinChannel() {
 		isttvRunning = true
 		oscSend('/avatar/parameters/ttvIsTalking', false)
 		oscSend('/avatar/parameters/ToN_IsStarted', false)
-		oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156) )
-		oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901) )
-		oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137) )
+		oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156))
+		oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901))
+		oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137))
 
 	}
 }
@@ -198,12 +199,12 @@ function saySpeak() {
 	isTalking = true
 	console.log(chatBuffer[0].log)
 	if (useChatBox == true && ttvChatBox == true) {
-		oscChatBoxV2(`~${chatBuffer[0].osc}`,undefined,false,false,false,false)
+		oscChatBoxV2(`~${chatBuffer[0].osc}`, undefined, false, false, false, false)
 	}
 
-	oscSend('/avatar/parameters/ToN_ColorR', parseFloat(chatBuffer[0].color.split(',')[0]) )
-	oscSend('/avatar/parameters/ToN_ColorG', parseFloat(chatBuffer[0].color.split(',')[1]) )
-	oscSend('/avatar/parameters/ToN_ColorB', parseFloat(chatBuffer[0].color.split(',')[2]) )
+	oscSend('/avatar/parameters/ToN_ColorR', parseFloat(chatBuffer[0].color.split(',')[0]))
+	oscSend('/avatar/parameters/ToN_ColorG', parseFloat(chatBuffer[0].color.split(',')[1]))
+	oscSend('/avatar/parameters/ToN_ColorB', parseFloat(chatBuffer[0].color.split(',')[2]))
 
 	oscSend('/avatar/parameters/ToN_IsStarted', true)
 	oscSend('/avatar/parameters/ttvIsTalking', true)
@@ -216,9 +217,9 @@ function saySpeak() {
 		chatBuffer.shift()
 		if (msgVerbose == 3) { console.log(`${loglv().debug}${selflog} Messages Left in Buffer: ${chatBuffer.length}`) }
 		oscSend('/avatar/parameters/ttvIsTalking', false)
-		oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156) )
-		oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901) )
-		oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137) )
+		oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156))
+		oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901))
+		oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137))
 
 		oscSend('/avatar/parameters/ttvCheerTier', false)
 		setTimeout(() => {
@@ -256,7 +257,7 @@ client.on("join", (channel, username, self) => {
 });
 
 
-
+var vrcCurrentLocation = `🌐Current world is unknown at the moment`;
 client.on("message", (channel, userstate, message, self) => {
 	if (isActive == false) { return }
 	if (clearingBuffer == true) { return }
@@ -266,6 +267,14 @@ client.on("message", (channel, userstate, message, self) => {
 		if (channel == '#saltybet' && saltyMode == true) {
 			//if( userstate['display-name'] != 'WAIFU4u' && userstate['display-name'] != 'Nightbot' && message.slice(0,1) != '!' ){ return }
 			if (userstate['display-name'] != 'WAIFU4u') { return }
+		}
+
+		if (channel == '#krakkacafe') {
+			if (self == true) { return }
+		}
+		if (channel == '#14anthony7095') {
+			if (self == true) { return }
+			if (message == '!world') { client.say('14anthony7095', vrcCurrentLocation); return }
 		}
 
 		if (msgVerbose >= 2) {
@@ -343,3 +352,20 @@ ${loglv().log}${selflog} \x1b[33m${partalmsgpercent}% of message was not shown i
 	if (msgVerbose >= 1 && isTalking == false) { saySpeak() }
 });
 
+const { apiEmitter } = require("./Interface_vrc-Api.js");
+const { getOBSstate } = require('./interface_OBS.cjs');
+apiEmitter.on('fetchedDistThumbnail', (url, name, authorname, worldId) => {
+	if (getOBSstate() == true) {
+		// Auto Chat Message
+		client.say('14anthony7095', `🚀 Heading to world: ${name} By ${authorname} https://vrchat.com/home/world/${worldId}`);
+		// Buffer Message for !world command
+		vrcCurrentLocation = `🌐 Current world: ${name} By ${authorname} https://vrchat.com/home/world/${worldId}`;
+	}
+})
+const { logEmitter } = require("./Interface_vrc-Log.js")
+logEmitter.on('gameclose', () => {
+	if (getOBSstate() == true) {
+		// Edit Buffer Message for !world command if VRChat is closed
+		vrcCurrentLocation = vrcCurrentLocation.replace(`🚀 Heading to world: `, '🔍 Last seen world: ').replace(`🌐 Current world: `, '🔍 Last seen world: ')
+	}
+})

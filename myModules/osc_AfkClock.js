@@ -48,6 +48,7 @@ function afkStopTimer() {
 	exports.afktime = 0
 	console.log(`${loglv().log}${selflog} I am no longer AFK`)
 	clearInterval( afktimer )
+	afktimer = null
 }
 
 //	--	Events	--

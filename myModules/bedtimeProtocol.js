@@ -33,6 +33,7 @@ oscEmitter.on('osc', (address, value) => {
 	if( address == '/avatar/parameters/bed_active' ){
 		if( value == true ) {
 			clearInterval(timer)
+			timer = null
 		
 			let targetTimeStamp = Math.floor( Date.now() / 1000 ) + (oscQ.bed_min * 60) + (oscQ.bed_hr*3600); console.log(`${loglv().debug}${selflog} ${targetTimeStamp}`)
 			
@@ -104,6 +105,7 @@ oscEmitter.on('osc', (address, value) => {
 					oscChatBox(`~${logSay}`,5)
 					killvrc(10)
 					clearInterval(timer)
+					timer = null
 					//process.exit()	/* Also close OSC ? */
 				}
 
@@ -111,6 +113,7 @@ oscEmitter.on('osc', (address, value) => {
 		}
 		if( value == false ){
 			clearInterval(timer)
+			timer = null
 			logSay = `Canceled Auto-Close`
 			console.log(`${loglv().hey}${selflog} ${logSay}`);
 			oscChatBox(`~${logSay}`,5)

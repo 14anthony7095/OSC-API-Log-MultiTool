@@ -88,11 +88,11 @@ let ttvlevel = 0
 	
 	// Fetch Twitch Chat from?
 	// [0] None  [1] Videoplayers  [2] Users
-	exports.ttvFetchFrom = 1
+	exports.ttvFetchFrom = 0
 	// TODO: Don't force enable Twitch Follower unless a message is received from someone's chat while in "Users" mode
 	
 	// Allow Twitch Chat in ChatBox
-	exports.ttvChatBox = true
+	exports.ttvChatBox = false
 
 	// Filter SaltyBet chat messages to only bots
 	exports.saltyMode = false

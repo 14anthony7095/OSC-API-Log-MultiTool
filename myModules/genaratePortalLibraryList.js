@@ -75,21 +75,11 @@ require('https').get('https://i.imgur.com/vphs047.png', (res) => {
 var myWorldsArray = []
 var gameWorldsArray = []
 var privateWorldsArray = []
-var worldHopFindLegacy = []
-var worldHopFind2025 = []
 
 var worldHopFinds01Array = []
 var worldHopFinds02Array = []
 var worldHopFinds03Array = []
 var worldHopFinds04Array = []
-var worldHopFinds05Array = []
-var worldHopFinds06Array = []
-var worldHopFinds07Array = []
-var worldHopFinds08Array = []
-var worldHopFinds09Array = []
-var worldHopFinds10Array = []
-var worldHopFinds11Array = []
-var worldHopFinds12Array = []
 
 var personalCollectionArray = []
 var friendsOnlyWorldsArray = []
@@ -105,20 +95,10 @@ function genaratePortalLibrary() {
         await scan(worldJson.myworlds, indexcount);indexcount++
         await scan(worldJson.games_activity, indexcount);indexcount++
         await scan(worldJson.private_worlds, indexcount);indexcount++
-        await scan(worldJson.worldhop_legacy, indexcount);indexcount++
-        await scan(worldJson.worldhop_2025, indexcount);indexcount++
-        await scan(worldJson.worldhop_01_jan, indexcount);indexcount++
-        await scan(worldJson.worldhop_02_feb, indexcount);indexcount++
-        await scan(worldJson.worldhop_03_mar, indexcount);indexcount++
-        await scan(worldJson.worldhop_04_apr, indexcount);indexcount++
-        await scan(worldJson.worldhop_05_may, indexcount);indexcount++
-        await scan(worldJson.worldhop_06_june, indexcount);indexcount++
-        await scan(worldJson.worldhop_07_july, indexcount);indexcount++
-        await scan(worldJson.worldhop_08_aug, indexcount);indexcount++
-        await scan(worldJson.worldhop_09_sep, indexcount);indexcount++
-        await scan(worldJson.worldhop_10_oct, indexcount);indexcount++
-        await scan(worldJson.worldhop_11_nov, indexcount);indexcount++
-        await scan(worldJson.worldhop_12_dec, indexcount);indexcount++
+        await scan(worldJson.worldhop_01, indexcount);indexcount++
+        await scan(worldJson.worldhop_02, indexcount);indexcount++
+        await scan(worldJson.worldhop_03, indexcount);indexcount++
+        await scan(worldJson.worldhop_04, indexcount);indexcount++
         await scan(worldJson.personal_collection, indexcount);indexcount++
 
         let writeString = {
@@ -129,20 +109,10 @@ function genaratePortalLibrary() {
                 { "Category": "My Worlds", "Worlds": myWorldsArray },
                 { "Category": "Games & Activity", "Worlds": gameWorldsArray },
                 { "Category": "Private Worlds", "Worlds": privateWorldsArray },
-                { "Category": "World Hop (Legacy)", "Worlds": worldHopFindLegacy },
-                { "Category": "World Hop (2025)", "Worlds": worldHopFind2025 },
-                { "Category": "World Hop (1-Jan)", "Worlds": worldHopFinds01Array },
-                { "Category": "World Hop (2-Feb)", "Worlds": worldHopFinds02Array },
-                { "Category": "World Hop (3-Mar)", "Worlds": worldHopFinds03Array },
-                { "Category": "World Hop (4-Apr)", "Worlds": worldHopFinds04Array },
-                { "Category": "World Hop (5-May)", "Worlds": worldHopFinds05Array },
-                { "Category": "World Hop (6-June)", "Worlds": worldHopFinds06Array },
-                { "Category": "World Hop (7-July)", "Worlds": worldHopFinds07Array },
-                { "Category": "World Hop (8-Aug)", "Worlds": worldHopFinds08Array },
-                { "Category": "World Hop (9-Sep)", "Worlds": worldHopFinds09Array },
-                { "Category": "World Hop (10-Oct)", "Worlds": worldHopFinds10Array },
-                { "Category": "World Hop (11-Nov)", "Worlds": worldHopFinds11Array },
-                { "Category": "World Hop (12-Dec)", "Worlds": worldHopFinds12Array },
+                { "Category": "World Hop (1)", "Worlds": worldHopFinds01Array },
+                { "Category": "World Hop (2)", "Worlds": worldHopFinds02Array },
+                { "Category": "World Hop (3)", "Worlds": worldHopFinds03Array },
+                { "Category": "World Hop (4)", "Worlds": worldHopFinds04Array },
                 { "Category": "Personal Collection", "Worlds": personalCollectionArray, "PermittedRoles": ["Me"] }
             ]
         }
@@ -189,20 +159,10 @@ function genaratePortalLibrary() {
                             case 1: myWorldsArray.push(dataPush); break;
                             case 2: gameWorldsArray.push(dataPush); break;
                             case 3: privateWorldsArray.push(dataPush); break;
-                            case 4: worldHopFindLegacy.push(dataPush); break;
-                            case 5: worldHopFind2025.push(dataPush); break;
                             case 6: worldHopFinds01Array.push(dataPush); break;
                             case 7: worldHopFinds02Array.push(dataPush); break;
                             case 8: worldHopFinds03Array.push(dataPush); break;
                             case 9: worldHopFinds04Array.push(dataPush); break;
-                            case 10: worldHopFinds05Array.push(dataPush); break;
-                            case 11: worldHopFinds06Array.push(dataPush); break;
-                            case 12: worldHopFinds07Array.push(dataPush); break;
-                            case 13: worldHopFinds08Array.push(dataPush); break;
-                            case 14: worldHopFinds09Array.push(dataPush); break;
-                            case 15: worldHopFinds10Array.push(dataPush); break;
-                            case 16: worldHopFinds11Array.push(dataPush); break;
-                            case 17: worldHopFinds12Array.push(dataPush); break;
                             case 18: personalCollectionArray.push(dataPush); break;
                             default: break;
                         }

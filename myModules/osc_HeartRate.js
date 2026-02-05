@@ -23,7 +23,7 @@ cmdEmitter.on('cmd',(cmd,args,raw)=>{
 				console.log(`${loglv().log}${selflog} OSC Data: ${parseFloat( randrate / 255 - 1 )}` )
 			},2000)
 		}
-		if( args[1] == 'false' ){ clearInterval(hrmRandomizer) }
+		if( args[1] == 'false' ){ clearInterval(hrmRandomizer); hrmRandomizer = null }
 	}
 	if( cmd == 'heart' && args[0] == 'linar' ){
 		if( args[1] == 'true' ){
@@ -40,10 +40,11 @@ cmdEmitter.on('cmd',(cmd,args,raw)=>{
 				}
 			},25400)
 		}
-		if( args[1] == 'false' ){ clearInterval(hrmLinar) }		
+		if( args[1] == 'false' ){ clearInterval(hrmLinar); hrmLinar = null }		
 	}
 	if( cmd == 'heart' && args[0] == 'set' ){
 		clearInterval(hrmRandomizer)
+		hrmRandomizer = null
 		oscSend('/avatar/parameters/Float/HeartRate_BPM', parseFloat( args[1] / 255 - 1 ) )
 	}
 })
@@ -108,6 +109,7 @@ function openWebSocket() {
 		console.log(`${loglv().warn}${selflog} [PULSOID] ${error}`)
 		wsopenned = false
 		clearTimeout(reconDelay)
+		reconDelay = null
 		ws.close()
 	})
 }

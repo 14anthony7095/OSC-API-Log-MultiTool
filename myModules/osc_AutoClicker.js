@@ -12,5 +12,6 @@ oscEmitter.on('osc', (address, value) => {
 		}, 50);
 	   }else if( address == '/avatar/parameters/rightHand' && value != 1 ){
 		   clearInterval(autoClick)
+		   autoClick = null
 	   }
 })

@@ -131,6 +131,7 @@ function sleep(time) {
     })
 }
 
+var exploreNextCountDownTimer
 oscEmitter.on('osc', (address, value) => {
     if (address == `/avatar/parameters/api/explore/start` && value == true) {
         getOnlineWorlds('worlds1', false)
@@ -138,6 +139,7 @@ oscEmitter.on('osc', (address, value) => {
     if (address == `/avatar/parameters/api/explore/next` && value == true) {
         if (exploreMode == true) {
             clearTimeout(exploreNextCountDownTimer)
+            exploreNextCountDownTimer = null
             inviteOnlineWorlds_Loop(worldsToExplore[0]);
         } else if (exploreMode == false) {
             inviteLocalQueue()
@@ -147,6 +149,8 @@ oscEmitter.on('osc', (address, value) => {
         apiEmitter.emit('switch', 0, 'world')
         if (exploreMode == true) {
             console.log(`${loglv().hey}${selflog} Explore Mode: Disabled - Avatar Trigger`)
+            clearTimeout(exploreNextCountDownTimer)
+            exploreNextCountDownTimer = null
             exploreMode = false
         } else if (exploreMode == false) {
             // switchQueueList() // All the lists are merged.. soo.. rip
@@ -234,7 +238,7 @@ async function worldAutoPreloadQueue(worldList = []) {
                     'worldId': world,
                     'type': 'hidden',
                     'region': 'use',
-                    'displayName': 'PreVisit Check',
+                    'displayName': 'Preloading Worlds',
                     'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752'
                 }
             }).then(created_instance => {
@@ -566,6 +570,24 @@ async function addLabWorldsToLocalQueue() {
     })
 }
 
+function shuffle(array) {
+  var m = array.length, t, i;
+
+  // While there remain elements to shuffle…
+  while (m) {
+
+    // Pick a remaining element…
+    i = Math.floor(Math.random() * m--);
+
+    // And swap it with the current element.
+    t = array[m];
+    array[m] = array[i];
+    array[i] = t;
+  }
+
+  return array;
+}
+
 var worldsToExplore = []
 async function getOnlineWorlds(favgroup = 'worlds1', addMoreWorlds = false) {
     if (worldsToExplore.length > 0) {
@@ -581,7 +603,8 @@ async function getOnlineWorlds(favgroup = 'worlds1', addMoreWorlds = false) {
         let { data: fav4 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 300 } })
         let favworldsAll = fav1.concat(fav2, fav3, fav4)
         let favWorlds1 = favworldsAll.filter(favworldsAll => favworldsAll.favoriteGroup == favgroup)
-        favWorlds1.forEach((wrld, index, arr) => { worldsToExplore.push(wrld.id) })
+        // worldsToExplore = shuffle(favWorlds1)
+        favWorlds1.forEach((wrld, index, arr) => { worldsToExplore.unshift(wrld.id) })
         let extimelow = Math.floor((favWorlds1.length * 2) / 60)
         let extimehig = Math.floor((favWorlds1.length * 10) / 60)
         console.log(`${loglv().log}${selflog} ${favWorlds1.length} worlds to explore. [${extimelow} to ${extimehig} Hours]`)
@@ -608,7 +631,7 @@ async function getOnlineWorlds(favgroup = 'worlds1', addMoreWorlds = false) {
 
     inviteOnlineWorlds_Loop(worldsToExplore[0])
 }
-var exploreNextCountDownTimer;
+
 async function inviteOnlineWorlds_Loop(world_id) {
     let { data: checkCap } = await vrchat.getWorld({ 'path': { 'worldId': world_id } })
     if (checkCap == undefined) {
@@ -993,7 +1016,7 @@ logEmitter.on('propNameRequest', async (propID, vrcpropcount) => {
 })
 logEmitter.on('headingToWorld', async (I_worldID) => {
     let res = await vrchat.getWorld({ 'path': { 'worldId': I_worldID } })
-    apiEmitter.emit('fetchedDistThumbnail', res.data.imageUrl, res.data.name.slice(0, 50))
+    apiEmitter.emit('fetchedDistThumbnail', res.data.imageUrl, res.data.name.slice(0, 50), res.data.authorName.slice(0, 50), I_worldID)
 })
 
 async function switchYearGroupsClosed() {
