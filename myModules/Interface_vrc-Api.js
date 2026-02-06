@@ -121,6 +121,7 @@ cmdEmitter.on('cmd', (cmd, args) => {
     if (cmd == 'years' && args[0] == 'close') { switchYearGroupsClosed() }
     if (cmd == 'years' && args[0] == 'open') { switchYearGroupsReOpen() }
     if (cmd == 'preload') { worldAutoPreloadQueue(args[0].split(',')) }
+    if (cmd == 'explore' && args[0] == 'start') { getOnlineWorlds('worlds1', false) }
 })
 
 function sleep(time) {
@@ -571,21 +572,21 @@ async function addLabWorldsToLocalQueue() {
 }
 
 function shuffle(array) {
-  var m = array.length, t, i;
+    var m = array.length, t, i;
 
-  // While there remain elements to shuffle…
-  while (m) {
+    // While there remain elements to shuffle…
+    while (m) {
 
-    // Pick a remaining element…
-    i = Math.floor(Math.random() * m--);
+        // Pick a remaining element…
+        i = Math.floor(Math.random() * m--);
 
-    // And swap it with the current element.
-    t = array[m];
-    array[m] = array[i];
-    array[i] = t;
-  }
+        // And swap it with the current element.
+        t = array[m];
+        array[m] = array[i];
+        array[i] = t;
+    }
 
-  return array;
+    return array;
 }
 
 var worldsToExplore = []
@@ -603,8 +604,9 @@ async function getOnlineWorlds(favgroup = 'worlds1', addMoreWorlds = false) {
         let { data: fav4 } = await vrchat.getFavoritedWorlds({ query: { n: 100, sort: '_created_at', offset: 300 } })
         let favworldsAll = fav1.concat(fav2, fav3, fav4)
         let favWorlds1 = favworldsAll.filter(favworldsAll => favworldsAll.favoriteGroup == favgroup)
-        // worldsToExplore = shuffle(favWorlds1)
         favWorlds1.forEach((wrld, index, arr) => { worldsToExplore.unshift(wrld.id) })
+        worldsToExplore = shuffle(worldsToExplore)
+        
         let extimelow = Math.floor((favWorlds1.length * 2) / 60)
         let extimehig = Math.floor((favWorlds1.length * 10) / 60)
         console.log(`${loglv().log}${selflog} ${favWorlds1.length} worlds to explore. [${extimelow} to ${extimehig} Hours]`)

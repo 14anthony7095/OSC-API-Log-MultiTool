@@ -382,6 +382,10 @@ udpPort.on("message", function (msg, rinfo) {
 		fs.appendFile('datasets/cameraPositions.txt', `\r\n${lastCameraPos}`, 'utf-8', (err) => { if (err) { console.log(err) } })
 	}
 
+	if (msg['address'] == vrcap+'MuteSelf') {
+		oscEmitter.emit('voiceActive', msg['args'][0]==true);
+	}
+
 	if (msg['address'] == '/avatar/change') {
 		var avatarId = msg['args'][0]
 		exports.avatarId = msg['args'][0]

@@ -17,7 +17,7 @@
   },
   "49fec698-f0cb-475c-9bc3-8f24e1bcc4eb": {
     "name": "Campfire",
-    "count": 552
+    "count": 554
   },
   "fb4e6b9e-ddd2-464c-8e44-cdba7f77eb5d": {
     "name": "Marshmallow on a Stick",
@@ -114,5 +114,9 @@
   "25a95ca1-bba4-48d0-8a31-249bbc3af78e": {
     "name": "MAGFest26 Coin",
     "count": 2
+  },
+  "ee4d580d-358c-49d7-87a6-1d191e295ef9": {
+    "name": "WIP Daisy",
+    "count": 1
   }
 }

@@ -120,8 +120,8 @@ async function fileCheck(fileid, fileversion) {
 
 getAvatarThumbnail()
 async function getAvatarThumbnail() {
-    let filter = ['KangarooKisser']
-    let res = await getMutualFriends('usr_d79cf307-8e27-445b-85ef-8e9632217ddd')
+    let filter = ['itsBiffy']
+    let res = await getMutualFriends('usr_db6b86b5-19ba-4a3d-ab92-e698c8baef1f')
     // console.log(res)
     // file_165709d6-51ab-4b11-b81a-2dddfb2a16a9
     var filtered = res.filter(e => filter.includes(e.displayName))

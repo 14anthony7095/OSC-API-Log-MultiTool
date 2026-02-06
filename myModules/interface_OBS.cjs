@@ -4,9 +4,10 @@ const fs = require('fs');
 require('dotenv').config({ 'quiet': true })
 const { logEmitter } = require("./Interface_vrc-Log.js");
 const { apiEmitter } = require("./Interface_vrc-Api.js");
+const { oscEmitter } = require('./Interface_osc_v1.js');
 
 
-// async function sleep(time) { return new Promise((resolve) => { console.log(`Sleeping for ${time} ms`); setTimeout(() => { resolve(1) }, time); }) }
+async function sleep(time) { return new Promise((resolve) => { console.log(`Sleeping for ${time} ms`); setTimeout(() => { resolve(1) }, time); }) }
 var connected = false
 async function main() {
     try {
@@ -18,6 +19,8 @@ async function main() {
         });
         console.log(`Connected to server ${obsWebSocketVersion} (using RPC ${negotiatedRpcVersion})`)
         connected = true
+
+        obs.callBatch([{ requestType: 'SetInputMute', requestData: { inputName: 'VR Mic', inputMuted: true } }])
 
         obs.once('ExitStarted', () => {
             connected = false
@@ -59,3 +62,7 @@ logEmitter.on('joinedworld', () => {
         obs.callBatch([{ requestType: 'SetCurrentProgramScene', requestData: { sceneName: 'vrc_inWorld' } }])
     }
 })
+
+oscEmitter.on('voiceActive', (value)=>{
+    obs.callBatch([{ requestType: 'SetInputMute', requestData: { inputName: 'VR Mic', inputMuted: value } }])
+});
