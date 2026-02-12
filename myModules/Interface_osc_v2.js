@@ -7,7 +7,6 @@ console.log(`${loglv().log}${selflog} Loaded`)
 const { EventEmitter } = require('events')
 const oscEmitter = new EventEmitter();
 exports.oscEmitter = oscEmitter;
-oscEmitter.on('ready', (ready) => { });
 oscEmitter.on('osc', (address, value) => { });
 
 

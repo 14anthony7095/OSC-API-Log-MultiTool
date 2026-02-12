@@ -203,6 +203,7 @@ oscSend('/avatar/parameters/log/instance_closed', false)
 var G_groupID = ``
 var instanceType = ''
 var lastSetUserStatus = ''
+var cooldownPortalVanish = false
 
 function getInstanceGroupID() { return G_groupID }
 exports.getInstanceGroupID = getInstanceGroupID;
@@ -285,7 +286,12 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 	// Portal Manager
 	if (line.includes(`[PortalManager]`)) {
 		var PortalLog = line.split(`[PortalManager] `)[1]
-		if (PortalLog == 'Received portal destroy event.') { oscChatBox(`~Portal has vanished`, 5) }
+		if (PortalLog == 'Received portal destroy event.') {
+			if(cooldownPortalVanish == false){
+				oscChatBox(`~Portal has vanished`, 5)
+				setTimeout(()=>{ cooldownPortalVanish = true },120_000)
+			}
+		}
 		console.log(`${loglv().log}${selflog} [PortalManager]: ${PortalLog}`)
 	}
 
@@ -360,10 +366,46 @@ function queueInstanceDataBurst() {
 	// memberRatio
 }
 
+oscEmitter.on('osc', (addr, value) => {
+	if (addr == '/avatar/parameters/api/favWorld' && value != 0) {
+		if (G_worldID == '') { console.error('No World ID in location buffer'); return }
+
+		var wrld_fav = {}
+		fs.readFile('./datasets/wrld_fav.json', 'utf8', (err, data) => {
+			if (err) { console.error(err); return }
+			wrld_fav = JSON.parse(data)
+			// console.debug(wrld_fav)
+
+			switch (value) {
+				case 1:
+					oscChatBoxV2('Added world to "Approve" list',2,false,true,undefined,false);
+					wrld_fav["1_Approve"].push(G_worldID);
+					break;
+				case 2:
+					oscChatBoxV2('Added world to "Likes" list',2,false,true,undefined,false);
+					wrld_fav["2_Likes"].push(G_worldID);
+					break;
+				case 3:
+					oscChatBoxV2('Added world to "Love / Show Off" list',2,false,true,undefined,false);
+					wrld_fav["3_Love_ShowOff"].push(G_worldID);
+					break;
+				case 4:
+					oscChatBoxV2('Added world to "Games & Activity" list',2,false,true,undefined,false);
+					wrld_fav["4_Game_Activity"].push(G_worldID);
+					break;
+				default: break;
+			}
+
+			fs.writeFile('./datasets/wrld_fav.json', JSON.stringify(wrld_fav), 'utf8', (err) => { if (err) { console.error(err) } })
+
+		})
+
+	}
+})
 oscEmitter.on('avatar', (avtrID) => {
 	if (['avtr_305ddd5d-d1f9-4adb-a025-50c2f1a9d219',
 		`avtr_5c866609-f49a-4867-ac74-5dab03d5d713`,
-		`avtr_0c97e918-23d0-4934-b364-5fd28fb10236`,
+		`avtr_75c670ca-4614-4db2-a687-e27994acb0ac`,
 		'avtr_6b25124e-e141-4df4-ad27-22766608e5dc',
 	].includes(avtrID)) {
 		queueInstanceDataBurst()
@@ -677,9 +719,7 @@ function eventPlayerInitialized(logOutputLine) {
 
 		playerRatio = playersInInstance.length / playerHardLimit
 
-		if (Date.now() > (worldjointimestamp + 10000)) {
-			queueInstanceDataBurst()
-		}
+		if (Date.now() > (worldjointimestamp + 10000)) { queueInstanceDataBurst() }
 
 		console.log(`${loglv().log}${selflog} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
 

@@ -325,7 +325,6 @@ exports.oscSend6 = oscSend6;
 
 var menuX = 0
 var menuY = 0
-oscEmitter.on('ready', (ready) => { });
 oscEmitter.on('osc', (address, value) => {
 
 	// /avatar/parameters/14a/oscsrc/testParameter
@@ -382,8 +381,8 @@ udpPort.on("message", function (msg, rinfo) {
 		fs.appendFile('datasets/cameraPositions.txt', `\r\n${lastCameraPos}`, 'utf-8', (err) => { if (err) { console.log(err) } })
 	}
 
-	if (msg['address'] == vrcap+'MuteSelf') {
-		oscEmitter.emit('voiceActive', msg['args'][0]==true);
+	if (msg['address'] == vrcap + 'MuteSelf') {
+		oscEmitter.emit('voiceActive', msg['args'][0] == true);
 	}
 
 	if (msg['address'] == '/avatar/change') {
@@ -435,12 +434,11 @@ udpPort.on("message", function (msg, rinfo) {
 udpPort.on("ready", function () {
 	oscReady = true
 	exports.oscReady = oscReady
-	oscEmitter.emit('ready', true);
 	console.log(`${loglv().log}${selflog} Ready..`)
 
 	// require('./Interface_vrc-Api.js')
 	// require('./interface_midi.js')
-	
+
 	// require('./osc_PingSystem.js') // OSC
 	require('./osc_Chessboard-logic.js') // OSC
 	require('./osc_AfkClock.js') // OSC

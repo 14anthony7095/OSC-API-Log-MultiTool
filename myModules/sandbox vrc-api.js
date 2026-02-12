@@ -11,7 +11,7 @@ const { VRChat } = require("vrchat");
 const { KeyvFile } = require("keyv-file");
 const fs = require('fs');
 const { distance, closestMatch } = require("closest-match");
-// const { logEmitter } = require("./Interface_vrc-Log.js");
+const { logEmitter } = require("./Interface_vrc-Log.js");
 require('dotenv').config({ 'quiet': true })
 
 
@@ -63,13 +63,10 @@ async function main() {
     const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
     console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
 
-
     // 2026.01.28 01:35:17 Debug      -  [Behaviour] Switching Yugenki to avatar 01 - Akiho Nagase V2
 
     // [Behaviour] Switching USER_DISPLAYNAME to avatar AVATAR_NAME
     // [API] Requesting Get analysis/FILE_ID/FILE_VERISON/security {{}} retryCount: 2
-
-
 
 
 }
@@ -84,9 +81,8 @@ function formatBytes(bytes, decimals = 1) {
         resolve(parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i])
     })
 }
-
 var userAvatars = []
-/* logEmitter.on('avatarchange', (username, avatarname) => {
+logEmitter.on('avatarchange', (username, avatarname) => {
     console.log(`${avatarname} worn by ${username}`)
 
     let search = userAvatars.find(e => e.user == username)
@@ -97,8 +93,8 @@ var userAvatars = []
     }
 
     console.log(userAvatars)
-}) */
-/* logEmitter.on('fileanalysis', async (fileid, fileversion) => {
+})
+logEmitter.on('fileanalysis', async (fileid, fileversion) => {
     let res = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } })
     if (res.data.avatarStats || res.data.performanceRating) {
         // console.log('File is Avatar')
@@ -108,7 +104,7 @@ var userAvatars = []
         console.log(`${filesize} ${res.data.performanceRating} ${res.data.name}`)
         closestMatch(res.data.name, userAvatars.find(e=>e.avatarname) )
     }
-}) */
+})
 
 
 async function fileCheck(fileid, fileversion) {
@@ -118,7 +114,7 @@ async function fileCheck(fileid, fileversion) {
 // fileCheck('file_d71306cc-d216-410d-b9be-e9f7ec42f8cf', 2)
 
 
-getAvatarThumbnail()
+// getAvatarThumbnail()
 async function getAvatarThumbnail() {
     let filter = ['itsBiffy']
     let res = await getMutualFriends('usr_db6b86b5-19ba-4a3d-ab92-e698c8baef1f')

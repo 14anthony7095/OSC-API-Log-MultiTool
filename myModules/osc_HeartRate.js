@@ -115,7 +115,7 @@ function openWebSocket() {
 }
 
 var isActive = false
-var supportedAvatars = ['avtr_3de07f88-5838-4d53-a732-991287dea363','avtr_0c97e918-23d0-4934-b364-5fd28fb10236','avtr_5c866609-f49a-4867-ac74-5dab03d5d713','avtr_6865ad14-dfcb-4285-8e3d-1674ed655722','avtr_9d2264c9-0524-44eb-a6da-712b9306e04d','avtr_7c561c55-9225-400a-899e-7300f44ca545','avtr_e1dbdac0-0a9e-42f0-aeef-bb2d4ef27bc1','avtr_430f03d7-8ae4-4d0f-afa4-f70ecc2e2555','avtr_7368d5ea-67cb-41fa-80f0-34c9fed6bc39']
+var supportedAvatars = ['avtr_3de07f88-5838-4d53-a732-991287dea363','avtr_75c670ca-4614-4db2-a687-e27994acb0ac','avtr_5c866609-f49a-4867-ac74-5dab03d5d713','avtr_6865ad14-dfcb-4285-8e3d-1674ed655722','avtr_9d2264c9-0524-44eb-a6da-712b9306e04d','avtr_7c561c55-9225-400a-899e-7300f44ca545','avtr_e1dbdac0-0a9e-42f0-aeef-bb2d4ef27bc1','avtr_430f03d7-8ae4-4d0f-afa4-f70ecc2e2555','avtr_7368d5ea-67cb-41fa-80f0-34c9fed6bc39']
 oscEmitter.on('osc', (address, value) => {
 	if( address == '/avatar/change' ){
 		if( isActive == false && supportedAvatars.includes(value) ){

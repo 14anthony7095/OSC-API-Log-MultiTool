@@ -63,6 +63,8 @@ logEmitter.on('joinedworld', () => {
     }
 })
 
-oscEmitter.on('voiceActive', (value)=>{
-    obs.callBatch([{ requestType: 'SetInputMute', requestData: { inputName: 'VR Mic', inputMuted: value } }])
+oscEmitter.on('voiceActive', (value) => {
+    if (connected == true) {
+        obs.callBatch([{ requestType: 'SetInputMute', requestData: { inputName: 'VR Mic', inputMuted: value } }])
+    }
 });

@@ -50,6 +50,8 @@ let selflogWS = `\x1b[0m[\x1b[33mVRC_WebSocket\x1b[0m]`
 console.log(`${loglv().log}${selflog} Loaded`)
 
 var vrchat = new VRChat({
+    // baseUrl: "https://api.vrchat.cloud/api/1",
+    // meta: {},
     application: {
         name: "Api-Osc-Interface",
         version: "1.2",
@@ -61,8 +63,8 @@ var vrchat = new VRChat({
             password: process.env["VRC_ACC_PASSWORD_1"],
             totpSecret: process.env["VRC_ACC_TOTPSECRET_1"]
         }
-    }
-    // ,keyv: new KeyvFile({ filename: "./datasets/vrcA.json" })
+    },
+    keyv: new KeyvFile({ filename: "./datasets/vrcA.json" })
     /* 
         1   95
         2   96
@@ -222,13 +224,150 @@ async function main() {
 }
 
 
+function formatBytes(bytes, decimals = 1) {
+    return new Promise((resolve, reject) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        resolve(parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i])
+    })
+}
+
+
+
+
+// - Avatar Perf Allowance -
+const avatarStatWeights = {
+    "boundsVolume": 50,
+    "animatorCount": 0.1,
+    "audioSourceCount": 0.45,
+    "boneCount": 20.05,
+    "cameraCount": 0.2,
+    "clothCount": 0.1,
+    "constraintCount": 17.55,
+    "constraintDepth": 5.05,
+    "lineRendererCount": 0.45,
+    "materialCount": 1.65,
+    "meshParticleMaxPolygons": 250.05,
+    // "meshPolygons": 3200,
+    "particleSystemCount": 0.85,
+    "physicsColliders": 0.45,
+    "physicsRigidbodies": 0.45,
+    // "skinnedMeshPolygons": 3200,
+    "totalClothVertices": 10.05,
+    "totalMaxParticles": 2500,
+    "trailRendererCount": 0.45,
+    "totalTextureUsage": 3800000,
+    "totalPolygons": 5000,
+    "skinnedMeshCount": 0.5,
+    "meshCount": 1.5,
+    "physBoneCollisionCheckCount": 25,
+    "physBoneColliderCount": 5,
+    "physBoneComponentCount": 2.6,
+    "physBoneTransformCount": 20,
+    "contactCount": 4,
+    "materialSlotsUsed": 0.88,
+    "lightCount": 3,
+    "blendShapeCount": 10
+}
+
+// const { distance, closestMatch } = require("closest-match");
+logEmitter.on('fileanalysis', async (fileid, fileversion) => {
+    let res = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } })
+    if (res.data.avatarStats || res.data.performanceRating) {
+        // console.log('File is Avatar')
+        let getName = await vrchat.getFile({ 'path': { 'fileId': fileid } })
+        res.data["name"] = getName.data.name.slice(9).split(' - Asset bundle - ')[0]
+
+
+        let filesize = await formatBytes(res.data.fileSize)
+        let vramTexsize = await formatBytes(res.data.avatarStats.totalTextureUsage)
+        console.log(`${loglv().log}${selflog} [AvatarAnalysis] ${res.data.performanceRating == 'VeryPoor' ? '❌ VeryPoor' : res.data.performanceRating == 'Poor' ? '🔴 Poor' : res.data.performanceRating == 'Medium' ? '🟡 Medium' : res.data.performanceRating == 'Good' ? '🟢 Good' : res.data.performanceRating == 'Excellent' ? '✅ Excellent' : ''} - ${res.data.name}
+             📦 ${filesize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)} (${Math.round((res.data.avatarStats.bounds[0] * res.data.avatarStats.bounds[1] * res.data.avatarStats.bounds[2]) * 1000) / 1000}m³)`)
+
+        // - Performance Marks-
+        let totalavatareval = ``
+        let boundsVolume = Math.round((res.data.avatarStats.bounds[0] * res.data.avatarStats.bounds[1] * res.data.avatarStats.bounds[2]) / avatarStatWeights.boundsVolume)
+        if (boundsVolume >= 20) { totalavatareval += `\n              Bounds:                    ${boundsVolume} EV ${boundsVolume >= 50 ? '⚠️' : ''}` }
+        var animatorCount = Math.round(res.data.avatarStats.animatorCount / avatarStatWeights.animatorCount)
+        if (animatorCount >= 20) { totalavatareval += `\n              Animator Count:            ${animatorCount} EV ${animatorCount >= 50 ? '⚠️' : ''}` }
+        var audioSourceCount = Math.round(res.data.avatarStats.audioSourceCount / avatarStatWeights.audioSourceCount)
+        if (audioSourceCount >= 20) { totalavatareval += `\n              AudioSource Count:         ${audioSourceCount} EV ${audioSourceCount >= 50 ? '⚠️' : ''}` }
+        var boneCount = Math.round(res.data.avatarStats.boneCount / avatarStatWeights.boneCount)
+        if (boneCount >= 20) { totalavatareval += `\n              Bones:                     ${boneCount} EV ${boneCount >= 50 ? '⚠️' : ''}` }
+        var cameraCount = Math.round(res.data.avatarStats.cameraCount / avatarStatWeights.cameraCount)
+        if (cameraCount >= 20) { totalavatareval += `\n              Camera Count:              ${cameraCount} EV ${cameraCount >= 50 ? '⚠️' : ''}` }
+        var clothCount = Math.round(res.data.avatarStats.clothCount / avatarStatWeights.clothCount)
+        if (clothCount >= 20) { totalavatareval += `\n              Cloth Count:               ${clothCount} EV ${clothCount >= 50 ? '⚠️' : ''}` }
+        var constraintCount = Math.round(res.data.avatarStats.constraintCount / avatarStatWeights.constraintCount)
+        if (constraintCount >= 20) { totalavatareval += `\n              Constraint Count:           ${constraintCount} EV ${constraintCount >= 50 ? '⚠️' : ''}` }
+        var constraintDepth = Math.round(res.data.avatarStats.constraintDepth / avatarStatWeights.constraintDepth)
+        if (constraintDepth >= 20) { totalavatareval += `\n              Constraint Depth:          ${constraintDepth} EV ${constraintDepth >= 50 ? '⚠️' : ''}` }
+        var lineRendererCount = Math.round(res.data.avatarStats.lineRendererCount / avatarStatWeights.lineRendererCount)
+        if (lineRendererCount >= 20) { totalavatareval += `\n              Line Renderer Count:       ${lineRendererCount} EV ${lineRendererCount >= 50 ? '⚠️' : ''}` }
+        var materialCount = Math.round(res.data.avatarStats.materialCount / avatarStatWeights.materialCount)
+        if (materialCount >= 20) { totalavatareval += `\n              Material Count:            ${materialCount} EV ${materialCount >= 50 ? '⚠️' : ''}` }
+        var meshParticleMaxPolygons = Math.round(res.data.avatarStats.meshParticleMaxPolygons / avatarStatWeights.meshParticleMaxPolygons)
+        if (meshParticleMaxPolygons >= 20) { totalavatareval += `\n              Mesh Particle Max Polygons: ${meshParticleMaxPolygons} EV ${meshParticleMaxPolygons >= 50 ? '⚠️' : ''}` }
+        // var meshPolygons = Math.round(res.data.avatarStats.meshPolygons / avatarStatWeights.meshPolygons)
+        // if (meshPolygons >= 20) { totalavatareval += `\n              Mesh Polygons:              ${meshPolygons} EV ${meshPolygons >= 50 ? '⚠️' : ''}` }
+        var particleSystemCount = Math.round(res.data.avatarStats.particleSystemCount / avatarStatWeights.particleSystemCount)
+        if (particleSystemCount >= 20) { totalavatareval += `\n              Particle System Count:     ${particleSystemCount} EV ${particleSystemCount >= 50 ? '⚠️' : ''}` }
+        var physicsColliders = Math.round(res.data.avatarStats.physicsColliders / avatarStatWeights.physicsColliders)
+        if (physicsColliders >= 20) { totalavatareval += `\n              Physics Colliders:         ${physicsColliders} EV ${physicsColliders >= 50 ? '⚠️' : ''}` }
+        var physicsRigidbodies = Math.round(res.data.avatarStats.physicsRigidbodies / avatarStatWeights.physicsRigidbodies)
+        if (physicsRigidbodies >= 20) { totalavatareval += `\n              Physics Rigidbodies:       ${physicsRigidbodies} EV ${physicsRigidbodies >= 50 ? '⚠️' : ''}` }
+        // var skinnedMeshPolygons = Math.round(res.data.avatarStats.skinnedMeshPolygons / avatarStatWeights.skinnedMeshPolygons)
+        // if (skinnedMeshPolygons >= 20) { totalavatareval += `\n              Skinned Mesh Polygons:      ${skinnedMeshPolygons} EV ${skinnedMeshPolygons >= 50 ? '⚠️' : ''}` }
+        var totalClothVertices = Math.round(res.data.avatarStats.totalClothVertices / avatarStatWeights.totalClothVertices)
+        if (totalClothVertices >= 20) { totalavatareval += `\n              Cloth Vertices:            ${totalClothVertices} EV ${totalClothVertices >= 50 ? '⚠️' : ''}` }
+        var totalMaxParticles = Math.round(res.data.avatarStats.totalMaxParticles / avatarStatWeights.totalMaxParticles)
+        if (totalMaxParticles >= 20) { totalavatareval += `\n              Max Particles:             ${totalMaxParticles} EV ${totalMaxParticles >= 50 ? '⚠️' : ''}` }
+        var trailRendererCount = Math.round(res.data.avatarStats.trailRendererCount / avatarStatWeights.trailRendererCount)
+        if (trailRendererCount >= 20) { totalavatareval += `\n              Trail Renderer Count:      ${trailRendererCount} EV ${trailRendererCount >= 50 ? '⚠️' : ''}` }
+        var totalTextureUsage = Math.round(res.data.avatarStats.totalTextureUsage / avatarStatWeights.totalTextureUsage)
+        if (totalTextureUsage >= 20) { totalavatareval += `\n              Texture Memory:            ${totalTextureUsage} EV ${totalTextureUsage >= 50 ? '⚠️' : ''}` }
+        var totalPolygons = Math.round(res.data.avatarStats.totalPolygons / avatarStatWeights.totalPolygons)
+        if (totalPolygons >= 20) { totalavatareval += `\n              Polygons:                  ${totalPolygons} EV ${totalPolygons >= 50 ? '⚠️' : ''}` }
+        var skinnedMeshCount = Math.round(res.data.avatarStats.skinnedMeshCount / avatarStatWeights.skinnedMeshCount)
+        if (skinnedMeshCount >= 20) { totalavatareval += `\n              Skinned Meshes:            ${skinnedMeshCount} EV ${skinnedMeshCount >= 50 ? '⚠️' : ''}` }
+        var meshCount = Math.round(res.data.avatarStats.meshCount / avatarStatWeights.meshCount)
+        if (meshCount >= 20) { totalavatareval += `\n              Basic Meshes:              ${meshCount} EV ${meshCount >= 50 ? '⚠️' : ''}` }
+        var physBoneCollisionCheckCount = Math.round(res.data.avatarStats.physBoneCollisionCheckCount / avatarStatWeights.physBoneCollisionCheckCount)
+        if (physBoneCollisionCheckCount >= 20) { totalavatareval += `\n              PhysBone Collision Checks: ${physBoneCollisionCheckCount} EV ${physBoneCollisionCheckCount >= 50 ? '⚠️' : ''}` }
+        var physBoneColliderCount = Math.round(res.data.avatarStats.physBoneColliderCount / avatarStatWeights.physBoneColliderCount)
+        if (physBoneColliderCount >= 20) { totalavatareval += `\n              PhysBone Colliders:        ${physBoneColliderCount} EV ${physBoneColliderCount >= 50 ? '⚠️' : ''}` }
+        var physBoneComponentCount = Math.round(res.data.avatarStats.physBoneComponentCount / avatarStatWeights.physBoneComponentCount)
+        if (physBoneComponentCount >= 20) { totalavatareval += `\n              PhysBone Components:       ${physBoneComponentCount} EV ${physBoneComponentCount >= 50 ? '⚠️' : ''}` }
+        var physBoneTransformCount = Math.round(res.data.avatarStats.physBoneTransformCount / avatarStatWeights.physBoneTransformCount)
+        if (physBoneTransformCount >= 20) { totalavatareval += `\n              PhysBone Transforms:       ${physBoneTransformCount} EV ${physBoneTransformCount >= 50 ? '⚠️' : ''}` }
+        var contactCount = Math.round(res.data.avatarStats.contactCount / avatarStatWeights.contactCount)
+        if (contactCount >= 20) { totalavatareval += `\n              Contact Count:             ${contactCount} EV ${contactCount >= 50 ? '⚠️' : ''}` }
+        var materialSlotsUsed = Math.round(res.data.avatarStats.materialSlotsUsed / avatarStatWeights.materialSlotsUsed)
+        if (materialSlotsUsed >= 20) { totalavatareval += `\n              Material Slots:            ${materialSlotsUsed} EV ${materialSlotsUsed >= 50 ? '⚠️' : ''}` }
+        var lightCount = Math.round(res.data.avatarStats.lightCount / avatarStatWeights.lightCount)
+        if (lightCount >= 20) { totalavatareval += `\n              Light Count:               ${lightCount} EV ${lightCount >= 50 ? '⚠️' : ''}` }
+        var blendShapeCount = Math.round(res.data.avatarStats.blendShapeCount / avatarStatWeights.blendShapeCount)
+        if (blendShapeCount >= 20) { totalavatareval += `\n              BlendShapes:               ${blendShapeCount} EV ${blendShapeCount >= 50 ? '⚠️' : ''}` }
+
+        if (totalavatareval.length > 1) { console.log(totalavatareval.replace(/\n/, '') + "\n") }
+
+    }
+
+})
+
+
 async function worldAutoPreloadQueue(worldList = []) {
     console.log(`${loglv().log}${selflog} [Auto World Preload] Starting, have ${worldList.length} worlds to go through`)
+    setUserStatus('Preloading worlds')
     for (const wrd in worldList) {
         await joinWorld(worldList[wrd])
         if (wrd == worldList.length - 1) {
             console.log(`${loglv().hey}${selflog} [Auto World Preload] Finished, can close VRC if want.`)
             oscChatBoxV2(`Automatic Preload has finished \v Can close VRC if want.`, 30)
+            setUserStatus('')
         }
     }
     async function joinWorld(world) {
@@ -239,7 +378,7 @@ async function worldAutoPreloadQueue(worldList = []) {
                     'worldId': world,
                     'type': 'hidden',
                     'region': 'use',
-                    'displayName': 'Preloading Worlds',
+                    // 'displayName': 'Preloading Worlds',
                     'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752'
                 }
             }).then(created_instance => {
@@ -606,7 +745,7 @@ async function getOnlineWorlds(favgroup = 'worlds1', addMoreWorlds = false) {
         let favWorlds1 = favworldsAll.filter(favworldsAll => favworldsAll.favoriteGroup == favgroup)
         favWorlds1.forEach((wrld, index, arr) => { worldsToExplore.unshift(wrld.id) })
         worldsToExplore = shuffle(worldsToExplore)
-        
+
         let extimelow = Math.floor((favWorlds1.length * 2) / 60)
         let extimehig = Math.floor((favWorlds1.length * 10) / 60)
         console.log(`${loglv().log}${selflog} ${favWorlds1.length} worlds to explore. [${extimelow} to ${extimehig} Hours]`)
@@ -674,7 +813,7 @@ async function inviteOnlineWorlds_Loop(world_id) {
                     'worldId': world_id,
                     'type': 'group',
                     'region': 'use',
-                    'displayName': 'World Hop',
+                    // 'displayName': 'World Hop',
                     'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
                     'groupAccessType': 'public',
                     'queueEnabled': true,
@@ -686,7 +825,7 @@ async function inviteOnlineWorlds_Loop(world_id) {
                     'worldId': world_id,
                     'type': 'group',
                     'region': 'use',
-                    'displayName': 'World Hop',
+                    // 'displayName': 'World Hop',
                     'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
                     'groupAccessType': 'plus',
                     'queueEnabled': true,
@@ -699,7 +838,7 @@ async function inviteOnlineWorlds_Loop(world_id) {
                     'type': 'private',
                     'canRequestInvite': true,
                     'region': 'use',
-                    'displayName': 'World Hop',
+                    // 'displayName': 'World Hop',
                     'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752',
                     'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
                 }
@@ -709,7 +848,7 @@ async function inviteOnlineWorlds_Loop(world_id) {
                     'worldId': world_id,
                     'type': 'hidden',
                     'region': 'use',
-                    'displayName': 'World Hop',
+                    // 'displayName': 'World Hop',
                     'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752',
                     'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
                 }
@@ -775,7 +914,7 @@ function inviteLocalQueue(I_autoNext = false) {
                     'worldId': world_id,
                     'type': 'group',
                     'region': 'use',
-                    'displayName': 'World Hop',
+                    // 'displayName': 'World Hop',
                     'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
                     'groupAccessType': 'public',
                     'queueEnabled': true,
@@ -787,7 +926,7 @@ function inviteLocalQueue(I_autoNext = false) {
                     'worldId': world_id,
                     'type': 'group',
                     'region': 'use',
-                    'displayName': 'World Hop',
+                    // 'displayName': 'World Hop',
                     'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
                     'groupAccessType': 'plus',
                     'queueEnabled': true,
@@ -800,7 +939,7 @@ function inviteLocalQueue(I_autoNext = false) {
                     'type': 'private',
                     'canRequestInvite': true,
                     'region': 'use',
-                    'displayName': 'World Hop',
+                    // 'displayName': 'World Hop',
                     'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752',
                     'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
                 }
@@ -810,7 +949,7 @@ function inviteLocalQueue(I_autoNext = false) {
                     'worldId': world_id,
                     'type': 'hidden',
                     'region': 'use',
-                    'displayName': 'World Hop',
+                    // 'displayName': 'World Hop',
                     'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752',
                     'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
                 }

@@ -159,11 +159,11 @@ function genaratePortalLibrary() {
                             case 1: myWorldsArray.push(dataPush); break;
                             case 2: gameWorldsArray.push(dataPush); break;
                             case 3: privateWorldsArray.push(dataPush); break;
-                            case 6: worldHopFinds01Array.push(dataPush); break;
-                            case 7: worldHopFinds02Array.push(dataPush); break;
-                            case 8: worldHopFinds03Array.push(dataPush); break;
-                            case 9: worldHopFinds04Array.push(dataPush); break;
-                            case 18: personalCollectionArray.push(dataPush); break;
+                            case 4: worldHopFinds01Array.push(dataPush); break;
+                            case 5: worldHopFinds02Array.push(dataPush); break;
+                            case 6: worldHopFinds03Array.push(dataPush); break;
+                            case 7: worldHopFinds04Array.push(dataPush); break;
+                            case 8: personalCollectionArray.push(dataPush); break;
                             default: break;
                         }
 

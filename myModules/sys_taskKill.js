@@ -12,7 +12,7 @@ kill vrchat function with a timer in secs
 const { loglv, vrckiller } = require('./config.js')
 const { oscEmitter } = require('./Interface_osc_v1.js');
 const find = require('find-process');
-const { fetchLogFile, logEmitter, eventGameClose } = require('./Interface_vrc-Log.js');
+const { fetchLogFile, eventGameClose } = require('./Interface_vrc-Log.js');
 
 //	--	Global Vars	--
 let selflog = `\x1b[0m[\x1b[31mTaskKiller\x1b[0m]`
@@ -67,10 +67,6 @@ function killvrc(delay) {
 }
 exports.killvrc = killvrc;
 exports.killprep = killprep;
-
-logEmitter.on('playerJoin', playername => {
-	//playername == 'Snake Dog' ? killvrc(1) : ''
-})
 
 oscEmitter.on('osc', (address, value) => {
 	if (address == '/avatar/change' && vrchatprocessid == null) {
