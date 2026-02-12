@@ -612,11 +612,6 @@ function eventHeadingToWorld(logOutputLine) {
 
 var worldjointimestamp = 0
 function eventJoinWorld() {
-	setTimeout(() => {
-		if (playersInInstance.length == 1 && G_autoNextWorldHop == true && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
-			logEmitter.emit('nextworld', true)
-		}
-	}, 120_000)
 	worldHopTimeout = setTimeout(() => {
 		say.speak(`Been in world for too long. Proceed to next in queue`, 'Microsoft David Desktop', 1.0, (err) => {
 			if (err) { return console.error(`${loglv().warn}${selflog} say.js error: ` + err) }
@@ -656,7 +651,7 @@ function eventInstanceClosed() {
 			lastSetUserStatus = `Exploring World Queue`
 			logEmitter.emit('setstatus', `Exploring World Queue`)
 		}
-		logEmitter.emit('nextworld', false)
+		logEmitter.emit('nextworld', G_autoNextWorldHop)
 	}
 	worldID_Closed = true
 	oscSend('/avatar/parameters/log/instance_closed', true)

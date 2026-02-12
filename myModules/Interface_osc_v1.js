@@ -441,7 +441,6 @@ udpPort.on("ready", function () {
 
 	// require('./osc_PingSystem.js') // OSC
 	require('./osc_Chessboard-logic.js') // OSC
-	require('./osc_AfkClock.js') // OSC
 	require('./Interface_twitch.js') // OSC
 	// require('./osc_HeartRate.js') // OSC
 	require('./osc_AutoClicker.js') // OSC
