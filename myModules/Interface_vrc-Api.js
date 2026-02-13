@@ -395,14 +395,13 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
 
         Object.keys(avatarStatSummary.stats).forEach((key, index, arr) => {
             if (key == 'fileSize') {
-                console.log(res.data.fileSize)
-                avatarStatSummary.stats[key].sum += res.data.fileSize
-                avatarStatSummary.stats[key].min = avatarStatSummary.stats[key].min == 0 ? parseInt(res.data.fileSize) : Math.min(avatarStatSummary.stats[key].min, parseInt(res.data.fileSize))
-                avatarStatSummary.stats[key].max = Math.max(avatarStatSummary.stats[key].max, res.data.fileSize)
+                avatarStatSummary.stats['fileSize'].sum += res.data.fileSize
+                avatarStatSummary.stats['fileSize'].min = avatarStatSummary.stats['fileSize'].min == 0 ? res.data.fileSize : Math.min(avatarStatSummary.stats['fileSize'].min, res.data.fileSize)
+                avatarStatSummary.stats['fileSize'].max = Math.max(avatarStatSummary.stats['fileSize'].max, res.data.fileSize)
             } else if (key == 'boundsVolume') {
-                avatarStatSummary.stats[key].sum += boundsVolume
-                avatarStatSummary.stats[key].min = avatarStatSummary.stats[key].min == 0 ? boundsVolume : Math.min(avatarStatSummary.stats[key].min, boundsVolume)
-                avatarStatSummary.stats[key].max = Math.max(avatarStatSummary.stats[key].max, boundsVolume)
+                avatarStatSummary.stats['boundsVolume'].sum += boundsVolume
+                avatarStatSummary.stats['boundsVolume'].min = avatarStatSummary.stats['boundsVolume'].min == 0 ? boundsVolume : Math.min(avatarStatSummary.stats['boundsVolume'].min, boundsVolume)
+                avatarStatSummary.stats['boundsVolume'].max = Math.max(avatarStatSummary.stats['boundsVolume'].max, boundsVolume)
             } else {
                 avatarStatSummary.stats[key].sum += res.data.avatarStats[key]
                 avatarStatSummary.stats[key].min = avatarStatSummary.stats[key].min == 0 ? res.data.avatarStats[key] : Math.min(avatarStatSummary.stats[key].min, res.data.avatarStats[key])
@@ -411,7 +410,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
             avatarStatSummary.stats[key].avg = avatarStatSummary.stats[key].sum / avatarStatSummary.totalAvatars
         })
 
-        console.log(avatarStatSummary)
+        // console.log(avatarStatSummary)
 
     }
 
@@ -1217,48 +1216,48 @@ logEmitter.on('propNameRequest', async (propID, vrcpropcount) => {
 })
 const { table } = require('table');
 function requestAvatarStatTable() {
-    var avatarStatSummaryTable = [['Stat', 'Avg', 'Min', 'Max']]
+    var avatarStatSummaryTable = [['Stat - ' + avatarStatSummary.totalAvatars + ' Avatars', 'Avg', 'Min', 'Max']]
     Object.keys(avatarStatSummary.stats).forEach(async (key, index, arr) => {
         if (key == 'fileSize') {
-            avatarStatSummary.stats.fileSize.avg = await formatBytes(avatarStatSummary.stats.fileSize.avg)
-            avatarStatSummary.stats.fileSize.min = await formatBytes(avatarStatSummary.stats.fileSize.min)
-            avatarStatSummary.stats.fileSize.max = await formatBytes(avatarStatSummary.stats.fileSize.max)
+            avatarStatSummary.stats['fileSize'].avg = await formatBytes(avatarStatSummary.stats['fileSize'].avg)
+            avatarStatSummary.stats['fileSize'].min = await formatBytes(avatarStatSummary.stats['fileSize'].min)
+            avatarStatSummary.stats['fileSize'].max = await formatBytes(avatarStatSummary.stats['fileSize'].max)
             avatarStatSummaryTable.push(['fileSize', avatarStatSummary.stats.fileSize.avg, avatarStatSummary.stats.fileSize.min, avatarStatSummary.stats.fileSize.max])
         } else if (key == 'totalTextureUsage') {
-            avatarStatSummary.stats.totalTextureUsage.avg = await formatBytes(avatarStatSummary.stats.totalTextureUsage.avg)
-            avatarStatSummary.stats.totalTextureUsage.min = await formatBytes(avatarStatSummary.stats.totalTextureUsage.min)
-            avatarStatSummary.stats.totalTextureUsage.max = await formatBytes(avatarStatSummary.stats.totalTextureUsage.max)
+            avatarStatSummary.stats['totalTextureUsage'].avg = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].avg)
+            avatarStatSummary.stats['totalTextureUsage'].min = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].min)
+            avatarStatSummary.stats['totalTextureUsage'].max = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].max)
             avatarStatSummaryTable.push(['totalTextureUsage', avatarStatSummary.stats.totalTextureUsage.avg, avatarStatSummary.stats.totalTextureUsage.min, avatarStatSummary.stats.totalTextureUsage.max])
         } else {
-            avatarStatSummary.stats[key].avg = Math.ceil(avatarStatSummary.stats[key].avg)
-            avatarStatSummary.stats[key].min = Math.ceil(avatarStatSummary.stats[key].min)
-            avatarStatSummary.stats[key].max = Math.ceil(avatarStatSummary.stats[key].max)
+            avatarStatSummary.stats[key].avg = Math.ceil(avatarStatSummary.stats[key].avg).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            avatarStatSummary.stats[key].min = Math.ceil(avatarStatSummary.stats[key].min).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            avatarStatSummary.stats[key].max = Math.ceil(avatarStatSummary.stats[key].max).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 
             avatarStatSummaryTable.push([key, avatarStatSummary.stats[key].avg, avatarStatSummary.stats[key].min, avatarStatSummary.stats[key].max])
         }
     })
     setTimeout(() => {
-        console.log('=== Avatar Stats Summary ===\n' + table(avatarStatSummaryTable))
+        console.log('=== Perf. Stats Summary ===\n' + table(avatarStatSummaryTable, { 'drawHorizontalLine': (lineIndex, rowCount) => { return lineIndex === 0 || lineIndex === 1 || lineIndex === rowCount } }))
     }, 2000)
 }
 logEmitter.on('headingToWorld', async (I_worldID) => {
     // Save avatar stats for the instance
-    var avatarStatSummaryTable = [['Stat', 'Avg', 'Min', 'Max']]
+    var avatarStatSummaryTable = [['Stat - ' + avatarStatSummary.totalAvatars + ' Avatars', 'Avg', 'Min', 'Max']]
     Object.keys(avatarStatSummary.stats).forEach(async (key, index, arr) => {
         if (key == 'fileSize') {
-            avatarStatSummary.stats.fileSize.avg = await formatBytes(avatarStatSummary.stats.fileSize.avg)
-            avatarStatSummary.stats.fileSize.min = await formatBytes(avatarStatSummary.stats.fileSize.min)
-            avatarStatSummary.stats.fileSize.max = await formatBytes(avatarStatSummary.stats.fileSize.max)
+            avatarStatSummary.stats['fileSize'].avg = await formatBytes(avatarStatSummary.stats['fileSize'].avg)
+            avatarStatSummary.stats['fileSize'].min = await formatBytes(avatarStatSummary.stats['fileSize'].min)
+            avatarStatSummary.stats['fileSize'].max = await formatBytes(avatarStatSummary.stats['fileSize'].max)
             avatarStatSummaryTable.push(['fileSize', avatarStatSummary.stats.fileSize.avg, avatarStatSummary.stats.fileSize.min, avatarStatSummary.stats.fileSize.max])
         } else if (key == 'totalTextureUsage') {
-            avatarStatSummary.stats.totalTextureUsage.avg = await formatBytes(avatarStatSummary.stats.totalTextureUsage.avg)
-            avatarStatSummary.stats.totalTextureUsage.min = await formatBytes(avatarStatSummary.stats.totalTextureUsage.min)
-            avatarStatSummary.stats.totalTextureUsage.max = await formatBytes(avatarStatSummary.stats.totalTextureUsage.max)
+            avatarStatSummary.stats['totalTextureUsage'].avg = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].avg)
+            avatarStatSummary.stats['totalTextureUsage'].min = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].min)
+            avatarStatSummary.stats['totalTextureUsage'].max = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].max)
             avatarStatSummaryTable.push(['totalTextureUsage', avatarStatSummary.stats.totalTextureUsage.avg, avatarStatSummary.stats.totalTextureUsage.min, avatarStatSummary.stats.totalTextureUsage.max])
         } else {
-            avatarStatSummary.stats[key].avg = Math.ceil(avatarStatSummary.stats[key].avg)
-            avatarStatSummary.stats[key].min = Math.ceil(avatarStatSummary.stats[key].min)
-            avatarStatSummary.stats[key].max = Math.ceil(avatarStatSummary.stats[key].max)
+            avatarStatSummary.stats[key].avg = Math.ceil(avatarStatSummary.stats[key].avg).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            avatarStatSummary.stats[key].min = Math.ceil(avatarStatSummary.stats[key].min).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            avatarStatSummary.stats[key].max = Math.ceil(avatarStatSummary.stats[key].max).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 
             avatarStatSummaryTable.push([key, avatarStatSummary.stats[key].avg, avatarStatSummary.stats[key].min, avatarStatSummary.stats[key].max])
         }
@@ -1266,7 +1265,7 @@ logEmitter.on('headingToWorld', async (I_worldID) => {
 
     setTimeout(() => {
         console.log(table(avatarStatSummaryTable))
-        fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + '.txt', '=== Avatar Stats Summary ===\n' + table(avatarStatSummaryTable), 'utf8', (err) => { if (err) { console.error(err) } })
+        fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + '.txt', '=== Perf. Stats Summary ===\n' + table(avatarStatSummaryTable, { 'drawHorizontalLine': (lineIndex, rowCount) => { return lineIndex === 0 || lineIndex === 1 || lineIndex === rowCount } }), 'utf8', (err) => { if (err) { console.error(err) } })
 
         // Reset internal stats back to 0
         avatarStatSummary = {

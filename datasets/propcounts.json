@@ -1,11 +1,11 @@
 {
   "89be973f-9e1a-4260-8deb-211e32da8196": {
     "name": "Rainbow Ribbon",
-    "count": 571
+    "count": 572
   },
   "829ba6f6-b837-49d9-b9a9-056b82103b58": {
     "name": "THE REFERENCE CUBE",
-    "count": 1262
+    "count": 1265
   },
   "5c54ccdb-cafb-461b-b07f-91d189fc7b72": {
     "name": "Bubble Blaster",
@@ -117,14 +117,18 @@
   },
   "ee4d580d-358c-49d7-87a6-1d191e295ef9": {
     "name": "WIP Daisy",
-    "count": 21
+    "count": 24
   },
   "2073a19e-3dd8-4f4c-86eb-e0090210b4b7": {
     "name": "Grand Assortment",
-    "count": 3
+    "count": 4
   },
   "ece03ecc-b2fe-49b7-b453-835c3dfa7b31": {
     "name": "Cupid’s Bow",
+    "count": 1
+  },
+  "3cd4e1ac-dd76-4bb2-bb64-9caa64e2fa28": {
+    "name": "PropRoseTest",
     "count": 1
   }
 }
