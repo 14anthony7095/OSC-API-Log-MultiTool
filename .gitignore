@@ -147,3 +147,4 @@ vite.config.ts.timestamp-*
 /datasets/vrcA.json
 worldThumbnails/output/worlds.json
 worldThumbnails/output/thumbnail.mp4
+datasets/avatarStatSummarys/
