@@ -41,7 +41,7 @@
   },
   "0fd9deb0-6ca8-4c69-acbe-17035f93792b": {
     "name": "Groan Tube",
-    "count": 488
+    "count": 490
   },
   "e9d0bc1f-f7fd-4886-abec-d299745b2264": {
     "name": "MagicPotion",
@@ -85,7 +85,7 @@
   },
   "d974e56d-443e-4409-99c2-f5c9e5705d5b": {
     "name": "Party Popper",
-    "count": 162
+    "count": 163
   },
   "a1573c82-9767-4b42-a45d-4050e42a92b9": {
     "name": "Fortune Box",
@@ -101,7 +101,7 @@
   },
   "ce118c16-53d9-4d56-bcb2-717057eca102": {
     "name": "Roman Candle",
-    "count": 57
+    "count": 58
   },
   "cb3cad70-5354-4ce6-810b-9e0364264e2f": {
     "name": "Fiery Sky Fireworks Show",
@@ -109,7 +109,7 @@
   },
   "036389b7-3c9d-4e0d-96d1-f23cb195e76b": {
     "name": "Snow Blaster",
-    "count": 78
+    "count": 79
   },
   "25a95ca1-bba4-48d0-8a31-249bbc3af78e": {
     "name": "MAGFest26 Coin",
@@ -117,7 +117,7 @@
   },
   "ee4d580d-358c-49d7-87a6-1d191e295ef9": {
     "name": "WIP Daisy",
-    "count": 24
+    "count": 28
   },
   "2073a19e-3dd8-4f4c-86eb-e0090210b4b7": {
     "name": "Grand Assortment",
@@ -129,6 +129,6 @@
   },
   "3cd4e1ac-dd76-4bb2-bb64-9caa64e2fa28": {
     "name": "PropRoseTest",
-    "count": 1
+    "count": 2
   }
 }
