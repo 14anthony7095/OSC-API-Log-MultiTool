@@ -1219,7 +1219,7 @@ logEmitter.on('propNameRequest', async (propID, vrcpropcount) => {
     }
 })
 const { table } = require('table');
-function requestAvatarStatTable() {
+function requestAvatarStatTable(writeToFile = false) {
     var avatarStatSummaryTable = [['Stat - ' + avatarStatSummary.totalAvatars + ' Avatars', 'Avg', 'Min', 'Max']]
     Object.keys(avatarStatSummary.stats).forEach(async (key, index, arr) => {
         if (key == 'fileSize') {
@@ -1247,82 +1247,60 @@ function requestAvatarStatTable() {
     })
     setTimeout(() => {
         console.log('=== Perf. Stats Summary ===\n' + table(avatarStatSummaryTable, { 'drawHorizontalLine': (lineIndex, rowCount) => { return lineIndex === 0 || lineIndex === 1 || lineIndex === rowCount } }))
+        if (writeToFile == true) {
+            fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + '.txt', '=== Perf. Stats Summary ===\n' + table(avatarStatSummaryTable, { 'drawHorizontalLine': (lineIndex, rowCount) => { return lineIndex === 0 || lineIndex === 1 || lineIndex === rowCount } }), 'utf8', (err) => { if (err) { console.error(err) } })
+
+            // Reset internal stats back to 0
+            avatarStatSummary = {
+                "totalAvatars": 0,
+                "stats": {
+                    "animatorCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "audioSourceCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "blendShapeCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "boneCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "boundsVolume": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "cameraCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "clothCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "constraintCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "constraintDepth": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "contactCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "lightCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "lineRendererCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "materialCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "materialSlotsUsed": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "meshCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "meshParticleMaxPolygons": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "particleSystemCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "physBoneColliderCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "physBoneCollisionCheckCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "physBoneComponentCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "physBoneTransformCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "physicsColliders": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "physicsRigidbodies": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "skinnedMeshCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "totalClothVertices": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "totalMaxParticles": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "totalPolygons": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "totalTextureUsage": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "trailRendererCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "fileSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                    "uncompressedSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 }
+                }
+            }
+        }
     }, 2000)
 }
 logEmitter.on('headingToWorld', async (I_worldID) => {
     // Save avatar stats for the instance
-    var avatarStatSummaryTable = [['Stat - ' + avatarStatSummary.totalAvatars + ' Avatars', 'Avg', 'Min', 'Max']]
-    Object.keys(avatarStatSummary.stats).forEach(async (key, index, arr) => {
-        if (key == 'fileSize') {
-            avatarStatSummary.stats['fileSize'].avg = await formatBytes(avatarStatSummary.stats['fileSize'].avg)
-            avatarStatSummary.stats['fileSize'].min = await formatBytes(avatarStatSummary.stats['fileSize'].min)
-            avatarStatSummary.stats['fileSize'].max = await formatBytes(avatarStatSummary.stats['fileSize'].max)
-            avatarStatSummaryTable.push(['fileSize', avatarStatSummary.stats.fileSize.avg, avatarStatSummary.stats.fileSize.min, avatarStatSummary.stats.fileSize.max])
-        } else if (key == 'uncompressedSize') {
-            avatarStatSummary.stats['uncompressedSize'].avg = await formatBytes(avatarStatSummary.stats['uncompressedSize'].avg)
-            avatarStatSummary.stats['uncompressedSize'].min = await formatBytes(avatarStatSummary.stats['uncompressedSize'].min)
-            avatarStatSummary.stats['uncompressedSize'].max = await formatBytes(avatarStatSummary.stats['uncompressedSize'].max)
-            avatarStatSummaryTable.push(['uncompressedSize', avatarStatSummary.stats.uncompressedSize.avg, avatarStatSummary.stats.uncompressedSize.min, avatarStatSummary.stats.uncompressedSize.max])
-        } else if (key == 'totalTextureUsage') {
-            avatarStatSummary.stats['totalTextureUsage'].avg = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].avg)
-            avatarStatSummary.stats['totalTextureUsage'].min = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].min)
-            avatarStatSummary.stats['totalTextureUsage'].max = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].max)
-            avatarStatSummaryTable.push(['totalTextureUsage', avatarStatSummary.stats.totalTextureUsage.avg, avatarStatSummary.stats.totalTextureUsage.min, avatarStatSummary.stats.totalTextureUsage.max])
-        } else {
-            avatarStatSummary.stats[key].avg = Math.ceil(avatarStatSummary.stats[key].avg).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-            avatarStatSummary.stats[key].min = Math.ceil(avatarStatSummary.stats[key].min).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-            avatarStatSummary.stats[key].max = Math.ceil(avatarStatSummary.stats[key].max).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-
-            avatarStatSummaryTable.push([key, avatarStatSummary.stats[key].avg, avatarStatSummary.stats[key].min, avatarStatSummary.stats[key].max])
-        }
-    })
-
-    setTimeout(() => {
-        console.log(table(avatarStatSummaryTable))
-        fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + '.txt', '=== Perf. Stats Summary ===\n' + table(avatarStatSummaryTable, { 'drawHorizontalLine': (lineIndex, rowCount) => { return lineIndex === 0 || lineIndex === 1 || lineIndex === rowCount } }), 'utf8', (err) => { if (err) { console.error(err) } })
-
-        // Reset internal stats back to 0
-        avatarStatSummary = {
-            "totalAvatars": 0,
-            "stats": {
-                "animatorCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "audioSourceCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "blendShapeCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "boneCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "boundsVolume": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "cameraCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "clothCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "constraintCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "constraintDepth": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "contactCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "lightCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "lineRendererCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "materialCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "materialSlotsUsed": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "meshCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "meshParticleMaxPolygons": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "particleSystemCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "physBoneColliderCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "physBoneCollisionCheckCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "physBoneComponentCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "physBoneTransformCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "physicsColliders": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "physicsRigidbodies": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "skinnedMeshCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "totalClothVertices": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "totalMaxParticles": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "totalPolygons": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "totalTextureUsage": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "trailRendererCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "fileSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "uncompressedSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 }
-            }
-        }
-    }, 2000);
+    requestAvatarStatTable(true)
 
     // Get world info for OBS Stream
     let res = await vrchat.getWorld({ 'path': { 'worldId': I_worldID } })
     apiEmitter.emit('fetchedDistThumbnail', res.data.imageUrl, res.data.name.slice(0, 50), res.data.authorName.slice(0, 50), I_worldID)
+})
+logEmitter.on('gameclose', () => {
+    // Save avatar stats for the instance
+    requestAvatarStatTable(true)
 })
 
 async function switchYearGroupsClosed() {
