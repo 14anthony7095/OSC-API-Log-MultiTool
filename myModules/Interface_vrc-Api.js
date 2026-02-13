@@ -303,7 +303,7 @@ var avatarStatSummary = {
         "totalPolygons": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
         "totalTextureUsage": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
         "trailRendererCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-        "downloadSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 }
+        "fileSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 }
     }
 }
 
@@ -394,9 +394,10 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         avatarStatSummary.totalAvatars++
 
         Object.keys(avatarStatSummary.stats).forEach((key, index, arr) => {
-            if (key == 'downloadSize') {
+            if (key == 'fileSize') {
+                console.log(res.data.fileSize)
                 avatarStatSummary.stats[key].sum += res.data.fileSize
-                avatarStatSummary.stats[key].min = avatarStatSummary.stats[key].min == 0 ? res.data.fileSize : Math.min(avatarStatSummary.stats[key].min, res.data.fileSize)
+                avatarStatSummary.stats[key].min = avatarStatSummary.stats[key].min == 0 ? parseInt(res.data.fileSize) : Math.min(avatarStatSummary.stats[key].min, parseInt(res.data.fileSize))
                 avatarStatSummary.stats[key].max = Math.max(avatarStatSummary.stats[key].max, res.data.fileSize)
             } else if (key == 'boundsVolume') {
                 avatarStatSummary.stats[key].sum += boundsVolume
@@ -1218,11 +1219,11 @@ const { table } = require('table');
 function requestAvatarStatTable() {
     var avatarStatSummaryTable = [['Stat', 'Avg', 'Min', 'Max']]
     Object.keys(avatarStatSummary.stats).forEach(async (key, index, arr) => {
-        if (key == 'downloadSize') {
-            avatarStatSummary.stats.downloadSize.avg = await formatBytes(avatarStatSummary.stats.downloadSize.avg)
-            avatarStatSummary.stats.downloadSize.min = await formatBytes(avatarStatSummary.stats.downloadSize.min)
-            avatarStatSummary.stats.downloadSize.max = await formatBytes(avatarStatSummary.stats.downloadSize.max)
-            avatarStatSummaryTable.push(['downloadSize', avatarStatSummary.stats.downloadSize.avg, avatarStatSummary.stats.downloadSize.min, avatarStatSummary.stats.downloadSize.max])
+        if (key == 'fileSize') {
+            avatarStatSummary.stats.fileSize.avg = await formatBytes(avatarStatSummary.stats.fileSize.avg)
+            avatarStatSummary.stats.fileSize.min = await formatBytes(avatarStatSummary.stats.fileSize.min)
+            avatarStatSummary.stats.fileSize.max = await formatBytes(avatarStatSummary.stats.fileSize.max)
+            avatarStatSummaryTable.push(['fileSize', avatarStatSummary.stats.fileSize.avg, avatarStatSummary.stats.fileSize.min, avatarStatSummary.stats.fileSize.max])
         } else if (key == 'totalTextureUsage') {
             avatarStatSummary.stats.totalTextureUsage.avg = await formatBytes(avatarStatSummary.stats.totalTextureUsage.avg)
             avatarStatSummary.stats.totalTextureUsage.min = await formatBytes(avatarStatSummary.stats.totalTextureUsage.min)
@@ -1244,11 +1245,11 @@ logEmitter.on('headingToWorld', async (I_worldID) => {
     // Save avatar stats for the instance
     var avatarStatSummaryTable = [['Stat', 'Avg', 'Min', 'Max']]
     Object.keys(avatarStatSummary.stats).forEach(async (key, index, arr) => {
-        if (key == 'downloadSize') {
-            avatarStatSummary.stats.downloadSize.avg = await formatBytes(avatarStatSummary.stats.downloadSize.avg)
-            avatarStatSummary.stats.downloadSize.min = await formatBytes(avatarStatSummary.stats.downloadSize.min)
-            avatarStatSummary.stats.downloadSize.max = await formatBytes(avatarStatSummary.stats.downloadSize.max)
-            avatarStatSummaryTable.push(['downloadSize', avatarStatSummary.stats.downloadSize.avg, avatarStatSummary.stats.downloadSize.min, avatarStatSummary.stats.downloadSize.max])
+        if (key == 'fileSize') {
+            avatarStatSummary.stats.fileSize.avg = await formatBytes(avatarStatSummary.stats.fileSize.avg)
+            avatarStatSummary.stats.fileSize.min = await formatBytes(avatarStatSummary.stats.fileSize.min)
+            avatarStatSummary.stats.fileSize.max = await formatBytes(avatarStatSummary.stats.fileSize.max)
+            avatarStatSummaryTable.push(['fileSize', avatarStatSummary.stats.fileSize.avg, avatarStatSummary.stats.fileSize.min, avatarStatSummary.stats.fileSize.max])
         } else if (key == 'totalTextureUsage') {
             avatarStatSummary.stats.totalTextureUsage.avg = await formatBytes(avatarStatSummary.stats.totalTextureUsage.avg)
             avatarStatSummary.stats.totalTextureUsage.min = await formatBytes(avatarStatSummary.stats.totalTextureUsage.min)
@@ -1300,7 +1301,7 @@ logEmitter.on('headingToWorld', async (I_worldID) => {
                 "totalPolygons": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
                 "totalTextureUsage": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
                 "trailRendererCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "downloadSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 }
+                "fileSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 }
             }
         }
     }, 2000);
