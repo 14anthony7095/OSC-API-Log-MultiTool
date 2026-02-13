@@ -303,7 +303,8 @@ var avatarStatSummary = {
         "totalPolygons": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
         "totalTextureUsage": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
         "trailRendererCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-        "fileSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 }
+        "fileSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+        "uncompressedSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 }
     }
 }
 
@@ -317,9 +318,10 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
 
 
         let filesize = await formatBytes(res.data.fileSize)
+        let uncompresssize = await formatBytes(res.data.uncompressedSize)
         let vramTexsize = await formatBytes(res.data.avatarStats.totalTextureUsage)
         console.log(`${loglv().log}${selflog} [AvatarAnalysis] ${res.data.performanceRating == 'VeryPoor' ? '❌ VeryPoor' : res.data.performanceRating == 'Poor' ? '🔴 Poor' : res.data.performanceRating == 'Medium' ? '🟡 Medium' : res.data.performanceRating == 'Good' ? '🟢 Good' : res.data.performanceRating == 'Excellent' ? '✅ Excellent' : ''} - ${res.data.name}
-             📦 ${filesize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)} (${Math.round((res.data.avatarStats.bounds[0] * res.data.avatarStats.bounds[1] * res.data.avatarStats.bounds[2]) * 1000) / 1000}m³)`)
+             📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)} (${Math.round((res.data.avatarStats.bounds[0] * res.data.avatarStats.bounds[1] * res.data.avatarStats.bounds[2]) * 1000) / 1000}m³)`)
 
 
 
@@ -348,16 +350,12 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         if (materialCount >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Material Count:            ${materialCount} EV ${materialCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.materialCount : ''}` }
         var meshParticleMaxPolygons = Math.round(res.data.avatarStats.meshParticleMaxPolygons / avatarStatWeights.meshParticleMaxPolygons)
         if (meshParticleMaxPolygons >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Mesh Particle Max Polygons:${meshParticleMaxPolygons} EV ${meshParticleMaxPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.meshParticleMaxPolygons : ''}` }
-        // var meshPolygons = Math.round(res.data.avatarStats.meshPolygons / avatarStatWeights.meshPolygons)
-        // if (meshPolygons >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Mesh Polygons:              ${meshPolygons} EV ${meshPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️' : ''}` }
         var particleSystemCount = Math.round(res.data.avatarStats.particleSystemCount / avatarStatWeights.particleSystemCount)
         if (particleSystemCount >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Particle System Count:     ${particleSystemCount} EV ${particleSystemCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.particleSystemCount : ''}` }
         var physicsColliders = Math.round(res.data.avatarStats.physicsColliders / avatarStatWeights.physicsColliders)
         if (physicsColliders >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Physics Colliders:         ${physicsColliders} EV ${physicsColliders >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physicsColliders : ''}` }
         var physicsRigidbodies = Math.round(res.data.avatarStats.physicsRigidbodies / avatarStatWeights.physicsRigidbodies)
         if (physicsRigidbodies >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Physics Rigidbodies:       ${physicsRigidbodies} EV ${physicsRigidbodies >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physicsRigidbodies : ''}` }
-        // var skinnedMeshPolygons = Math.round(res.data.avatarStats.skinnedMeshPolygons / avatarStatWeights.skinnedMeshPolygons)
-        // if (skinnedMeshPolygons >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Skinned Mesh Polygons:      ${skinnedMeshPolygons} EV ${skinnedMeshPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️' : ''}` }
         var totalClothVertices = Math.round(res.data.avatarStats.totalClothVertices / avatarStatWeights.totalClothVertices)
         if (totalClothVertices >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Cloth Vertices:            ${totalClothVertices} EV ${totalClothVertices >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.totalClothVertices : ''}` }
         var totalMaxParticles = Math.round(res.data.avatarStats.totalMaxParticles / avatarStatWeights.totalMaxParticles)
@@ -366,6 +364,8 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         if (trailRendererCount >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Trail Renderer Count:      ${trailRendererCount} EV ${trailRendererCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.trailRendererCount : ''}` }
         var totalTextureUsage = Math.round(res.data.avatarStats.totalTextureUsage / avatarStatWeights.totalTextureUsage)
         if (totalTextureUsage >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Texture Memory:            ${totalTextureUsage} EV ${totalTextureUsage >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}` }
+        var uncompressedSize = Math.round(res.data.uncompressedSize / avatarStatWeights.uncompressedSize)
+        if (uncompressedSize >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Uncompressed Size:         ${uncompressedSize} EV ${uncompressedSize >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}` }
         var totalPolygons = Math.round(res.data.avatarStats.totalPolygons / avatarStatWeights.totalPolygons)
         if (totalPolygons >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Polygons:                  ${totalPolygons} EV ${totalPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️📐' : ''}` }
         var skinnedMeshCount = Math.round(res.data.avatarStats.skinnedMeshCount / avatarStatWeights.skinnedMeshCount)
@@ -391,10 +391,14 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
 
         if (totalavatareval.length > 1) { console.log(totalavatareval.replace(/\n/, '') + "\n") }
 
+        // Summary Chart Data
         avatarStatSummary.totalAvatars++
-
         Object.keys(avatarStatSummary.stats).forEach((key, index, arr) => {
-            if (key == 'fileSize') {
+            if (key == 'uncompressedSize') {
+                avatarStatSummary.stats['uncompressedSize'].sum += res.data.uncompressedSize
+                avatarStatSummary.stats['uncompressedSize'].min = avatarStatSummary.stats['uncompressedSize'].min == 0 ? res.data.uncompressedSize : Math.min(avatarStatSummary.stats['uncompressedSize'].min, res.data.uncompressedSize)
+                avatarStatSummary.stats['uncompressedSize'].max = Math.max(avatarStatSummary.stats['uncompressedSize'].max, res.data.uncompressedSize)
+            } else if (key == 'fileSize') {
                 avatarStatSummary.stats['fileSize'].sum += res.data.fileSize
                 avatarStatSummary.stats['fileSize'].min = avatarStatSummary.stats['fileSize'].min == 0 ? res.data.fileSize : Math.min(avatarStatSummary.stats['fileSize'].min, res.data.fileSize)
                 avatarStatSummary.stats['fileSize'].max = Math.max(avatarStatSummary.stats['fileSize'].max, res.data.fileSize)
@@ -1223,6 +1227,11 @@ function requestAvatarStatTable() {
             avatarStatSummary.stats['fileSize'].min = await formatBytes(avatarStatSummary.stats['fileSize'].min)
             avatarStatSummary.stats['fileSize'].max = await formatBytes(avatarStatSummary.stats['fileSize'].max)
             avatarStatSummaryTable.push(['fileSize', avatarStatSummary.stats.fileSize.avg, avatarStatSummary.stats.fileSize.min, avatarStatSummary.stats.fileSize.max])
+        } else if (key == 'uncompressedSize') {
+            avatarStatSummary.stats['uncompressedSize'].avg = await formatBytes(avatarStatSummary.stats['uncompressedSize'].avg)
+            avatarStatSummary.stats['uncompressedSize'].min = await formatBytes(avatarStatSummary.stats['uncompressedSize'].min)
+            avatarStatSummary.stats['uncompressedSize'].max = await formatBytes(avatarStatSummary.stats['uncompressedSize'].max)
+            avatarStatSummaryTable.push(['uncompressedSize', avatarStatSummary.stats.uncompressedSize.avg, avatarStatSummary.stats.uncompressedSize.min, avatarStatSummary.stats.uncompressedSize.max])
         } else if (key == 'totalTextureUsage') {
             avatarStatSummary.stats['totalTextureUsage'].avg = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].avg)
             avatarStatSummary.stats['totalTextureUsage'].min = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].min)
@@ -1249,6 +1258,11 @@ logEmitter.on('headingToWorld', async (I_worldID) => {
             avatarStatSummary.stats['fileSize'].min = await formatBytes(avatarStatSummary.stats['fileSize'].min)
             avatarStatSummary.stats['fileSize'].max = await formatBytes(avatarStatSummary.stats['fileSize'].max)
             avatarStatSummaryTable.push(['fileSize', avatarStatSummary.stats.fileSize.avg, avatarStatSummary.stats.fileSize.min, avatarStatSummary.stats.fileSize.max])
+        } else if (key == 'uncompressedSize') {
+            avatarStatSummary.stats['uncompressedSize'].avg = await formatBytes(avatarStatSummary.stats['uncompressedSize'].avg)
+            avatarStatSummary.stats['uncompressedSize'].min = await formatBytes(avatarStatSummary.stats['uncompressedSize'].min)
+            avatarStatSummary.stats['uncompressedSize'].max = await formatBytes(avatarStatSummary.stats['uncompressedSize'].max)
+            avatarStatSummaryTable.push(['uncompressedSize', avatarStatSummary.stats.uncompressedSize.avg, avatarStatSummary.stats.uncompressedSize.min, avatarStatSummary.stats.uncompressedSize.max])
         } else if (key == 'totalTextureUsage') {
             avatarStatSummary.stats['totalTextureUsage'].avg = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].avg)
             avatarStatSummary.stats['totalTextureUsage'].min = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].min)
@@ -1300,7 +1314,8 @@ logEmitter.on('headingToWorld', async (I_worldID) => {
                 "totalPolygons": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
                 "totalTextureUsage": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
                 "trailRendererCount": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
-                "fileSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 }
+                "fileSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 },
+                "uncompressedSize": { "avg": 0, "min": 0, "max": 0, "sum": 0 }
             }
         }
     }, 2000);
