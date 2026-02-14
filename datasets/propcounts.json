@@ -1,11 +1,11 @@
 {
   "89be973f-9e1a-4260-8deb-211e32da8196": {
     "name": "Rainbow Ribbon",
-    "count": 572
+    "count": 576
   },
   "829ba6f6-b837-49d9-b9a9-056b82103b58": {
     "name": "THE REFERENCE CUBE",
-    "count": 1265
+    "count": 1266
   },
   "5c54ccdb-cafb-461b-b07f-91d189fc7b72": {
     "name": "Bubble Blaster",
@@ -17,11 +17,11 @@
   },
   "49fec698-f0cb-475c-9bc3-8f24e1bcc4eb": {
     "name": "Campfire",
-    "count": 569
+    "count": 572
   },
   "fb4e6b9e-ddd2-464c-8e44-cdba7f77eb5d": {
     "name": "Marshmallow on a Stick",
-    "count": 512
+    "count": 513
   },
   "213156fd-eb54-4c2c-8e12-cc840581ec73": {
     "name": "Candy Codex",
@@ -41,7 +41,7 @@
   },
   "0fd9deb0-6ca8-4c69-acbe-17035f93792b": {
     "name": "Groan Tube",
-    "count": 490
+    "count": 494
   },
   "e9d0bc1f-f7fd-4886-abec-d299745b2264": {
     "name": "MagicPotion",
@@ -81,11 +81,11 @@
   },
   "bd6395d2-8bf9-4aa8-bda9-954f355f332d": {
     "name": "2026 Glasses on a Stick",
-    "count": 32
+    "count": 33
   },
   "d974e56d-443e-4409-99c2-f5c9e5705d5b": {
     "name": "Party Popper",
-    "count": 163
+    "count": 169
   },
   "a1573c82-9767-4b42-a45d-4050e42a92b9": {
     "name": "Fortune Box",
@@ -93,7 +93,7 @@
   },
   "fb94d182-ff62-4290-835c-8a2e4944fb5d": {
     "name": "Gold-plated Lighter",
-    "count": 75
+    "count": 76
   },
   "c7f8c49f-f982-4d8c-8ab2-549b2fe8b4f8": {
     "name": "Blazing Sparkler",
@@ -101,7 +101,7 @@
   },
   "ce118c16-53d9-4d56-bcb2-717057eca102": {
     "name": "Roman Candle",
-    "count": 58
+    "count": 59
   },
   "cb3cad70-5354-4ce6-810b-9e0364264e2f": {
     "name": "Fiery Sky Fireworks Show",
@@ -109,7 +109,7 @@
   },
   "036389b7-3c9d-4e0d-96d1-f23cb195e76b": {
     "name": "Snow Blaster",
-    "count": 79
+    "count": 83
   },
   "25a95ca1-bba4-48d0-8a31-249bbc3af78e": {
     "name": "MAGFest26 Coin",
@@ -117,18 +117,18 @@
   },
   "ee4d580d-358c-49d7-87a6-1d191e295ef9": {
     "name": "WIP Daisy",
-    "count": 28
+    "count": 37
   },
   "2073a19e-3dd8-4f4c-86eb-e0090210b4b7": {
     "name": "Grand Assortment",
-    "count": 4
+    "count": 7
   },
   "ece03ecc-b2fe-49b7-b453-835c3dfa7b31": {
     "name": "Cupid’s Bow",
-    "count": 1
+    "count": 4
   },
   "3cd4e1ac-dd76-4bb2-bb64-9caa64e2fa28": {
     "name": "PropRoseTest",
-    "count": 2
+    "count": 5
   }
 }

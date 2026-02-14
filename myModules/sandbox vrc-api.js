@@ -11,7 +11,7 @@ const { VRChat } = require("vrchat");
 const { KeyvFile } = require("keyv-file");
 const fs = require('fs');
 const { distance, closestMatch } = require("closest-match");
-const { logEmitter } = require("./Interface_vrc-Log.js");
+// const { logEmitter } = require("./Interface_vrc-Log.js");
 require('dotenv').config({ 'quiet': true })
 
 
@@ -82,7 +82,7 @@ function formatBytes(bytes, decimals = 1) {
     })
 }
 var userAvatars = []
-logEmitter.on('avatarchange', (username, avatarname) => {
+/* logEmitter.on('avatarchange', (username, avatarname) => {
     console.log(`${avatarname} worn by ${username}`)
 
     let search = userAvatars.find(e => e.user == username)
@@ -104,14 +104,14 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         console.log(`${filesize} ${res.data.performanceRating} ${res.data.name}`)
         closestMatch(res.data.name, userAvatars.find(e=>e.avatarname) )
     }
-})
+}) */
 
 
 async function fileCheck(fileid, fileversion) {
-    // let res = await vrchat.getFile({ 'path': { 'fileId': fileid, 'versionId': fileversion } });console.log(res)
+    let res = await vrchat.getFile({ 'path': { 'fileId': fileid, 'versionId': fileversion } });console.log(res)
     let res2 = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } });console.log(res2)
 }
-// fileCheck('file_d71306cc-d216-410d-b9be-e9f7ec42f8cf', 2)
+// fileCheck('file_abe45c22-5700-487f-bdf2-68ee4baa63fc', 1)
 
 
 // getAvatarThumbnail()
