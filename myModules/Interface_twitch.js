@@ -34,7 +34,7 @@ const opts = {
 };
 const client = new tmi.client(opts);
 
-cmdEmitter.on('cmd', (cmd, args) => {
+cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'help') {
 		console.log(`${selflog}
 -	twitch msg [0-3] // [0] Disable	[1] Cheers	[2] Latest	[3] Buffer
@@ -44,15 +44,19 @@ cmdEmitter.on('cmd', (cmd, args) => {
 -	twitch switch ["Channel"]
 -	twitch from [0-2] // [0] None  [1] Videoplayers  [2] Users
 -	twitch alwaysrun [true/false]
+-	twitch bsay "message"		// Broadcast Say a message to all channels connected
+-	twitch say ["Channel"] "message"		// Say a message in target channel
 -	twitch salty [true/false]`)
 	}
 
 	if (cmd == 'twitch' && args[0] == 'alwaysrun') { ttvAlwaysRun = args[1] }
 	if (cmd == 'twitch' && args[0] == 'msg') { msgVerbose = args[1] }
 	if (cmd == 'twitch' && args[0] == 'chatbox') { ttvChatBox = JSON.parse(args[1]) }
-	if (cmd == 'twitch' && args[0] == 'join') { ttvFetchFrom = 2; setTimeout(() => { joinChannel(args[1].toString()) }, 100) }
-	if (cmd == 'twitch' && args[0] == 'leave') { ttvFetchFrom = 2; setTimeout(() => { leaveChannel(args[1].toString()) }, 100) }
-	if (cmd == 'twitch' && args[0] == 'switch') { ttvFetchFrom = 1; setTimeout(() => { switchChannel(args[1].toString()) }, 100) }
+	if (cmd == 'twitch' && args[0] == 'join') { joinChannel(args[1].toString()) }
+	if (cmd == 'twitch' && args[0] == 'leave') { leaveChannel(args[1].toString()) }
+	if (cmd == 'twitch' && args[0] == 'switch') { switchChannel(args[1].toString()) }
+	if (cmd == 'twitch' && args[0] == 'bsay') { broadcastSay(raw.slice(12)) }
+	if (cmd == 'twitch' && args[0] == 'say') { channelSay(args[1], raw.slice(args[1].length + 12)) }
 	if (cmd == 'twitch' && args[0] == 'from') { ttvFetchFrom = args[1] }
 	if (cmd == 'twitch' && args[0] == 'salty') { saltyMode = args[1] }
 	if (cmd == 'twitch' && args[0] == 'mediatek') {
@@ -102,9 +106,28 @@ function start() {
 }
 
 
+function broadcastSay(saymessage) {
+	client.getChannels().forEach(ch => {
+		client.say(ch.slice(1), saymessage)
+			.then((value) => {
+				console.log(value)
+			}).catch((err) => {
+				console.log(err)
+			})
+	})
+}
+function channelSay(targetChannel, saymessage) {
+	client.say(targetChannel, saymessage)
+		.then((value) => {
+			console.log(value)
+		}).catch((err) => {
+			console.log(err)
+		})
+}
+
 var clearingBuffer = false
 function switchChannel(newChannel) {
-	if (ttvFetchFrom == 1 && isActive == true) {
+	if (isActive == true) {
 		say.stop()
 		console.log(`${loglv().log}${selflog} Switching to channel ${newChannel}`)
 		twitchFromVideo = newChannel
@@ -133,7 +156,7 @@ function switchChannel(newChannel) {
 }
 exports.switchChannel = switchChannel;
 function joinChannel(newChannel) {
-	if (ttvFetchFrom == 2 && isActive == true) {
+	if (isActive == true) {
 		console.log(`${loglv().log}${selflog} Joining channel ${newChannel}`)
 		twitchFromVideo = newChannel
 
@@ -141,30 +164,34 @@ function joinChannel(newChannel) {
 			//console.log(data)
 			isActive = true
 			isttvRunning = true
+			console.log(client.getChannels())
 		}).catch(err => {
-			console.log(`${loglv().warn}${selflog}`, err)
-			if (err == 'No response from Twitch.') {
+			// console.log(`${loglv().warn}${selflog}`, err)
+			/* if (!client.getChannels().includes('#' + newChannel) && err == 'No response from Twitch.') {
 				setTimeout(() => {
 					console.log(`${loglv().log}${selflog} Retrying Join`)
 					joinChannel(newChannel)
-				}, 5000);
-			}
+				}, 10_000 + Math.random() * 50_000);
+			} */
 		})
 	}
 }
 exports.joinChannel = joinChannel;
 
 function leaveChannel(newChannel) {
-	if (ttvFetchFrom == 2 && isActive == true) {
+	if (isActive == true) {
 		console.log(`${loglv().log}${selflog} Leaving channel ${newChannel}`)
 
-		client.part(newChannel).catch((err) => {
-			console.log(`${loglv().warn}${selflog}`, err)
-			if (err == 'No response from Twitch.') {
+		client.part(newChannel).then((nc) => {
+			console.log(client.getChannels())
+		}).catch((err) => {
+			// console.log(`${loglv().warn}${selflog}`, err)
+			if (client.getChannels().includes('#' + newChannel) && err == 'No response from Twitch.') {
 				setTimeout(() => {
 					console.log(`${loglv().log}${selflog} Retrying Leave`)
 					leaveChannel(newChannel)
-				}, 5000);
+				}, 10_000 + Math.random() * 50_000);
+
 			}
 		})
 	}

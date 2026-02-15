@@ -238,7 +238,7 @@ function formatBytes(bytes, decimals = 1) {
 const avatarStatWeights = {
     "lowerLimitWeight": 40,             // Display Evaluation Value
     "higherLimitWeight": 40,            // Warn Icon + True Stat
-    "boundsVolume": 50,                 //🔒locked in - from suggestion list
+    "boundsLongest": 0.2,               //🔒locked in - from suggestion list
     "constraintCount": 17.55,           //🔒locked in - from suggestion list
     "constraintDepth": 5.05,            //🔒locked in - from suggestion list
     "totalTextureUsage": 3800000,       //🔒locked in - from suggestion list
@@ -274,7 +274,7 @@ var avatarStatSummary = {
     "checkedFileIDs": [],
     "stats": {
         "totalPolygons": { "label": "Polygons", "values": [], "sum": 0 },
-        "boundsVolume": { "label": "Bounds Volume", "values": [], "sum": 0 },
+        "boundsLongest": { "label": "Bounds (Longest)", "values": [], "sum": 0 },
         "skinnedMeshCount": { "label": "Skinned Meshes", "values": [], "sum": 0 },
         "meshCount": { "label": "Basic Meshes", "values": [], "sum": 0 },
         "materialSlotsUsed": { "label": "Material Slots", "values": [], "sum": 0 },
@@ -339,12 +339,12 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
     let uncompresssize = await formatBytes(res.data.uncompressedSize)
     let vramTexsize = await formatBytes(res.data.avatarStats.totalTextureUsage)
     console.log(`${loglv().log}${selflog} [AvatarAnalysis] ${res.data.performanceRating == 'VeryPoor' ? '❌ VeryPoor' : res.data.performanceRating == 'Poor' ? '🔴 Poor' : res.data.performanceRating == 'Medium' ? '🟡 Medium' : res.data.performanceRating == 'Good' ? '🟢 Good' : res.data.performanceRating == 'Excellent' ? '✅ Excellent' : ''} - ${res.data.name}
-             📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)} (${Math.round((res.data.avatarStats.bounds[0] * res.data.avatarStats.bounds[1] * res.data.avatarStats.bounds[2]) * 1000) / 1000}m³)`)
+             📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)}`)
 
     // - Performance Marks-
     let totalavatareval = ``
-    let boundsVolume = Math.round((res.data.avatarStats.bounds[0] * res.data.avatarStats.bounds[1] * res.data.avatarStats.bounds[2]) / avatarStatWeights.boundsVolume)
-    if (boundsVolume >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Bounds:                    ${boundsVolume} EV ${boundsVolume >= avatarStatWeights.higherLimitWeight ? '⚠️🧊' : ''}` }
+    let boundsLongest = Math.round(Math.max(...res.data.avatarStats.bounds) / avatarStatWeights.boundsLongest)
+    if (boundsLongest >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Bounds:                    ${boundsLongest} EV ${boundsLongest >= avatarStatWeights.higherLimitWeight ? '⚠️🧊' : ''}` }
     var animatorCount = Math.round(res.data.avatarStats.animatorCount / avatarStatWeights.animatorCount)
     if (animatorCount >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Animator Count:            ${animatorCount} EV ${animatorCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.animatorCount : ''}` }
     var audioSourceCount = Math.round(res.data.avatarStats.audioSourceCount / avatarStatWeights.audioSourceCount)
@@ -415,9 +415,9 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         } else if (key == 'fileSize') {
             avatarStatSummary.stats['fileSize'].sum += res.data.fileSize
             avatarStatSummary.stats['fileSize'].values.push(res.data.fileSize)
-        } else if (key == 'boundsVolume') {
-            avatarStatSummary.stats['boundsVolume'].sum += Math.round((res.data.avatarStats.bounds[0] * res.data.avatarStats.bounds[1] * res.data.avatarStats.bounds[2]) * 1000) / 1000
-            avatarStatSummary.stats['boundsVolume'].values.push(Math.round((res.data.avatarStats.bounds[0] * res.data.avatarStats.bounds[1] * res.data.avatarStats.bounds[2]) * 1000) / 1000)
+        } else if (key == 'boundsLongest') {
+            avatarStatSummary.stats['boundsLongest'].sum += Math.round(Math.max(...res.data.avatarStats.bounds) * 100) / 100
+            avatarStatSummary.stats['boundsLongest'].values.push(Math.round(Math.max(...res.data.avatarStats.bounds) * 100) / 100)
         } else {
             avatarStatSummary.stats[key].sum += res.data.avatarStats[key]
             avatarStatSummary.stats[key].values.push(res.data.avatarStats[key])
@@ -1278,15 +1278,15 @@ function requestAvatarStatTable(writeToFile = false) {
                 var vMax = Math.max(...avatarStatSummary.stats[key].values)
                 var vQ3 = sort[Math.floor((sort.length - 1) * 0.75)]
 
-                if (key == 'boundsVolume') {
+                if (key == 'boundsLongest') {
                     avatarStatSummaryTable.push([
-                        "Bounds Volume",
-                        (Math.ceil(vMin * 1000) / 1000).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                        (Math.ceil(vQ1 * 1000) / 1000).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                        (Math.ceil(vMed * 1000) / 1000).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                        (Math.ceil(vQ3 * 1000) / 1000).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                        (Math.ceil(vMax * 1000) / 1000).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                        (Math.ceil(vAvg * 1000) / 1000).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                        "Bounds (Longest)",
+                        (Math.ceil(vMin * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                        (Math.ceil(vQ1 * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                        (Math.ceil(vMed * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                        (Math.ceil(vQ3 * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                        (Math.ceil(vMax * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                        (Math.ceil(vAvg * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
                         ''
                     ])
                 } else {
@@ -1304,11 +1304,11 @@ function requestAvatarStatTable(writeToFile = false) {
             }
         })
         setTimeout(() => {
-            if (avatarStatSummary.totalAvatars > 1) {
+            if (avatarStatSummary.totalAvatars >= 4) {
                 var tableOptions = { 'drawHorizontalLine': (lineIndex, rowCount) => { return lineIndex === 0 || lineIndex === 1 || lineIndex === 29 || lineIndex === rowCount } }
-                console.log('=== Avatar Performance Stat Summary ===\n' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions))
+                console.log('=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + '\n--Avatar Security Checks used--' + avatarStatSummary.checkedFileIDs.map((v) => { return '\n' + v }))
                 if (writeToFile == true) {
-                    fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + '.txt', '=== Avatar Performance Stat Summary ===\n' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions), 'utf8', (err) => { if (err) { console.error(err) } })
+                    fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + '.txt', '=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + '\n--Avatar Security Checks used--' + avatarStatSummary.checkedFileIDs.map((v) => { return '\n' + v }), 'utf8', (err) => { if (err) { console.error(err) } })
                 }
             }
             resolve(true)
@@ -1319,7 +1319,7 @@ function requestAvatarStatTable(writeToFile = false) {
                 "checkedFileIDs": [],
                 "stats": {
                     "totalPolygons": { "label": "Polygons", "values": [], "sum": 0 },
-                    "boundsVolume": { "label": "Bounds Volume", "values": [], "sum": 0 },
+                    "boundsLongest": { "label": "Bounds (Longest)", "values": [], "sum": 0 },
                     "skinnedMeshCount": { "label": "Skinned Meshes", "values": [], "sum": 0 },
                     "meshCount": { "label": "Basic Meshes", "values": [], "sum": 0 },
                     "materialSlotsUsed": { "label": "Material Slots", "values": [], "sum": 0 },

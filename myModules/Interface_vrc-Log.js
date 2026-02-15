@@ -714,7 +714,7 @@ function eventPlayerInitialized(logOutputLine) {
 
 		playerRatio = playersInInstance.length / playerHardLimit
 
-		if (Date.now() > (worldjointimestamp + 10000)) { queueInstanceDataBurst() }
+		// if (Date.now() > (worldjointimestamp + 10000)) { queueInstanceDataBurst() }
 
 		console.log(`${loglv().log}${selflog} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
 
@@ -796,7 +796,7 @@ function eventPlayerLeft(logOutputLine) {
 			memberRatio = membersInInstance.length / playersInInstance.length
 		} */
 
-		queueInstanceDataBurst()
+		// if (Date.now() > (worldjointimestamp + 10000)) { queueInstanceDataBurst() }
 
 		console.log(`${loglv().log}${selflog} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
 		/* if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
