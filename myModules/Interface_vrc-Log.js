@@ -578,11 +578,11 @@ function eventHeadingToWorld(logOutputLine) {
 	G_worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
 	console.log(`${loglv().debug}${selflog} World ID ${G_worldID}`)
 
-	logEmitter.emit('headingToWorld', G_worldID)
-
+	
 	// 2026.01.27 14:20:50 Debug      -  [Behaviour] Destination set: wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5:65895~hidden(usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752)~region(use)
 	G_currentLocation = 'wrld_' + logOutputLine.split('wrld_')[1]
-
+	logEmitter.emit('headingToWorld', G_worldID,G_currentLocation)
+	
 	if (logOutputLine.includes(`~group(grp_`)) {
 		G_groupID = /grp_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
 		console.log(`${loglv().debug}${selflog} Group ID ${G_groupID}`)

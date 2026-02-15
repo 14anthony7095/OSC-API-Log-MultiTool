@@ -148,3 +148,5 @@ vite.config.ts.timestamp-*
 worldThumbnails/output/worlds.json
 worldThumbnails/output/thumbnail.mp4
 datasets/avatarStatSummarys/
+datasets/avatarStatCache/
+myModules/sandbox vrc-api.js
