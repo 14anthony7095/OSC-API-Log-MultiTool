@@ -114,7 +114,7 @@ function oscChatTyping(active) {
 }
 exports.oscChatTyping = oscChatTyping;
 
-function oscChatBoxV2(I_say = "~", I_display_time = 5000, I_highPriority = false, I_auto_clear = false, isLoop = false, I_playAudio = false) {
+function oscChatBoxV2(I_say = "~", I_display_time_ms = 5000, I_highPriority = false, I_auto_clear = false, isLoop = false, I_playAudio = false) {
 	let firstLong = 0
 	if (isLoop == false) {
 		oscChatTyping(1)
@@ -122,7 +122,7 @@ function oscChatBoxV2(I_say = "~", I_display_time = 5000, I_highPriority = false
 			let msgsplit = I_say.match(/.{0,144}\S(?=$|\s)/g)
 			chatboxQueue.length == 0 ? firstLong = msgsplit.length : 0
 			for (const seg in msgsplit) {
-				chatboxQueue.unshift({ "message": msgsplit[seg], "display_time_ms": I_display_time, "auto_clear": I_auto_clear, "play_audio": I_playAudio })
+				chatboxQueue.unshift({ "message": msgsplit[seg], "display_time_ms": I_display_time_ms, "auto_clear": I_auto_clear, "play_audio": I_playAudio })
 			}
 			// })
 			// chatboxQueue.unshift({ "message": I_say, "display_time_ms": I_display_time, "auto_clear": I_auto_clear })
@@ -130,7 +130,7 @@ function oscChatBoxV2(I_say = "~", I_display_time = 5000, I_highPriority = false
 			let msgsplit = I_say.match(/.{0,144}\S(?=$|\s)/g)
 			chatboxQueue.length == 0 ? firstLong = msgsplit.length : 0
 			for (const seg in msgsplit) {
-				chatboxQueue.push({ "message": msgsplit[seg], "display_time_ms": I_display_time, "auto_clear": I_auto_clear, "play_audio": I_playAudio })
+				chatboxQueue.push({ "message": msgsplit[seg], "display_time_ms": I_display_time_ms, "auto_clear": I_auto_clear, "play_audio": I_playAudio })
 			}
 			// })
 			// console.log(chatboxQueue)

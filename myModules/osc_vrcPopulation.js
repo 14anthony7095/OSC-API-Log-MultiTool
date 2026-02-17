@@ -8,7 +8,8 @@
 //	--	Libraries	--
 var { loglv, playerCounter, graphTimeRangeMinutes } = require('./config.js');
 const { oscSend, oscEmitter, OSCDataBurst } = require('./Interface_osc_v1.js');
-const { getVisitsCount, apiEmitter } = require('./Interface_vrc-Api.js')
+const { getVisitsCount, apiEmitter } = require('./Interface_vrc-Api.js');
+const { logEmitter } = require('./Interface_vrc-Log.js');
 
 
 //	--	Global Vars	--
@@ -95,6 +96,12 @@ apiEmitter.on('switch', (data, type) => {
 		worldTimer = null
 	}
 })
+logEmitter.on('gameclose', () => {
+	isWorlding = false
+	start()
+	clearInterval(worldTimer)
+	worldTimer = null
+})
 
 
 
@@ -145,7 +152,7 @@ Int Double DATA handling
 	digitLen >= 1 ? OSCDataBurst(6, parseInt(digitSeg[5]) / 10) : OSCDataBurst(6, parseFloat(1))
 
 
-	
+
 
 
 

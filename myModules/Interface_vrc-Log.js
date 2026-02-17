@@ -273,7 +273,7 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 
 			OSCDataBurst(12, parseFloat((parseInt(avgStartDisplay.substring(14, 16)) * 60 + parseInt(avgStartDisplay.substring(17, 19))) / 255))
 
-			tonAvgStartWait.length > 1 ? oscChatBox(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}`, 12) : oscChatBox(`~Round ready to start`, 10)
+			tonAvgStartWait.length > 1 ? oscChatBoxV2(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}`,5000,false,true) : oscChatBoxV2(`~Round ready to start`,5000,false,true)
 		}
 		if (line.includes(`Everything recieved, looks good`)) {
 			console.log(`${loglv().log}${selflog} [TON] Round Starting.`)
@@ -378,19 +378,19 @@ oscEmitter.on('osc', (addr, value) => {
 
 			switch (value) {
 				case 1:
-					oscChatBoxV2('Added world to "Approve" list',2,false,true,undefined,false);
+					oscChatBoxV2('Added world to "Approve" list',2000,false,true,undefined,false);
 					wrld_fav["1_Approve"].push(G_worldID);
 					break;
 				case 2:
-					oscChatBoxV2('Added world to "Likes" list',2,false,true,undefined,false);
+					oscChatBoxV2('Added world to "Likes" list',2000,false,true,undefined,false);
 					wrld_fav["2_Likes"].push(G_worldID);
 					break;
 				case 3:
-					oscChatBoxV2('Added world to "Love / Show Off" list',2,false,true,undefined,false);
+					oscChatBoxV2('Added world to "Love / Show Off" list',2000,false,true,undefined,false);
 					wrld_fav["3_Love_ShowOff"].push(G_worldID);
 					break;
 				case 4:
-					oscChatBoxV2('Added world to "Games & Activity" list',2,false,true,undefined,false);
+					oscChatBoxV2('Added world to "Games & Activity" list',2000,false,true,undefined,false);
 					wrld_fav["4_Game_Activity"].push(G_worldID);
 					break;
 				default: break;
@@ -887,7 +887,7 @@ function videoUrlResolver(videourl) {
 
 	//	--- Print Video URL ---
 	console.log(`${loglv().log}${selflog} Video URL: ${videourl}`)
-	if (ChatVideoURL == true) { oscChatBoxV2(`~VideoURL:\v${videourl}`, 5, true, true) }
+	if (ChatVideoURL == true) { oscChatBoxV2(`~VideoURL:\v${videourl}`, 5000, true, true) }
 
 	//	---	Twitch Channel URL Resolver	---
 	if (videourl.includes('twitch.tv/') && !videourl.includes('twitch.tv/videos')) {
@@ -940,7 +940,7 @@ function videoUrlResolver(videourl) {
 			.then((data) => {
 				setTimeout(() => {
 					console.log(`${loglv().log}${selflog} Video Title: ${data.videoDetails.title}`)
-					if (ChatVideoTitle == true) { oscChatBoxV2(`~VideoTitle:\v` + data.videoDetails.title, 2, true, true) }
+					if (ChatVideoTitle == true) { oscChatBoxV2(`~VideoTitle:\v` + data.videoDetails.title, 2000, true, true) }
 				}, 2000)
 			})
 			.catch((err) => {

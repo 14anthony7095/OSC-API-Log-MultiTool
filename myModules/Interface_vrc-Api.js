@@ -114,13 +114,15 @@ cmdEmitter.on('cmd', (cmd, args) => {
 -   years close
 -   preload [wrldID...]
 -   explore start
+-   avatars
 `)
     }
     if (cmd == 'api' && args[0] == 'requestall') { requestAllOnlineFriends(currentUser) }
     if (cmd == 'years' && args[0] == 'close') { switchYearGroupsClosed() }
     if (cmd == 'years' && args[0] == 'open') { switchYearGroupsReOpen() }
     if (cmd == 'preload') { worldAutoPreloadQueue(args[0].split(',')) }
-    if (cmd == 'avatartable') { requestAvatarStatTable() }
+    if (cmd == 'avatars') { requestAvatarStatTable() }
+    if (cmd == 'allavatars') { scanAllAvatarStats() }
     // if (cmd == 'explore' && args[0] == 'start') { getOnlineWorlds('worlds1', false) }
 })
 
@@ -231,7 +233,13 @@ function formatBytes(bytes, decimals = 1) {
         resolve(parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i])
     })
 }
-
+function mathSumValues(values_Arr) {
+    var sum = 0
+    for (const i in values_Arr) {
+        sum += values_Arr[i]
+    }
+    return sum
+}
 
 // - Avatar Perf Allowance -
 //  Stat / Value >= Threshold
@@ -241,7 +249,7 @@ const avatarStatWeights = {
     "boundsLongest": 0.2,               //🔒locked in - from suggestion list
     "constraintCount": 17.55,           //🔒locked in - from suggestion list
     "constraintDepth": 5.05,            //🔒locked in - from suggestion list
-    "totalTextureUsage": 3800000,       //🔒locked in - from suggestion list
+    "totalTextureUsage": 3934781,       //🔒locked in - from suggestion list
     "totalPolygons": 5000,              //🔒locked in - from suggestion list
     "skinnedMeshCount": 0.5,            //🔒locked in - from suggestion list
     "meshCount": 1.5,                   //🔒locked in - from suggestion list
@@ -272,40 +280,46 @@ const avatarStatWeights = {
 var avatarStatSummary = {
     "totalAvatars": 0,
     "checkedFileIDs": [],
+    "Excellent": 0,
+    "Good": 0,
+    "Medium": 0,
+    "Poor": 0,
+    "VeryPoor": 0,
     "stats": {
-        "totalPolygons": { "label": "Polygons", "values": [], "sum": 0 },
-        "boundsLongest": { "label": "Bounds (Longest)", "values": [], "sum": 0 },
-        "skinnedMeshCount": { "label": "Skinned Meshes", "values": [], "sum": 0 },
-        "meshCount": { "label": "Basic Meshes", "values": [], "sum": 0 },
-        "materialSlotsUsed": { "label": "Material Slots", "values": [], "sum": 0 },
-        "materialCount": { "label": "Material Count", "values": [], "sum": 0 },
-        "physBoneColliderCount": { "label": "PhysBone Colliders", "values": [], "sum": 0 },
-        "physBoneCollisionCheckCount": { "label": "PhysBone Collision Checks", "values": [], "sum": 0 },
-        "physBoneComponentCount": { "label": "PhysBone Components", "values": [], "sum": 0 },
-        "physBoneTransformCount": { "label": "PhysBone Transforms", "values": [], "sum": 0 },
-        "contactCount": { "label": "Contacts", "values": [], "sum": 0 },
-        "constraintCount": { "label": "Constraint Count", "values": [], "sum": 0 },
-        "constraintDepth": { "label": "Constraint Depth", "values": [], "sum": 0 },
-        "animatorCount": { "label": "Animators", "values": [], "sum": 0 },
-        "boneCount": { "label": "Bones", "values": [], "sum": 0 },
-        "lightCount": { "label": "Lights", "values": [], "sum": 0 },
-        "particleSystemCount": { "label": "Particle Systems", "values": [], "sum": 0 },
-        "totalMaxParticles": { "label": "Max Particles", "values": [], "sum": 0 },
-        "meshParticleMaxPolygons": { "label": "Particle Max Polygons", "values": [], "sum": 0 },
-        "trailRendererCount": { "label": "Trail Renderers", "values": [], "sum": 0 },
-        "lineRendererCount": { "label": "Line Renderers", "values": [], "sum": 0 },
-        "clothCount": { "label": "Cloth Count", "values": [], "sum": 0 },
-        "totalClothVertices": { "label": "Cloth Vertices", "values": [], "sum": 0 },
-        "physicsColliders": { "label": "Unity Colliders", "values": [], "sum": 0 },
-        "physicsRigidbodies": { "label": "Rigidbodies", "values": [], "sum": 0 },
-        "audioSourceCount": { "label": "AudioSources", "values": [], "sum": 0 },
-        "blendShapeCount": { "label": "BlendShapes", "values": [], "sum": 0 },
-        "cameraCount": { "label": "Cameras", "values": [], "sum": 0 },
-        "totalTextureUsage": { "label": "Texture Memory", "values": [], "sum": 0 },
-        "fileSize": { "label": "Download Size", "values": [], "sum": 0 },
-        "uncompressedSize": { "label": "Uncompressed Size", "values": [], "sum": 0 }
+        "totalPolygons": { "label": "Polygons", "values": [] },
+        "boundsLongest": { "label": "Bounds (Longest Edge)", "values": [] },
+        "skinnedMeshCount": { "label": "Skinned Meshes", "values": [] },
+        "meshCount": { "label": "Basic Meshes", "values": [] },
+        "materialSlotsUsed": { "label": "Material Slots", "values": [] },
+        "materialCount": { "label": "Material Count", "values": [] },
+        "physBoneColliderCount": { "label": "PhysBone Colliders", "values": [] },
+        "physBoneCollisionCheckCount": { "label": "PhysBone Collision Checks", "values": [] },
+        "physBoneComponentCount": { "label": "PhysBone Components", "values": [] },
+        "physBoneTransformCount": { "label": "PhysBone Transforms", "values": [] },
+        "contactCount": { "label": "Contacts", "values": [] },
+        "constraintCount": { "label": "Constraint Count", "values": [] },
+        "constraintDepth": { "label": "Constraint Depth", "values": [] },
+        "animatorCount": { "label": "Animators", "values": [] },
+        "boneCount": { "label": "Bones", "values": [] },
+        "lightCount": { "label": "Lights", "values": [] },
+        "particleSystemCount": { "label": "Particle Systems", "values": [] },
+        "totalMaxParticles": { "label": "Max Particles", "values": [] },
+        "meshParticleMaxPolygons": { "label": "Particle Max Polygons", "values": [] },
+        "trailRendererCount": { "label": "Trail Renderers", "values": [] },
+        "lineRendererCount": { "label": "Line Renderers", "values": [] },
+        "clothCount": { "label": "Cloth Count", "values": [] },
+        "totalClothVertices": { "label": "Cloth Vertices", "values": [] },
+        "physicsColliders": { "label": "Unity Colliders", "values": [] },
+        "physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
+        "audioSourceCount": { "label": "AudioSources", "values": [] },
+        "blendShapeCount": { "label": "BlendShapes", "values": [] },
+        "cameraCount": { "label": "Cameras", "values": [] },
+        "totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
+        "fileSize": { "label": "Download Size", "values": [] },
+        "uncompressedSize": { "label": "Uncompressed Size (RAM)", "values": [] }
     }
 }
+
 
 // const { distance, closestMatch } = require("closest-match");
 logEmitter.on('fileanalysis', async (fileid, fileversion) => {
@@ -343,8 +357,12 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
 
     // - Performance Marks-
     let totalavatareval = ``
+    var warnbox = ''
     let boundsLongest = Math.round(Math.max(...res.data.avatarStats.bounds) / avatarStatWeights.boundsLongest)
-    if (boundsLongest >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Bounds:                    ${boundsLongest} EV ${boundsLongest >= avatarStatWeights.higherLimitWeight ? '⚠️🧊' : ''}` }
+    if (boundsLongest >= avatarStatWeights.lowerLimitWeight) {
+        //warnbox += `\vBounds ${Math.max(...res.data.avatarStats.bounds)}m`;
+        totalavatareval += `\n              Bounds:                    ${boundsLongest} EV ${boundsLongest >= avatarStatWeights.higherLimitWeight ? '⚠️🧊' : ''}`
+    }
     var animatorCount = Math.round(res.data.avatarStats.animatorCount / avatarStatWeights.animatorCount)
     if (animatorCount >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Animator Count:            ${animatorCount} EV ${animatorCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.animatorCount : ''}` }
     var audioSourceCount = Math.round(res.data.avatarStats.audioSourceCount / avatarStatWeights.audioSourceCount)
@@ -378,15 +396,24 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
     var trailRendererCount = Math.round(res.data.avatarStats.trailRendererCount / avatarStatWeights.trailRendererCount)
     if (trailRendererCount >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Trail Renderer Count:      ${trailRendererCount} EV ${trailRendererCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.trailRendererCount : ''}` }
     var totalTextureUsage = Math.round(res.data.avatarStats.totalTextureUsage / avatarStatWeights.totalTextureUsage)
-    if (totalTextureUsage >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Texture Memory:            ${totalTextureUsage} EV ${totalTextureUsage >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}` }
+    if (totalTextureUsage >= avatarStatWeights.lowerLimitWeight) {
+        warnbox += `\vTexture Memory ${vramTexsize}`;
+        totalavatareval += `\n              Texture Memory:            ${totalTextureUsage} EV ${totalTextureUsage >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
+    }
     var uncompressedSize = Math.round(res.data.uncompressedSize / avatarStatWeights.uncompressedSize)
     if (uncompressedSize >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Uncompressed Size:         ${uncompressedSize} EV ${uncompressedSize >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}` }
     var totalPolygons = Math.round(res.data.avatarStats.totalPolygons / avatarStatWeights.totalPolygons)
     if (totalPolygons >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Polygons:                  ${totalPolygons} EV ${totalPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️📐' : ''}` }
     var skinnedMeshCount = Math.round(res.data.avatarStats.skinnedMeshCount / avatarStatWeights.skinnedMeshCount)
-    if (skinnedMeshCount >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Skinned Meshes:            ${skinnedMeshCount} EV ${skinnedMeshCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.skinnedMeshCount : ''}` }
+    if (skinnedMeshCount >= avatarStatWeights.lowerLimitWeight) {
+        warnbox += `\vSkinnedMeshes ${res.data.avatarStats.skinnedMeshCount}`;
+        totalavatareval += `\n              Skinned Meshes:            ${skinnedMeshCount} EV ${skinnedMeshCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.skinnedMeshCount : ''}`
+    }
     var meshCount = Math.round(res.data.avatarStats.meshCount / avatarStatWeights.meshCount)
-    if (meshCount >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Basic Meshes:              ${meshCount} EV ${meshCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.meshCount : ''}` }
+    if (meshCount >= avatarStatWeights.lowerLimitWeight) {
+        warnbox += `\vBasic Meshes ${res.data.avatarStats.meshCount}`;
+        totalavatareval += `\n              Basic Meshes:              ${meshCount} EV ${meshCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.meshCount : ''}`
+    }
     var physBoneCollisionCheckCount = Math.round(res.data.avatarStats.physBoneCollisionCheckCount / avatarStatWeights.physBoneCollisionCheckCount)
     if (physBoneCollisionCheckCount >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              PhysBone Collision Checks: ${physBoneCollisionCheckCount} EV ${physBoneCollisionCheckCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneCollisionCheckCount : ''}` }
     var physBoneColliderCount = Math.round(res.data.avatarStats.physBoneColliderCount / avatarStatWeights.physBoneColliderCount)
@@ -398,33 +425,79 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
     var contactCount = Math.round(res.data.avatarStats.contactCount / avatarStatWeights.contactCount)
     if (contactCount >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Contact Count:             ${contactCount} EV ${contactCount >= avatarStatWeights.higherLimitWeight ? '⚠️🥎' : ''}` }
     var materialSlotsUsed = Math.round(res.data.avatarStats.materialSlotsUsed / avatarStatWeights.materialSlotsUsed)
-    if (materialSlotsUsed >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Material Slots:            ${materialSlotsUsed} EV ${materialSlotsUsed >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.materialSlotsUsed : ''}` }
+    if (materialSlotsUsed >= avatarStatWeights.lowerLimitWeight) {
+        warnbox += `\vMaterial Slots ${res.data.avatarStats.materialSlotsUsed}`;
+        totalavatareval += `\n              Material Slots:            ${materialSlotsUsed} EV ${materialSlotsUsed >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.materialSlotsUsed : ''}`
+    }
     var lightCount = Math.round(res.data.avatarStats.lightCount / avatarStatWeights.lightCount)
     if (lightCount >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Light Count:               ${lightCount} EV ${lightCount >= avatarStatWeights.higherLimitWeight ? '⚠️💡' : ''}` }
     var blendShapeCount = Math.round(res.data.avatarStats.blendShapeCount / avatarStatWeights.blendShapeCount)
     if (blendShapeCount >= avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              BlendShapes:               ${blendShapeCount} EV ${blendShapeCount >= avatarStatWeights.higherLimitWeight ? '⚠️🧲' : ''}` }
 
     if (totalavatareval.length > 1) { console.log(totalavatareval.replace(/\n/, '') + "\n") }
+    if (warnbox.length > 0 && getInstanceGroupID() == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+        // if(warnbox.length > 0 ){
+        oscChatBoxV2(`${res.data.name.slice(0, 14)}${warnbox}`, 30000, false, true, false, true)
+    }
 
     // Summary Chart Data
     avatarStatSummary.totalAvatars++
+    avatarStatSummary[res.data.performanceRating]++
     Object.keys(avatarStatSummary.stats).forEach((key, index, arr) => {
         if (key == 'uncompressedSize') {
-            avatarStatSummary.stats['uncompressedSize'].sum += res.data.uncompressedSize
             avatarStatSummary.stats['uncompressedSize'].values.push(res.data.uncompressedSize)
         } else if (key == 'fileSize') {
-            avatarStatSummary.stats['fileSize'].sum += res.data.fileSize
             avatarStatSummary.stats['fileSize'].values.push(res.data.fileSize)
         } else if (key == 'boundsLongest') {
-            avatarStatSummary.stats['boundsLongest'].sum += Math.round(Math.max(...res.data.avatarStats.bounds) * 100) / 100
             avatarStatSummary.stats['boundsLongest'].values.push(Math.round(Math.max(...res.data.avatarStats.bounds) * 100) / 100)
         } else {
-            avatarStatSummary.stats[key].sum += res.data.avatarStats[key]
             avatarStatSummary.stats[key].values.push(res.data.avatarStats[key])
         }
     })
 
 })
+
+async function scanAllAvatarStats() {
+
+    var fsrddir = await fsp.readdir('./datasets/avatarStatCache/', 'utf8')
+    fsrddir.forEach(async (file, index, arr) => {
+        var res = {}
+        var fsrdfile = await fsp.readFile('./datasets/avatarStatCache/' + file, 'utf8')
+        console.log(`${loglv().log}${selflog} [AvatarAnalysis] Cached: ${file}`)
+        res.data = JSON.parse(fsrdfile)
+
+
+        let filesize = await formatBytes(res.data.fileSize)
+        let uncompresssize = await formatBytes(res.data.uncompressedSize)
+        let vramTexsize = await formatBytes(res.data.avatarStats.totalTextureUsage)
+        console.log(`${loglv().log}${selflog} [AvatarAnalysis] ${res.data.performanceRating == 'VeryPoor' ? '❌ VeryPoor' : res.data.performanceRating == 'Poor' ? '🔴 Poor' : res.data.performanceRating == 'Medium' ? '🟡 Medium' : res.data.performanceRating == 'Good' ? '🟢 Good' : res.data.performanceRating == 'Excellent' ? '✅ Excellent' : ''} - ${res.data.name}
+             📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)}`)
+
+        // Summary Chart Data
+        avatarStatSummary.totalAvatars++
+        avatarStatSummary[res.data.performanceRating]++
+        Object.keys(avatarStatSummary.stats).forEach((key, index, arr) => {
+            if (key == 'uncompressedSize') {
+                avatarStatSummary.stats['uncompressedSize'].values.push(res.data.uncompressedSize)
+            } else if (key == 'fileSize') {
+                avatarStatSummary.stats['fileSize'].values.push(res.data.fileSize)
+            } else if (key == 'boundsLongest') {
+                avatarStatSummary.stats['boundsLongest'].values.push(Math.round(Math.max(...res.data.avatarStats.bounds) * 100) / 100)
+            } else {
+                avatarStatSummary.stats[key].values.push(res.data.avatarStats[key])
+            }
+        })
+
+        if (index == arr.length - 1) {
+            setTimeout(() => {
+                // requestAvatarStatTable(false,0.01)
+                requestAvatarStatTable(false,0.05)
+                // requestAvatarStatTable(false,0.10)
+            }, 2000)
+        }
+
+    })
+}
 
 
 async function worldAutoPreloadQueue(worldList = []) {
@@ -434,7 +507,7 @@ async function worldAutoPreloadQueue(worldList = []) {
         await joinWorld(worldList[wrd])
         if (wrd == worldList.length - 1) {
             console.log(`${loglv().hey}${selflog} [Auto World Preload] Finished, can close VRC if want.`)
-            oscChatBoxV2(`Automatic Preload has finished \v Can close VRC if want.`, 30)
+            oscChatBoxV2(`Automatic Preload has finished \v Can close VRC if want.`, 30_000)
             setUserStatus('')
         }
     }
@@ -1225,9 +1298,9 @@ logEmitter.on('propNameRequest', async (propID, vrcpropcount) => {
     }
 })
 const { table } = require('table');
-function requestAvatarStatTable(writeToFile = false) {
+function requestAvatarStatTable(writeToFile = false,trAvgPercent=0.05) {
     return new Promise((resolve, reject) => {
-        var avatarStatSummaryTable = [['Components - ' + avatarStatSummary.totalAvatars + ' Avatars', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Avg', 'Total']]
+        var avatarStatSummaryTable = [['Components - ' + avatarStatSummary.totalAvatars + ' Avatars', 'Min', 'Q1', 'Median', 'Q3', 'Max', trAvgPercent*100+'% Tr.Avg', 'Total']]
         Object.keys(avatarStatSummary.stats).forEach(async (key, index, arr) => {
             if (key == 'fileSize') {
                 var sort = avatarStatSummary.stats['fileSize'].values.sort((a, b) => { return a - b })
@@ -1235,12 +1308,13 @@ function requestAvatarStatTable(writeToFile = false) {
                 var vQ1 = await formatBytes(sort[Math.floor((sort.length - 1) * 0.25)])
                 var vMedT = sort.length % 2 === 0 ? (sort[sort.length / 2] + sort[(sort.length / 2) - 1]) / 2 : sort[Math.floor(sort.length / 2)]
                 var vMed = await formatBytes(vMedT)
-                var vAvg = await formatBytes(avatarStatSummary.stats['fileSize'].sum / avatarStatSummary.totalAvatars)
+                var vTrAvgT = sort.slice(Math.floor(sort.length * trAvgPercent), Math.floor(sort.length * -trAvgPercent))
+                var vTrAvg = await formatBytes(mathSumValues(vTrAvgT) / vTrAvgT.length)
                 var vQ3 = await formatBytes(sort[Math.floor((sort.length - 1) * 0.75)])
                 var vMax = await formatBytes(Math.max(...avatarStatSummary.stats['fileSize'].values))
-                var vSum = await formatBytes(avatarStatSummary.stats['fileSize'].sum)
+                var vSum = await formatBytes(mathSumValues(avatarStatSummary.stats['fileSize'].values))
 
-                avatarStatSummaryTable.push(['Download Size', vMin, vQ1, vMed, vQ3, vMax, vAvg, vSum])
+                avatarStatSummaryTable.push([avatarStatSummary.stats['fileSize'].label, vMin, vQ1, vMed, vQ3, vMax, vTrAvg, vSum])
 
             } else if (key == 'uncompressedSize') {
                 var sort = avatarStatSummary.stats['uncompressedSize'].values.sort((a, b) => { return a - b })
@@ -1248,12 +1322,13 @@ function requestAvatarStatTable(writeToFile = false) {
                 var vQ1 = await formatBytes(sort[Math.floor((sort.length - 1) * 0.25)])
                 var vMedT = sort.length % 2 === 0 ? (sort[sort.length / 2] + sort[(sort.length / 2) - 1]) / 2 : sort[Math.floor(sort.length / 2)]
                 var vMed = await formatBytes(vMedT)
-                var vAvg = await formatBytes(avatarStatSummary.stats['uncompressedSize'].sum / avatarStatSummary.totalAvatars)
+                var vTrAvgT = sort.slice(Math.floor(sort.length * trAvgPercent), Math.floor(sort.length * -trAvgPercent))
+                var vTrAvg = await formatBytes(mathSumValues(vTrAvgT) / vTrAvgT.length)
                 var vQ3 = await formatBytes(sort[Math.floor((sort.length - 1) * 0.75)])
                 var vMax = await formatBytes(Math.max(...avatarStatSummary.stats['uncompressedSize'].values))
-                var vSum = await formatBytes(avatarStatSummary.stats['uncompressedSize'].sum)
+                var vSum = await formatBytes(mathSumValues(avatarStatSummary.stats['uncompressedSize'].values))
 
-                avatarStatSummaryTable.push(['Uncompressed Size', vMin, vQ1, vMed, vQ3, vMax, vAvg, vSum])
+                avatarStatSummaryTable.push([avatarStatSummary.stats['uncompressedSize'].label, vMin, vQ1, vMed, vQ3, vMax, vTrAvg, vSum])
 
             } else if (key == 'totalTextureUsage') {
                 var sort = avatarStatSummary.stats['totalTextureUsage'].values.sort((a, b) => { return a - b })
@@ -1261,12 +1336,13 @@ function requestAvatarStatTable(writeToFile = false) {
                 var vQ1 = await formatBytes(sort[Math.floor((sort.length - 1) * 0.25)])
                 var vMedT = sort.length % 2 === 0 ? (sort[sort.length / 2] + sort[(sort.length / 2) - 1]) / 2 : sort[Math.floor(sort.length / 2)]
                 var vMed = await formatBytes(vMedT)
-                var vAvg = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].sum / avatarStatSummary.totalAvatars)
+                var vTrAvgT = sort.slice(Math.floor(sort.length * trAvgPercent), Math.floor(sort.length * -trAvgPercent))
+                var vTrAvg = await formatBytes(mathSumValues(vTrAvgT) / vTrAvgT.length)
                 var vQ3 = await formatBytes(sort[Math.floor((sort.length - 1) * 0.75)])
                 var vMax = await formatBytes(Math.max(...avatarStatSummary.stats['totalTextureUsage'].values))
-                var vSum = await formatBytes(avatarStatSummary.stats['totalTextureUsage'].sum)
+                var vSum = await formatBytes(mathSumValues(avatarStatSummary.stats['totalTextureUsage'].values))
 
-                avatarStatSummaryTable.push(['Texture Memory', vMin, vQ1, vMed, vQ3, vMax, vAvg, vSum])
+                avatarStatSummaryTable.push([avatarStatSummary.stats['totalTextureUsage'].label, vMin, vQ1, vMed, vQ3, vMax, vTrAvg, vSum])
 
             } else {
                 var sort = avatarStatSummary.stats[key].values.sort((a, b) => { return a - b })
@@ -1277,16 +1353,18 @@ function requestAvatarStatTable(writeToFile = false) {
                 var vAvg = avatarStatSummary.stats[key].sum / avatarStatSummary.totalAvatars
                 var vMax = Math.max(...avatarStatSummary.stats[key].values)
                 var vQ3 = sort[Math.floor((sort.length - 1) * 0.75)]
+                var vTrAvgT = sort.slice(Math.floor(sort.length * trAvgPercent), Math.floor(sort.length * -trAvgPercent))
+                var vTrAvg = mathSumValues(vTrAvgT) / vTrAvgT.length
 
                 if (key == 'boundsLongest') {
                     avatarStatSummaryTable.push([
-                        "Bounds (Longest)",
+                        avatarStatSummary.stats[key].label,
                         (Math.ceil(vMin * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
                         (Math.ceil(vQ1 * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
                         (Math.ceil(vMed * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
                         (Math.ceil(vQ3 * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
                         (Math.ceil(vMax * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                        (Math.ceil(vAvg * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                        (Math.ceil(vTrAvg * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
                         ''
                     ])
                 } else {
@@ -1297,7 +1375,7 @@ function requestAvatarStatTable(writeToFile = false) {
                         Math.ceil(vMed).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
                         Math.ceil(vQ3).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
                         Math.ceil(vMax).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                        Math.ceil(vAvg).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                        Math.ceil(vTrAvg).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
                         ''
                     ])
                 }
@@ -1305,52 +1383,60 @@ function requestAvatarStatTable(writeToFile = false) {
         })
         setTimeout(() => {
             if (avatarStatSummary.totalAvatars >= 4) {
+                `    Excellent: ${avatarStatSummary.Excellent}\n         Good: ${avatarStatSummary.Good}\n       Medium: ${avatarStatSummary.Medium}\n         Poor: ${avatarStatSummary.Poor}\n     VeryPoor: ${avatarStatSummary.VeryPoor}`
                 var tableOptions = { 'drawHorizontalLine': (lineIndex, rowCount) => { return lineIndex === 0 || lineIndex === 1 || lineIndex === 29 || lineIndex === rowCount } }
-                console.log('=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + '\n--Avatar Security Checks used--' + avatarStatSummary.checkedFileIDs.map((v) => { return '\n' + v }))
+                console.log('=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent: ${avatarStatSummary.Excellent}\n         Good: ${avatarStatSummary.Good}\n       Medium: ${avatarStatSummary.Medium}\n         Poor: ${avatarStatSummary.Poor}\n     VeryPoor: ${avatarStatSummary.VeryPoor}`)
                 if (writeToFile == true) {
-                    fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + '.txt', '=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + '\n--Avatar Security Checks used--' + avatarStatSummary.checkedFileIDs.map((v) => { return '\n' + v }), 'utf8', (err) => { if (err) { console.error(err) } })
+                    fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + '.txt', '=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent: ${avatarStatSummary.Excellent}\n         Good: ${avatarStatSummary.Good}\n       Medium: ${avatarStatSummary.Medium}\n         Poor: ${avatarStatSummary.Poor}\n     VeryPoor: ${avatarStatSummary.VeryPoor}\n` + '\n--Avatar Security Checks used--' + avatarStatSummary.checkedFileIDs.map((v) => { return '\n' + v }), 'utf8', (err) => { if (err) { console.error(err) } })
+
+                    avatarStatSummary = {
+                        "totalAvatars": 0,
+                        "checkedFileIDs": [],
+                        "Excellent": 0,
+                        "Good": 0,
+                        "Medium": 0,
+                        "Poor": 0,
+                        "VeryPoor": 0,
+                        "stats": {
+                            "totalPolygons": { "label": "Polygons", "values": [] },
+                            "boundsLongest": { "label": "Bounds (Longest Edge)", "values": [] },
+                            "skinnedMeshCount": { "label": "Skinned Meshes", "values": [] },
+                            "meshCount": { "label": "Basic Meshes", "values": [] },
+                            "materialSlotsUsed": { "label": "Material Slots", "values": [] },
+                            "materialCount": { "label": "Material Count", "values": [] },
+                            "physBoneColliderCount": { "label": "PhysBone Colliders", "values": [] },
+                            "physBoneCollisionCheckCount": { "label": "PhysBone Collision Checks", "values": [] },
+                            "physBoneComponentCount": { "label": "PhysBone Components", "values": [] },
+                            "physBoneTransformCount": { "label": "PhysBone Transforms", "values": [] },
+                            "contactCount": { "label": "Contacts", "values": [] },
+                            "constraintCount": { "label": "Constraint Count", "values": [] },
+                            "constraintDepth": { "label": "Constraint Depth", "values": [] },
+                            "animatorCount": { "label": "Animators", "values": [] },
+                            "boneCount": { "label": "Bones", "values": [] },
+                            "lightCount": { "label": "Lights", "values": [] },
+                            "particleSystemCount": { "label": "Particle Systems", "values": [] },
+                            "totalMaxParticles": { "label": "Max Particles", "values": [] },
+                            "meshParticleMaxPolygons": { "label": "Particle Max Polygons", "values": [] },
+                            "trailRendererCount": { "label": "Trail Renderers", "values": [] },
+                            "lineRendererCount": { "label": "Line Renderers", "values": [] },
+                            "clothCount": { "label": "Cloth Count", "values": [] },
+                            "totalClothVertices": { "label": "Cloth Vertices", "values": [] },
+                            "physicsColliders": { "label": "Unity Colliders", "values": [] },
+                            "physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
+                            "audioSourceCount": { "label": "AudioSources", "values": [] },
+                            "blendShapeCount": { "label": "BlendShapes", "values": [] },
+                            "cameraCount": { "label": "Cameras", "values": [] },
+                            "totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
+                            "fileSize": { "label": "Download Size", "values": [] },
+                            "uncompressedSize": { "label": "Uncompressed Size (RAM)", "values": [] }
+                        }
+                    }
                 }
             }
             resolve(true)
             // Reset internal stats back to 0
 
-            avatarStatSummary = {
-                "totalAvatars": 0,
-                "checkedFileIDs": [],
-                "stats": {
-                    "totalPolygons": { "label": "Polygons", "values": [], "sum": 0 },
-                    "boundsLongest": { "label": "Bounds (Longest)", "values": [], "sum": 0 },
-                    "skinnedMeshCount": { "label": "Skinned Meshes", "values": [], "sum": 0 },
-                    "meshCount": { "label": "Basic Meshes", "values": [], "sum": 0 },
-                    "materialSlotsUsed": { "label": "Material Slots", "values": [], "sum": 0 },
-                    "materialCount": { "label": "Material Count", "values": [], "sum": 0 },
-                    "physBoneColliderCount": { "label": "PhysBone Colliders", "values": [], "sum": 0 },
-                    "physBoneCollisionCheckCount": { "label": "PhysBone Collision Checks", "values": [], "sum": 0 },
-                    "physBoneComponentCount": { "label": "PhysBone Components", "values": [], "sum": 0 },
-                    "physBoneTransformCount": { "label": "PhysBone Transforms", "values": [], "sum": 0 },
-                    "contactCount": { "label": "Contacts", "values": [], "sum": 0 },
-                    "constraintCount": { "label": "Constraint Count", "values": [], "sum": 0 },
-                    "constraintDepth": { "label": "Constraint Depth", "values": [], "sum": 0 },
-                    "animatorCount": { "label": "Animators", "values": [], "sum": 0 },
-                    "boneCount": { "label": "Bones", "values": [], "sum": 0 },
-                    "lightCount": { "label": "Lights", "values": [], "sum": 0 },
-                    "particleSystemCount": { "label": "Particle Systems", "values": [], "sum": 0 },
-                    "totalMaxParticles": { "label": "Max Particles", "values": [], "sum": 0 },
-                    "meshParticleMaxPolygons": { "label": "Particle Max Polygons", "values": [], "sum": 0 },
-                    "trailRendererCount": { "label": "Trail Renderers", "values": [], "sum": 0 },
-                    "lineRendererCount": { "label": "Line Renderers", "values": [], "sum": 0 },
-                    "clothCount": { "label": "Cloth Count", "values": [], "sum": 0 },
-                    "totalClothVertices": { "label": "Cloth Vertices", "values": [], "sum": 0 },
-                    "physicsColliders": { "label": "Unity Colliders", "values": [], "sum": 0 },
-                    "physicsRigidbodies": { "label": "Rigidbodies", "values": [], "sum": 0 },
-                    "audioSourceCount": { "label": "AudioSources", "values": [], "sum": 0 },
-                    "blendShapeCount": { "label": "BlendShapes", "values": [], "sum": 0 },
-                    "cameraCount": { "label": "Cameras", "values": [], "sum": 0 },
-                    "totalTextureUsage": { "label": "Texture Memory", "values": [], "sum": 0 },
-                    "fileSize": { "label": "Download Size", "values": [], "sum": 0 },
-                    "uncompressedSize": { "label": "Uncompressed Size", "values": [], "sum": 0 }
-                }
-            }
+
 
         }, 2000)
     })
