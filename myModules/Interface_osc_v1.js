@@ -34,6 +34,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 -	osc out [true/false]
 -	osc say ["Message"]
 -	osc morse ["Message"]
+-	osc avatars
 -	osc chat [tall/fat]
 -	osc kat [Clear: True/False | Color: 0-7 | "Message"]
 -	osc db [ID] [DATA]
@@ -43,6 +44,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	}
 	if (cmd == 'osc' && args[0] == 'in') { logOscIn = JSON.parse(args[1]) }
 	if (cmd == 'osc' && args[0] == 'out') { logOscOut = JSON.parse(args[1]) }
+	if (cmd == 'osc' && args[0] == 'avatars') { avatarRoulette() }
 	if (cmd == 'osc' && args[0] == 'db') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2])) }
 	if (cmd == 'osc' && args[0] == 'db2') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2]), parseFloat(args[3])) }
 	if (cmd == 'osc' && args[0] == 'db3') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2]), parseFloat(args[3]), parseFloat(args[4])) }
@@ -238,7 +240,7 @@ async function OSCDataBurst(in_addr, in_dataA, isLoop = false) {
 	9	MCounter: lobby digits, position 3
 	10	MCounter: lobby digits, position 4
 	11	MCounter: lobby progress bar
-	12	ToN-Wait-Time: 0 - 4:15 Float
+	12	
 	13	MCounter: display mode indicator
 	*/
 	if (isLoop == false) { dataBurst.push({ 'addr': in_addr, 'dataA': in_dataA }) }
@@ -400,6 +402,75 @@ udpPort.on("message", function (msg, rinfo) {
 	if (logOscIn == true) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
 	// if (msg['address'].includes('/usercamera/')) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
 });
+
+async function avatarRoulette() {
+	const ownAvatars = [
+		'avtr_75c670ca-4614-4db2-a687-e27994acb0ac',
+		'avtr_0c97e918-23d0-4934-b364-5fd28fb10236',
+		'avtr_5c866609-f49a-4867-ac74-5dab03d5d713',
+		'avtr_0e5ee812-23bb-49be-bf24-ee26d3cce0c3',
+		'avtr_4a841638-f1f0-48fa-bf13-d8dc70733c21',
+		'avtr_01c72797-2db5-477c-a889-f562e46acec9',
+		'avtr_dc40b8ed-06fd-4cf4-a68d-52416789e420',
+		'avtr_6b25124e-e141-4df4-ad27-22766608e5dc',
+		'avtr_54ad2ca6-ca8b-4a8d-a3d6-e98ecbee6de5',
+		'avtr_4facb6a2-46ba-4f51-8913-3115c1576b1c',
+		'avtr_5bd23d6b-1256-4d3f-91d4-f444d30d69f7',
+		'avtr_305ddd5d-d1f9-4adb-a025-50c2f1a9d219',
+		'avtr_445d0b78-9afb-4dbe-8e21-3f67c4df0e2f',
+		'avtr_4255f168-2305-45c8-9565-5e71729dc617',
+		'avtr_212019dd-1a92-4cad-8fa3-315fc2171f55',
+		'avtr_e7606537-1ce4-4b85-bb02-e7cbc65e333b',
+		'avtr_ba71f860-9071-4650-99ac-b3807892fe9d',
+		'avtr_fd31e468-4dd9-4505-b3c0-cea6c9ad253e',
+		'avtr_6865ad14-dfcb-4285-8e3d-1674ed655722',
+		'avtr_ed16320a-3446-472d-93c8-04fa275a057f',
+		'avtr_61dd6b6f-a3ba-4bce-be2d-6480fc97350e',
+		'avtr_56e57e73-d876-4af1-990f-991dcba28379',
+		'avtr_9df39891-37ea-4ce1-8559-4cb1f0a8a560',
+		'avtr_5415d0a3-c403-43e8-9342-080e372ac971',
+		'avtr_6549f8a1-0c3a-4e91-9531-1dd774fd5826',
+		'avtr_50d47178-7487-46c0-908e-eeaa2e1c1fe6',
+		'avtr_187f519e-38d4-4b54-b794-5f9cd7001996',
+		'avtr_422d1875-250b-4e00-8530-0a196325165b',
+		'avtr_ef5c0911-f5cd-4606-8ea5-0bb4db14b6b3',
+		'avtr_ead22119-58dd-4a83-b091-e9f7cd9c95c1',
+		'avtr_0dffad79-784f-4b32-8a09-f56f8358cd1c',
+		'avtr_2ebf3bc0-a842-45b9-8ec0-425cb4e1a215',
+		'avtr_c61e0706-a19c-49ae-be91-95c991ec43b8',
+		'avtr_d31aee66-3407-41e5-8738-daa204335b77',
+		'avtr_2bc7b54b-a107-4170-b412-381ce61db870',
+		'avtr_404ca82d-61ff-406b-bdc6-44d6eb9adffa',
+		'avtr_7e026057-c0a9-4299-ae2b-c7d5dee9775d',
+		'avtr_0d24d6f3-54a0-4b43-9a18-1d05037ad5e8',
+		'avtr_78736900-6285-4689-8f26-b6535a048615',
+		'avtr_aef6b6d9-48b6-4aab-9586-4b9caa2c1a1d',
+		'avtr_02bc3200-24a4-49cd-89a2-44d55605c45f',
+		'avtr_2425b435-d0c6-4022-a0cf-a48ccd5c8191',
+		'avtr_58061b7b-4d26-4f22-9b04-d2b60c14ec70',
+		'avtr_3969b9fe-b30f-4a10-a522-de48998484cd',
+		'avtr_877a7414-59f9-49b7-9f75-f86e6a549b61',
+		'avtr_a3fab8b7-3d41-4a14-bc59-61ae3207473c',
+		'avtr_d7d9721b-2da1-4d40-8248-171af0c8308d',
+		'avtr_3edd8feb-c6f9-456d-8a18-bbb83bde8f95',
+		'avtr_74d986cf-c457-4410-8363-8636a36dd47f',
+		'avtr_c0f912ba-e1f0-4292-89f6-ffcbe516473b',
+		'avtr_da5ad028-1a5e-4e83-8520-7faea9dfb994',
+		'avtr_a10c5aa8-19ce-46b8-b276-c5c6c3a3d98e',
+		'avtr_198cdc74-b025-4442-8067-b0fd7e8208db',
+		'avtr_42ba17ef-6f50-4236-8b24-ef37d6e99c9d',
+		'avtr_2f026532-8efa-4f3c-b15b-21f64c69365a',
+		'avtr_a73c2dde-854b-42e6-b395-54c0599ebef5',
+		'avtr_a8bb0827-5f00-4d88-b9d9-37e6973e4bc7',
+		'avtr_bba034cb-05f7-4159-9ba3-fd5bd08f5526'
+	]
+
+	ownAvatars.forEach((avtr,index)=>{
+		setTimeout(()=>{
+			oscSend('/avatar/change',avtr)
+		},index*120_000)
+	})
+}
 
 // function lerp(start,end,factor){ return start + (end - start) * factor; }
 // // var transformExample = { x: 0, y: 0, z: 0, pitch: 0, yaw: 0 }
