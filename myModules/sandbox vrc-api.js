@@ -248,7 +248,7 @@ async function fileCheck(fileid, fileversion) {
     let res = await vrchat.getFile({ 'path': { 'fileId': fileid, 'versionId': fileversion } }); console.log(res)
     let res2 = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } }); console.log(res2)
 }
-// fileCheck('file_abe45c22-5700-487f-bdf2-68ee4baa63fc', 1)
+fileCheck('file_577fb261-e518-4b5f-955e-f214be083dad',28)
 
 
 // getAvatarThumbnail()

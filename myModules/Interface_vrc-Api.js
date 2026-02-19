@@ -338,7 +338,10 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         console.log(`${loglv().log}${selflog} [AvatarAnalysis] Fetching: ${fileid} - ver ${fileversion}`)
 
         res = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } })
-        if (res.data.avatarStats || res.data.performanceRating) {
+        if (res.data == undefined ){
+            console.log(`${loglv().warn}${selflog} [AvatarAnalysis] ErrorFile: ${fileid} - ver ${fileversion}`)
+            return
+        }else if (res.data.avatarStats && res.data.performanceRating) {
             let getName = await vrchat.getFile({ 'path': { 'fileId': fileid } })
             res.data["name"] = getName.data.name.slice(9).split(' - Asset bundle - ')[0]
             fs.writeFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', JSON.stringify(res.data), 'utf8', (err) => { if (err) { console.log(err) } })
@@ -461,6 +464,8 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
 })
 
 async function scanAllAvatarStats() {
+
+    G_lastlocation = `All Avatar Stats in Cache`
 
     var fsrddir = await fsp.readdir('./datasets/avatarStatCache/', 'utf8')
     fsrddir.forEach(async (file, index, arr) => {
