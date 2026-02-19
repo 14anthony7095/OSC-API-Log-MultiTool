@@ -1431,7 +1431,7 @@ async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, 
             if (avatarStatSummary.totalAvatars >= 4) {
                 console.log('=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent: ${avatarStatSummary.Excellent}\n         Good: ${avatarStatSummary.Good}\n       Medium: ${avatarStatSummary.Medium}\n         Poor: ${avatarStatSummary.Poor}\n     VeryPoor: ${avatarStatSummary.VeryPoor}`)
                 if (writeToFile == true) {
-                    fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + '.txt', '=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent: ${avatarStatSummary.Excellent}\n         Good: ${avatarStatSummary.Good}\n       Medium: ${avatarStatSummary.Medium}\n         Poor: ${avatarStatSummary.Poor}\n     VeryPoor: ${avatarStatSummary.VeryPoor}\n` + '\n--Avatar Security Checks used--' + avatarStatSummary.checkedFileIDs.map((v) => { return '\n' + v }), 'utf8', (err) => {
+                    fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() +' '+ G_lastlocation+ '.txt', '=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent: ${avatarStatSummary.Excellent}\n         Good: ${avatarStatSummary.Good}\n       Medium: ${avatarStatSummary.Medium}\n         Poor: ${avatarStatSummary.Poor}\n     VeryPoor: ${avatarStatSummary.VeryPoor}\n` + '\n--Avatar Security Checks used--' + avatarStatSummary.checkedFileIDs.map((v) => { return '\n' + v }), 'utf8', (err) => {
                         if (err) { console.error(err) }
                     })
                 }
@@ -1486,14 +1486,14 @@ async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, 
     })
 }
 var G_lastlocation = ''
-logEmitter.on('headingToWorld', async (I_worldID, location) => {
+logEmitter.on('headingToWorld', async (I_worldID,I_groupID,I_instanceType) => {
     // Get world info for OBS Stream
     let res = await vrchat.getWorld({ 'path': { 'worldId': I_worldID } })
     apiEmitter.emit('fetchedDistThumbnail', res.data.imageUrl, res.data.name.slice(0, 50), res.data.authorName.slice(0, 50), I_worldID)
 
     // Save avatar stats for the instance
     await requestAvatarStatTable(true, 0.05, true)
-    G_lastlocation != location ? G_lastlocation = location : ''
+    G_lastlocation != `${I_instanceType} - ${I_worldID}${I_groupID != '' ? ' - '+I_groupID:''}` ? G_lastlocation = `${I_instanceType} - ${I_worldID}${I_groupID != '' ? ' - '+I_groupID:''}` : ''
 })
 logEmitter.on('gameclose', () => {
     // Save avatar stats for the instance
