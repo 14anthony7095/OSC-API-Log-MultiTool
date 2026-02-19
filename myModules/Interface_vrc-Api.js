@@ -121,7 +121,7 @@ cmdEmitter.on('cmd', (cmd, args) => {
     if (cmd == 'years' && args[0] == 'close') { switchYearGroupsClosed() }
     if (cmd == 'years' && args[0] == 'open') { switchYearGroupsReOpen() }
     if (cmd == 'preload') { worldAutoPreloadQueue(args[0].split(',')) }
-    if (cmd == 'avatars') { requestAvatarStatTable() }
+    if (cmd == 'avatars') { requestAvatarStatTable(false, 0.05, false) }
     if (cmd == 'allavatars') { scanAllAvatarStats() }
     // if (cmd == 'explore' && args[0] == 'start') { getOnlineWorlds('worlds1', false) }
 })
@@ -277,7 +277,7 @@ const avatarStatWeights = {
     "blendShapeCount": 10
 }
 
-const avatarStatSummaryDefault = {
+var avatarStatSummary = {
     "totalAvatars": 0,
     "checkedFileIDs": [],
     "Excellent": 0,
@@ -319,7 +319,6 @@ const avatarStatSummaryDefault = {
         "uncompressedSize": { "label": "Uncompressed Size (RAM)", "values": [] }
     }
 }
-var avatarStatSummary = avatarStatSummaryDefault
 
 
 // const { distance, closestMatch } = require("closest-match");
@@ -494,12 +493,51 @@ async function scanAllAvatarStats() {
 
         if (index == arr.length - 1) {
             setTimeout(() => {
-                // requestAvatarStatTable(false,0.01)
-                requestAvatarStatTable(false, 0.05)
-                // requestAvatarStatTable(false,0.10)
+                requestAvatarStatTable(false, 0.05, true)
             }, 2000)
             setTimeout(() => {
-                avatarStatSummary = avatarStatSummaryDefault
+                avatarStatSummary = {
+                    "totalAvatars": 0,
+                    "checkedFileIDs": [],
+                    "Excellent": 0,
+                    "Good": 0,
+                    "Medium": 0,
+                    "Poor": 0,
+                    "VeryPoor": 0,
+                    "stats": {
+                        "totalPolygons": { "label": "Polygons", "values": [] },
+                        "boundsLongest": { "label": "Bounds (Longest Edge)", "values": [] },
+                        "skinnedMeshCount": { "label": "Skinned Meshes", "values": [] },
+                        "meshCount": { "label": "Basic Meshes", "values": [] },
+                        "materialSlotsUsed": { "label": "Material Slots", "values": [] },
+                        "materialCount": { "label": "Material Count", "values": [] },
+                        "physBoneColliderCount": { "label": "PhysBone Colliders", "values": [] },
+                        "physBoneCollisionCheckCount": { "label": "PhysBone Collision Checks", "values": [] },
+                        "physBoneComponentCount": { "label": "PhysBone Components", "values": [] },
+                        "physBoneTransformCount": { "label": "PhysBone Transforms", "values": [] },
+                        "contactCount": { "label": "Contacts", "values": [] },
+                        "constraintCount": { "label": "Constraint Count", "values": [] },
+                        "constraintDepth": { "label": "Constraint Depth", "values": [] },
+                        "animatorCount": { "label": "Animators", "values": [] },
+                        "boneCount": { "label": "Bones", "values": [] },
+                        "lightCount": { "label": "Lights", "values": [] },
+                        "particleSystemCount": { "label": "Particle Systems", "values": [] },
+                        "totalMaxParticles": { "label": "Max Particles", "values": [] },
+                        "meshParticleMaxPolygons": { "label": "Particle Max Polygons", "values": [] },
+                        "trailRendererCount": { "label": "Trail Renderers", "values": [] },
+                        "lineRendererCount": { "label": "Line Renderers", "values": [] },
+                        "clothCount": { "label": "Cloth Count", "values": [] },
+                        "totalClothVertices": { "label": "Cloth Vertices", "values": [] },
+                        "physicsColliders": { "label": "Unity Colliders", "values": [] },
+                        "physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
+                        "audioSourceCount": { "label": "AudioSources", "values": [] },
+                        "blendShapeCount": { "label": "BlendShapes", "values": [] },
+                        "cameraCount": { "label": "Cameras", "values": [] },
+                        "totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
+                        "fileSize": { "label": "Download Size", "values": [] },
+                        "uncompressedSize": { "label": "Uncompressed Size (RAM)", "values": [] }
+                    }
+                }
             }, 10_000)
         }
 
@@ -1305,7 +1343,7 @@ logEmitter.on('propNameRequest', async (propID, vrcpropcount) => {
     }
 })
 const { table } = require('table');
-function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05) {
+async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, resetData = false) {
     return new Promise((resolve, reject) => {
         var avatarStatSummaryTable = [['Components - ' + avatarStatSummary.totalAvatars + ' Avatars', 'Min', 'Q1', 'Median', 'Q3', 'Max', trAvgPercent * 100 + '% Tr.Avg', 'Total']]
         Object.keys(avatarStatSummary.stats).forEach(async (key, index, arr) => {
@@ -1389,19 +1427,61 @@ function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05) {
             }
         })
         setTimeout(() => {
+            var tableOptions = { 'drawHorizontalLine': (lineIndex, rowCount) => { return lineIndex === 0 || lineIndex === 1 || lineIndex === 29 || lineIndex === rowCount } }
             if (avatarStatSummary.totalAvatars >= 4) {
-                `    Excellent: ${avatarStatSummary.Excellent}\n         Good: ${avatarStatSummary.Good}\n       Medium: ${avatarStatSummary.Medium}\n         Poor: ${avatarStatSummary.Poor}\n     VeryPoor: ${avatarStatSummary.VeryPoor}`
-                var tableOptions = { 'drawHorizontalLine': (lineIndex, rowCount) => { return lineIndex === 0 || lineIndex === 1 || lineIndex === 29 || lineIndex === rowCount } }
                 console.log('=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent: ${avatarStatSummary.Excellent}\n         Good: ${avatarStatSummary.Good}\n       Medium: ${avatarStatSummary.Medium}\n         Poor: ${avatarStatSummary.Poor}\n     VeryPoor: ${avatarStatSummary.VeryPoor}`)
                 if (writeToFile == true) {
-                    fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + '.txt', '=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent: ${avatarStatSummary.Excellent}\n         Good: ${avatarStatSummary.Good}\n       Medium: ${avatarStatSummary.Medium}\n         Poor: ${avatarStatSummary.Poor}\n     VeryPoor: ${avatarStatSummary.VeryPoor}\n` + '\n--Avatar Security Checks used--' + avatarStatSummary.checkedFileIDs.map((v) => { return '\n' + v }), 'utf8', (err) => { if (err) { console.error(err) } })
-
-                    avatarStatSummary = avatarStatSummaryDefault
+                    fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + '.txt', '=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent: ${avatarStatSummary.Excellent}\n         Good: ${avatarStatSummary.Good}\n       Medium: ${avatarStatSummary.Medium}\n         Poor: ${avatarStatSummary.Poor}\n     VeryPoor: ${avatarStatSummary.VeryPoor}\n` + '\n--Avatar Security Checks used--' + avatarStatSummary.checkedFileIDs.map((v) => { return '\n' + v }), 'utf8', (err) => {
+                        if (err) { console.error(err) }
+                    })
                 }
             }
-            resolve(true)
-            // Reset internal stats back to 0
+            if (resetData == true) {
+                avatarStatSummary = {
+                    "totalAvatars": 0,
+                    "checkedFileIDs": [],
+                    "Excellent": 0,
+                    "Good": 0,
+                    "Medium": 0,
+                    "Poor": 0,
+                    "VeryPoor": 0,
+                    "stats": {
+                        "totalPolygons": { "label": "Polygons", "values": [] },
+                        "boundsLongest": { "label": "Bounds (Longest Edge)", "values": [] },
+                        "skinnedMeshCount": { "label": "Skinned Meshes", "values": [] },
+                        "meshCount": { "label": "Basic Meshes", "values": [] },
+                        "materialSlotsUsed": { "label": "Material Slots", "values": [] },
+                        "materialCount": { "label": "Material Count", "values": [] },
+                        "physBoneColliderCount": { "label": "PhysBone Colliders", "values": [] },
+                        "physBoneCollisionCheckCount": { "label": "PhysBone Collision Checks", "values": [] },
+                        "physBoneComponentCount": { "label": "PhysBone Components", "values": [] },
+                        "physBoneTransformCount": { "label": "PhysBone Transforms", "values": [] },
+                        "contactCount": { "label": "Contacts", "values": [] },
+                        "constraintCount": { "label": "Constraint Count", "values": [] },
+                        "constraintDepth": { "label": "Constraint Depth", "values": [] },
+                        "animatorCount": { "label": "Animators", "values": [] },
+                        "boneCount": { "label": "Bones", "values": [] },
+                        "lightCount": { "label": "Lights", "values": [] },
+                        "particleSystemCount": { "label": "Particle Systems", "values": [] },
+                        "totalMaxParticles": { "label": "Max Particles", "values": [] },
+                        "meshParticleMaxPolygons": { "label": "Particle Max Polygons", "values": [] },
+                        "trailRendererCount": { "label": "Trail Renderers", "values": [] },
+                        "lineRendererCount": { "label": "Line Renderers", "values": [] },
+                        "clothCount": { "label": "Cloth Count", "values": [] },
+                        "totalClothVertices": { "label": "Cloth Vertices", "values": [] },
+                        "physicsColliders": { "label": "Unity Colliders", "values": [] },
+                        "physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
+                        "audioSourceCount": { "label": "AudioSources", "values": [] },
+                        "blendShapeCount": { "label": "BlendShapes", "values": [] },
+                        "cameraCount": { "label": "Cameras", "values": [] },
+                        "totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
+                        "fileSize": { "label": "Download Size", "values": [] },
+                        "uncompressedSize": { "label": "Uncompressed Size (RAM)", "values": [] }
+                    }
+                }
 
+            }
+            resolve(true)
         }, 2000)
     })
 }
@@ -1412,12 +1492,12 @@ logEmitter.on('headingToWorld', async (I_worldID, location) => {
     apiEmitter.emit('fetchedDistThumbnail', res.data.imageUrl, res.data.name.slice(0, 50), res.data.authorName.slice(0, 50), I_worldID)
 
     // Save avatar stats for the instance
-    await requestAvatarStatTable(true)
+    await requestAvatarStatTable(true, 0.05, true)
     G_lastlocation != location ? G_lastlocation = location : ''
 })
 logEmitter.on('gameclose', () => {
     // Save avatar stats for the instance
-    requestAvatarStatTable(true)
+    requestAvatarStatTable(true, 0.05, true)
 })
 
 async function switchYearGroupsClosed() {

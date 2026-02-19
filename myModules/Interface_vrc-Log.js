@@ -271,8 +271,6 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 			tonRoundReadyTime = Date.now()
 			let avgStartDisplay = new Date(average(tonAvgStartWait)).toISOString()
 
-			OSCDataBurst(12, parseFloat((parseInt(avgStartDisplay.substring(14, 16)) * 60 + parseInt(avgStartDisplay.substring(17, 19))) / 255))
-
 			tonAvgStartWait.length > 1 ? oscChatBoxV2(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}`,5000,false,true) : oscChatBoxV2(`~Round ready to start`,5000,false,true)
 		}
 		if (line.includes(`Everything recieved, looks good`)) {
@@ -803,7 +801,7 @@ function eventPlayerLeft(logOutputLine) {
 			console.log(`${loglv().log}${selflog} There are now ${membersInInstance.length} / ${playersInInstance.length} group members in the instance. [ ${memberRatio} ]`)
 		} */
 		// logEmitter.emit('playerLeft', playerDisplayName, playerID, playersInInstance)
-
+		
 		if (playerDisplayName == getCurrentAccountInUse().name) {
 			clearTimeout(worldHopTimeout)
 			worldHopTimeout = null
