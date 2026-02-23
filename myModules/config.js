@@ -81,7 +81,7 @@ exports.QuestIP = "192.168.2.140" // Work
 let ttvlevel = 3
 	
 	// Watched channels at start up
-	let ttvchans = ['14anthony7095','roricandydemon','krakkacafe','sunny_bounder','asogaut','elalbavrc']
+	let ttvchans = ['14anthony7095']
 
 	// Monitor twitch chat without Twitch Follower being Active
 	exports.ttvAlwaysRun = true

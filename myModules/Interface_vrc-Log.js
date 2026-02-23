@@ -271,7 +271,7 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 			tonRoundReadyTime = Date.now()
 			let avgStartDisplay = new Date(average(tonAvgStartWait)).toISOString()
 
-			tonAvgStartWait.length > 1 ? oscChatBoxV2(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}`,5000,false,true) : oscChatBoxV2(`~Round ready to start`,5000,false,true)
+			tonAvgStartWait.length > 1 ? oscChatBoxV2(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}`, 5000, false, true) : oscChatBoxV2(`~Round ready to start`, 5000, false, true)
 		}
 		if (line.includes(`Everything recieved, looks good`)) {
 			console.log(`${loglv().log}${selflog} [TON] Round Starting.`)
@@ -285,9 +285,9 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 	if (line.includes(`[PortalManager]`)) {
 		var PortalLog = line.split(`[PortalManager] `)[1]
 		if (PortalLog == 'Received portal destroy event.') {
-			if(cooldownPortalVanish == false){
+			if (cooldownPortalVanish == false) {
 				oscChatBox(`~Portal has vanished`, 5)
-				setTimeout(()=>{ cooldownPortalVanish = true },120_000)
+				setTimeout(() => { cooldownPortalVanish = true }, 120_000)
 			}
 		}
 		console.log(`${loglv().log}${selflog} [PortalManager]: ${PortalLog}`)
@@ -376,19 +376,19 @@ oscEmitter.on('osc', (addr, value) => {
 
 			switch (value) {
 				case 1:
-					oscChatBoxV2('Added world to "Approve" list',2000,false,true,undefined,false);
+					oscChatBoxV2('Added world to "Approve" list', 2000, false, true, undefined, false);
 					wrld_fav["1_Approve"].push(G_worldID);
 					break;
 				case 2:
-					oscChatBoxV2('Added world to "Likes" list',2000,false,true,undefined,false);
+					oscChatBoxV2('Added world to "Likes" list', 2000, false, true, undefined, false);
 					wrld_fav["2_Likes"].push(G_worldID);
 					break;
 				case 3:
-					oscChatBoxV2('Added world to "Love / Show Off" list',2000,false,true,undefined,false);
+					oscChatBoxV2('Added world to "Love / Show Off" list', 2000, false, true, undefined, false);
 					wrld_fav["3_Love_ShowOff"].push(G_worldID);
 					break;
 				case 4:
-					oscChatBoxV2('Added world to "Games & Activity" list',2000,false,true,undefined,false);
+					oscChatBoxV2('Added world to "Games & Activity" list', 2000, false, true, undefined, false);
 					wrld_fav["4_Game_Activity"].push(G_worldID);
 					break;
 				default: break;
@@ -576,10 +576,10 @@ function eventHeadingToWorld(logOutputLine) {
 	G_worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
 	console.log(`${loglv().debug}${selflog} World ID ${G_worldID}`)
 
-	
+
 	// 2026.01.27 14:20:50 Debug      -  [Behaviour] Destination set: wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5:65895~hidden(usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752)~region(use)
-	
-	
+
+
 	if (logOutputLine.includes(`~group(grp_`)) {
 		G_groupID = /grp_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
 		console.log(`${loglv().debug}${selflog} Group ID ${G_groupID}`)
@@ -605,12 +605,14 @@ function eventHeadingToWorld(logOutputLine) {
 		}
 	}
 	G_currentLocation = 'wrld_' + logOutputLine.split('wrld_')[1]
-	logEmitter.emit('headingToWorld', G_worldID,G_groupID,instanceType)
+	logEmitter.emit('headingToWorld', G_worldID, G_groupID, instanceType)
 
 	console.log(`${loglv().debug}${selflog} Instance Type ${instanceType}`)
 }
 
 var worldjointimestamp = 0
+function getWorldJoinTimestamp() { return worldjointimestamp }; exports.getWorldJoinTimestamp = getWorldJoinTimestamp;
+
 function eventJoinWorld() {
 	worldHopTimeout = setTimeout(() => {
 		say.speak(`Been in world for too long. Proceed to next in queue`, 'Microsoft David Desktop', 1.0, (err) => {
@@ -714,7 +716,7 @@ function eventPlayerInitialized(logOutputLine) {
 
 		playerRatio = playersInInstance.length / playerHardLimit
 
-		// if (Date.now() > (worldjointimestamp + 10000)) { queueInstanceDataBurst() }
+		if (Date.now() > (worldjointimestamp + 60000)) { queueInstanceDataBurst() }
 
 		console.log(`${loglv().log}${selflog} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
 
@@ -796,14 +798,14 @@ function eventPlayerLeft(logOutputLine) {
 			memberRatio = membersInInstance.length / playersInInstance.length
 		} */
 
-		// if (Date.now() > (worldjointimestamp + 10000)) { queueInstanceDataBurst() }
+		if (Date.now() > (worldjointimestamp + 60000)) { queueInstanceDataBurst() }
 
 		console.log(`${loglv().log}${selflog} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
 		/* if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
 			console.log(`${loglv().log}${selflog} There are now ${membersInInstance.length} / ${playersInInstance.length} group members in the instance. [ ${memberRatio} ]`)
 		} */
 		// logEmitter.emit('playerLeft', playerDisplayName, playerID, playersInInstance)
-		
+
 		if (playerDisplayName == getCurrentAccountInUse().name) {
 			clearTimeout(worldHopTimeout)
 			worldHopTimeout = null
