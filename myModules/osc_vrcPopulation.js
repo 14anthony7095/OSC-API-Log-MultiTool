@@ -7,7 +7,7 @@
 */
 //	--	Libraries	--
 var { loglv, playerCounter, graphTimeRangeMinutes } = require('./config.js');
-const { oscSend, oscEmitter, OSCDataBurst } = require('./Interface_osc_v1.js');
+const { oscSend, oscEmitter, OSCDataBurst, OSCDataBurstState } = require('./Interface_osc_v1.js');
 const { getVisitsCount, apiEmitter } = require('./Interface_vrc-Api.js');
 const { logEmitter } = require('./Interface_vrc-Log.js');
 
@@ -142,18 +142,15 @@ Int Double DATA handling
 	OSCDataBurst(9, parseFloat(playerRatio))
 	*/
 
-	let digitSeg = playerCount.toString().padStart(6, '0')
-	let digitLen = playerCount.toString().length
-	digitLen == 6 ? OSCDataBurst(1, parseInt(digitSeg[0]) / 10) : OSCDataBurst(1, parseFloat(1))
-	digitLen >= 5 ? OSCDataBurst(2, parseInt(digitSeg[1]) / 10) : OSCDataBurst(2, parseFloat(1))
-	digitLen >= 4 ? OSCDataBurst(3, parseInt(digitSeg[2]) / 10) : OSCDataBurst(3, parseFloat(1))
-	digitLen >= 3 ? OSCDataBurst(4, parseInt(digitSeg[3]) / 10) : OSCDataBurst(4, parseFloat(1))
-	digitLen >= 2 ? OSCDataBurst(5, parseInt(digitSeg[4]) / 10) : OSCDataBurst(5, parseFloat(1))
-	digitLen >= 1 ? OSCDataBurst(6, parseInt(digitSeg[5]) / 10) : OSCDataBurst(6, parseFloat(1))
-
-
-
-
-
+	if (OSCDataBurstState != 'overloaded') {
+		let digitSeg = playerCount.toString().padStart(6, '0')
+		let digitLen = playerCount.toString().length
+		digitLen == 6 ? OSCDataBurst(1, parseInt(digitSeg[0]) / 10) : OSCDataBurst(1, parseFloat(1))
+		digitLen >= 5 ? OSCDataBurst(2, parseInt(digitSeg[1]) / 10) : OSCDataBurst(2, parseFloat(1))
+		digitLen >= 4 ? OSCDataBurst(3, parseInt(digitSeg[2]) / 10) : OSCDataBurst(3, parseFloat(1))
+		digitLen >= 3 ? OSCDataBurst(4, parseInt(digitSeg[3]) / 10) : OSCDataBurst(4, parseFloat(1))
+		digitLen >= 2 ? OSCDataBurst(5, parseInt(digitSeg[4]) / 10) : OSCDataBurst(5, parseFloat(1))
+		digitLen >= 1 ? OSCDataBurst(6, parseInt(digitSeg[5]) / 10) : OSCDataBurst(6, parseFloat(1))
+	}
 
 }

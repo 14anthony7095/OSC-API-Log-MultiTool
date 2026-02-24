@@ -364,87 +364,201 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
     // - Performance Marks-
     let totalavatareval = ``
     var warnbox = ''
-    let boundsLongest = Math.round(Math.max(...res.data.avatarStats.bounds) / avatarStatWeights.boundsLongest)
-    if (boundsLongest >= avatarStatWeights.lowerLimitWeight) {
-        //warnbox += `\vBounds ${Math.max(...res.data.avatarStats.bounds)}m`;
-        totalavatareval += `\n              Bounds:                    ${boundsLongest} EV ${boundsLongest >= avatarStatWeights.higherLimitWeight ? '⚠️🧊' : ''}`
-    }
+    var boundsLongest = Math.round(Math.max(...res.data.avatarStats.bounds) / avatarStatWeights.boundsLongest)
     var animatorCount = Math.round(res.data.avatarStats.animatorCount / avatarStatWeights.animatorCount)
-    if (animatorCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Animator Count:            ${animatorCount} EV ${animatorCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.animatorCount : ''}` }
     var audioSourceCount = Math.round(res.data.avatarStats.audioSourceCount / avatarStatWeights.audioSourceCount)
-    if (audioSourceCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              AudioSource Count:         ${audioSourceCount} EV ${audioSourceCount >= avatarStatWeights.higherLimitWeight ? '⚠️🔊' : ''}` }
     var boneCount = Math.round(res.data.avatarStats.boneCount / avatarStatWeights.boneCount)
-    if (boneCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Bones:                     ${boneCount} EV ${boneCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.boneCount : ''}` }
     var cameraCount = Math.round(res.data.avatarStats.cameraCount / avatarStatWeights.cameraCount)
-    if (cameraCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Camera Count:              ${cameraCount} EV ${cameraCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.cameraCount : ''}` }
     var clothCount = Math.round(res.data.avatarStats.clothCount / avatarStatWeights.clothCount)
-    if (clothCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Cloth Count:               ${clothCount} EV ${clothCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.clothCount : ''}` }
     var constraintCount = Math.round(res.data.avatarStats.constraintCount / avatarStatWeights.constraintCount)
-    if (constraintCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Constraint Count:           ${constraintCount} EV ${constraintCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.constraintCount : ''}` }
     var constraintDepth = Math.round(res.data.avatarStats.constraintDepth / avatarStatWeights.constraintDepth)
-    if (constraintDepth > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Constraint Depth:          ${constraintDepth} EV ${constraintDepth >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.constraintDepth : ''}` }
     var lineRendererCount = Math.round(res.data.avatarStats.lineRendererCount / avatarStatWeights.lineRendererCount)
-    if (lineRendererCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Line Renderer Count:       ${lineRendererCount} EV ${lineRendererCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.lineRendererCount : ''}` }
     var materialCount = Math.round(res.data.avatarStats.materialCount / avatarStatWeights.materialCount)
-    if (materialCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Material Count:            ${materialCount} EV ${materialCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.materialCount : ''}` }
     var meshParticleMaxPolygons = Math.round(res.data.avatarStats.meshParticleMaxPolygons / avatarStatWeights.meshParticleMaxPolygons)
-    if (meshParticleMaxPolygons > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Mesh Particle Max Polygons:${meshParticleMaxPolygons} EV ${meshParticleMaxPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.meshParticleMaxPolygons : ''}` }
     var particleSystemCount = Math.round(res.data.avatarStats.particleSystemCount / avatarStatWeights.particleSystemCount)
-    if (particleSystemCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Particle System Count:     ${particleSystemCount} EV ${particleSystemCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.particleSystemCount : ''}` }
     var physicsColliders = Math.round(res.data.avatarStats.physicsColliders / avatarStatWeights.physicsColliders)
-    if (physicsColliders > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Physics Colliders:         ${physicsColliders} EV ${physicsColliders >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physicsColliders : ''}` }
     var physicsRigidbodies = Math.round(res.data.avatarStats.physicsRigidbodies / avatarStatWeights.physicsRigidbodies)
-    if (physicsRigidbodies > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Physics Rigidbodies:       ${physicsRigidbodies} EV ${physicsRigidbodies >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physicsRigidbodies : ''}` }
     var totalClothVertices = Math.round(res.data.avatarStats.totalClothVertices / avatarStatWeights.totalClothVertices)
-    if (totalClothVertices > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Cloth Vertices:            ${totalClothVertices} EV ${totalClothVertices >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.totalClothVertices : ''}` }
     var totalMaxParticles = Math.round(res.data.avatarStats.totalMaxParticles / avatarStatWeights.totalMaxParticles)
-    if (totalMaxParticles > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Max Particles:             ${totalMaxParticles} EV ${totalMaxParticles >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.totalMaxParticles : ''}` }
     var trailRendererCount = Math.round(res.data.avatarStats.trailRendererCount / avatarStatWeights.trailRendererCount)
-    if (trailRendererCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Trail Renderer Count:      ${trailRendererCount} EV ${trailRendererCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.trailRendererCount : ''}` }
-    var totalTextureUsage = Math.round(res.data.avatarStats.totalTextureUsage / avatarStatWeights.totalTextureUsage)
+    var totalTextureUsage = Math.floor(res.data.avatarStats.totalTextureUsage / avatarStatWeights.totalTextureUsage)
+    var uncompressedSize = Math.round(res.data.uncompressedSize / avatarStatWeights.uncompressedSize)
+    var totalPolygons = Math.round(res.data.avatarStats.totalPolygons / avatarStatWeights.totalPolygons)
+    var skinnedMeshCount = Math.round(res.data.avatarStats.skinnedMeshCount / avatarStatWeights.skinnedMeshCount)
+    var meshCount = Math.round(res.data.avatarStats.meshCount / avatarStatWeights.meshCount)
+    var physBoneCollisionCheckCount = Math.round(res.data.avatarStats.physBoneCollisionCheckCount / avatarStatWeights.physBoneCollisionCheckCount)
+    var physBoneColliderCount = Math.round(res.data.avatarStats.physBoneColliderCount / avatarStatWeights.physBoneColliderCount)
+    var physBoneComponentCount = Math.round(res.data.avatarStats.physBoneComponentCount / avatarStatWeights.physBoneComponentCount)
+    var physBoneTransformCount = Math.round(res.data.avatarStats.physBoneTransformCount / avatarStatWeights.physBoneTransformCount)
+    var contactCount = Math.round(res.data.avatarStats.contactCount / avatarStatWeights.contactCount)
+    var materialSlotsUsed = Math.round(res.data.avatarStats.materialSlotsUsed / avatarStatWeights.materialSlotsUsed)
+    var lightCount = Math.round(res.data.avatarStats.lightCount / avatarStatWeights.lightCount)
+    var blendShapeCount = Math.round(res.data.avatarStats.blendShapeCount / avatarStatWeights.blendShapeCount)
+
     if (totalTextureUsage > avatarStatWeights.lowerLimitWeight) {
-        warnbox += `\vTexture Memory ${vramTexsize}`;
+        warnbox += `\v(x${totalTextureUsage}) Texture Memory ${vramTexsize}`;
         totalavatareval += `\n              Texture Memory:            ${totalTextureUsage} EV ${totalTextureUsage >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
     }
-    var uncompressedSize = Math.round(res.data.uncompressedSize / avatarStatWeights.uncompressedSize)
-    if (uncompressedSize > avatarStatWeights.lowerLimitWeight) {
-        warnbox += `\vRAM ${uncompresssize}`
-        totalavatareval += `\n              Uncompressed Size:         ${uncompressedSize} EV ${uncompressedSize >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
+    if (totalPolygons > avatarStatWeights.lowerLimitWeight) {
+        warnbox += `\v(x${totalPolygons}) Polygons ${res.data.avatarStats.totalPolygons}`;
+        totalavatareval += `\n              Polygons:                  ${totalPolygons} EV ${totalPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️📐' : ''}`
     }
-    var totalPolygons = Math.round(res.data.avatarStats.totalPolygons / avatarStatWeights.totalPolygons)
-    if (totalPolygons > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Polygons:                  ${totalPolygons} EV ${totalPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️📐' : ''}` }
-    var skinnedMeshCount = Math.round(res.data.avatarStats.skinnedMeshCount / avatarStatWeights.skinnedMeshCount)
+    if (boundsLongest > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${boundsLongest}) Bounds ${Math.max(...res.data.avatarStats.bounds)}m`;
+        totalavatareval += `\n              Bounds:                    ${boundsLongest} EV ${boundsLongest >= avatarStatWeights.higherLimitWeight ? '⚠️🧊' : ''}`
+    }
     if (skinnedMeshCount > avatarStatWeights.lowerLimitWeight) {
-        // warnbox += `\vSkinnedMeshes ${res.data.avatarStats.skinnedMeshCount}`;
+        warnbox += `\v(x${skinnedMeshCount}) SkinnedMeshes ${res.data.avatarStats.skinnedMeshCount}`;
         totalavatareval += `\n              Skinned Meshes:            ${skinnedMeshCount} EV ${skinnedMeshCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.skinnedMeshCount : ''}`
     }
-    var meshCount = Math.round(res.data.avatarStats.meshCount / avatarStatWeights.meshCount)
     if (meshCount > avatarStatWeights.lowerLimitWeight) {
-        // warnbox += `\vBasic Meshes ${res.data.avatarStats.meshCount}`;
+        warnbox += `\v(x${meshCount}) Basic Meshes ${res.data.avatarStats.meshCount}`;
         totalavatareval += `\n              Basic Meshes:              ${meshCount} EV ${meshCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.meshCount : ''}`
     }
-    var physBoneCollisionCheckCount = Math.round(res.data.avatarStats.physBoneCollisionCheckCount / avatarStatWeights.physBoneCollisionCheckCount)
-    if (physBoneCollisionCheckCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              PhysBone Collision Checks: ${physBoneCollisionCheckCount} EV ${physBoneCollisionCheckCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneCollisionCheckCount : ''}` }
-    var physBoneColliderCount = Math.round(res.data.avatarStats.physBoneColliderCount / avatarStatWeights.physBoneColliderCount)
-    if (physBoneColliderCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              PhysBone Colliders:        ${physBoneColliderCount} EV ${physBoneColliderCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneColliderCount : ''}` }
-    var physBoneComponentCount = Math.round(res.data.avatarStats.physBoneComponentCount / avatarStatWeights.physBoneComponentCount)
-    if (physBoneComponentCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              PhysBone Components:       ${physBoneComponentCount} EV ${physBoneComponentCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneComponentCount : ''}` }
-    var physBoneTransformCount = Math.round(res.data.avatarStats.physBoneTransformCount / avatarStatWeights.physBoneTransformCount)
-    if (physBoneTransformCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              PhysBone Transforms:       ${physBoneTransformCount} EV ${physBoneTransformCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneTransformCount : ''}` }
-    var contactCount = Math.round(res.data.avatarStats.contactCount / avatarStatWeights.contactCount)
-    if (contactCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Contact Count:             ${contactCount} EV ${contactCount >= avatarStatWeights.higherLimitWeight ? '⚠️🥎' : ''}` }
-    var materialSlotsUsed = Math.round(res.data.avatarStats.materialSlotsUsed / avatarStatWeights.materialSlotsUsed)
     if (materialSlotsUsed > avatarStatWeights.lowerLimitWeight) {
-        // warnbox += `\vMaterial Slots ${res.data.avatarStats.materialSlotsUsed}`;
+        warnbox += `\v(x${materialSlotsUsed}) Material Slots ${res.data.avatarStats.materialSlotsUsed}`;
         totalavatareval += `\n              Material Slots:            ${materialSlotsUsed} EV ${materialSlotsUsed >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.materialSlotsUsed : ''}`
     }
-    var lightCount = Math.round(res.data.avatarStats.lightCount / avatarStatWeights.lightCount)
-    if (lightCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              Light Count:               ${lightCount} EV ${lightCount >= avatarStatWeights.higherLimitWeight ? '⚠️💡' : ''}` }
-    var blendShapeCount = Math.round(res.data.avatarStats.blendShapeCount / avatarStatWeights.blendShapeCount)
-    if (blendShapeCount > avatarStatWeights.lowerLimitWeight) { totalavatareval += `\n              BlendShapes:               ${blendShapeCount} EV ${blendShapeCount >= avatarStatWeights.higherLimitWeight ? '⚠️🧲' : ''}` }
+    if (materialCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${materialCount}) Material Count ${res.data.avatarStats.materialCount}`;
+        totalavatareval += `\n              Material Count:            ${materialCount} EV ${materialCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.materialCount : ''}`
+    }
+    if (physBoneComponentCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${physBoneComponentCount}) PhysBone Components ${res.data.avatarStats.physBoneComponentCount}`;
+        totalavatareval += `\n              PhysBone Components:       ${physBoneComponentCount} EV ${physBoneComponentCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneComponentCount : ''}`
+    }
+    if (physBoneTransformCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${physBoneTransformCount}) PhysBone Transforms ${res.data.avatarStats.physBoneTransformCount}`;
+        totalavatareval += `\n              PhysBone Transforms:       ${physBoneTransformCount} EV ${physBoneTransformCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneTransformCount : ''}`
+    }
+    if (physBoneColliderCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${physBoneColliderCount}) PhysBone Colliders ${res.data.avatarStats.physBoneColliderCount}`;
+        totalavatareval += `\n              PhysBone Colliders:        ${physBoneColliderCount} EV ${physBoneColliderCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneColliderCount : ''}`
+    }
+    if (physBoneCollisionCheckCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${physBoneCollisionCheckCount}) PhysBone Collision Checks ${res.data.avatarStats.physBoneCollisionCheckCount}`;
+        totalavatareval += `\n              PhysBone Collision Checks: ${physBoneCollisionCheckCount} EV ${physBoneCollisionCheckCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneCollisionCheckCount : ''}`
+    }
+    if (contactCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${contactCount}) Contacts ${res.data.avatarStats.contactCount}`;
+        totalavatareval += `\n              Contact Count:             ${contactCount} EV ${contactCount >= avatarStatWeights.higherLimitWeight ? '⚠️🥎' : ''}`
+    }
+    if (constraintCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${constraintCount}) Constraints ${res.data.avatarStats.constraintCount}`;
+        totalavatareval += `\n              Constraint Count:           ${constraintCount} EV ${constraintCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.constraintCount : ''}`
+    }
+    if (constraintDepth > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${constraintDepth}) Constraint Depth ${res.data.avatarStats.constraintDepth}`;
+        totalavatareval += `\n              Constraint Depth:          ${constraintDepth} EV ${constraintDepth >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.constraintDepth : ''}`
+    }
+    if (animatorCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${animatorCount}) Animators ${res.data.avatarStats.animatorCount}`;
+        totalavatareval += `\n              Animator Count:            ${animatorCount} EV ${animatorCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.animatorCount : ''}`
+    }
+    if (boneCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${boneCount}) Bones ${res.data.avatarStats.boneCount}`;
+        totalavatareval += `\n              Bones:                     ${boneCount} EV ${boneCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.boneCount : ''}`
+    }
+    if (lightCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${lightCount}) Light Count ${res.data.avatarStats.lightCount}`;
+        totalavatareval += `\n              Light Count:               ${lightCount} EV ${lightCount >= avatarStatWeights.higherLimitWeight ? '⚠️💡' : ''}`
+    }
+    if (particleSystemCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${particleSystemCount}) Particle Systems ${res.data.avatarStats.particleSystemCount}`;
+        totalavatareval += `\n              Particle System Count:     ${particleSystemCount} EV ${particleSystemCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.particleSystemCount : ''}`
+    }
+    if (totalMaxParticles > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${totalMaxParticles}) Max Particles ${res.data.avatarStats.totalMaxParticles}`;
+        totalavatareval += `\n              Max Particles:             ${totalMaxParticles} EV ${totalMaxParticles >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.totalMaxParticles : ''}`
+    }
+    if (meshParticleMaxPolygons > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${meshParticleMaxPolygons}) Particle Polygons ${res.data.avatarStats.meshParticleMaxPolygons}`;
+        totalavatareval += `\n              Mesh Particle Max Polygons:${meshParticleMaxPolygons} EV ${meshParticleMaxPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.meshParticleMaxPolygons : ''}`
+    }
+    if (trailRendererCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${trailRendererCount}) Trail Renderers ${res.data.avatarStats.trailRendererCount}`;
+        totalavatareval += `\n              Trail Renderer Count:      ${trailRendererCount} EV ${trailRendererCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.trailRendererCount : ''}`
+    }
+    if (lineRendererCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${lineRendererCount}) Line Renderers ${res.data.avatarStats.lineRendererCount}`;
+        totalavatareval += `\n              Line Renderer Count:       ${lineRendererCount} EV ${lineRendererCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.lineRendererCount : ''}`
+    }
+    if (clothCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${clothCount}) Cloth Meshes ${res.data.avatarStats.clothCount}`;
+        totalavatareval += `\n              Cloth Meshes:               ${clothCount} EV ${clothCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.clothCount : ''}`
+    }
+    if (totalClothVertices > avatarStatWeights.lowerLimitWeight) {
+        warnbox += `\v(x${totalClothVertices}) Cloth Vertices ${res.data.avatarStats.totalClothVertices}`;
+        totalavatareval += `\n              Cloth Vertices:            ${totalClothVertices} EV ${totalClothVertices >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.totalClothVertices : ''}`
+    }
+    if (physicsColliders > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${physicsColliders}) Unity Colliders ${res.data.avatarStats.physicsColliders}`;
+        totalavatareval += `\n              Physics Colliders:         ${physicsColliders} EV ${physicsColliders >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physicsColliders : ''}`
+    }
+    if (physicsRigidbodies > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${physicsRigidbodies}) Rigidbodies ${res.data.avatarStats.physicsRigidbodies}`;
+        totalavatareval += `\n              Physics Rigidbodies:       ${physicsRigidbodies} EV ${physicsRigidbodies >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physicsRigidbodies : ''}`
+    }
+    if (audioSourceCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${audioSourceCount}) AudioSources ${res.data.avatarStats.audioSourceCount}`;
+        totalavatareval += `\n              AudioSource Count:         ${audioSourceCount} EV ${audioSourceCount >= avatarStatWeights.higherLimitWeight ? '⚠️🔊' : ''}`
+    }
+    if (blendShapeCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${blendShapeCount}) BlendShapes ${res.data.avatarStats.blendShapeCount}`;
+        totalavatareval += `\n              BlendShapes:               ${blendShapeCount} EV ${blendShapeCount >= avatarStatWeights.higherLimitWeight ? '⚠️🧲' : ''}`
+    }
+    if (cameraCount > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${cameraCount}) Cameras ${res.data.avatarStats.cameraCount}`;
+        totalavatareval += `\n              Camera Count:              ${cameraCount} EV ${cameraCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.cameraCount : ''}`
+    }
+    if (uncompressedSize > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${uncompressedSize}) RAM ${uncompresssize}`;
+        totalavatareval += `\n              Uncompressed Size:         ${uncompressedSize} EV ${uncompressedSize >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
+    }
+
+
 
     if (totalavatareval.length > 1) { console.log(totalavatareval.replace(/\n/, '') + "\n") }
-    // if (warnbox.length > 0 && getInstanceGroupID() == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') { oscChatBoxV2(`${res.data.name.slice(0, 14)}${warnbox}`, 30000, false, true, false, true) }
+    if (warnbox.length > 0 && getInstanceGroupID() == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+        // if (warnbox.length > 0) {
+
+        function fitChars(I_line) {
+            const charWidth = {
+                " ": 0.018181, "a": 0.037037, "A": 0.041666,
+                "b": 0.04, "B": 0.043478, "c": 0.03125, "C": 0.041666,
+                "d": 0.04, "D": 0.047619, "e": 0.037037, "<": 0.037037,
+                "g": 0.04, "G": 0.047619, "0": 0.037037, "1": 0.037037,
+                "2": 0.037037, "3": 0.037037, "4": 0.037037, "5": 0.037037,
+                "6": 0.037037, "7": 0.037037, "8": 0.037037, "9": 0.037037,
+                "h": 0.04, "H": 0.05, ">": 0.037037, "K": 0.04,
+                "?": 0.028571, "E": 0.037037, "M": 0.058823, "n": 0.04,
+                "N": 0.05, "o": 0.04, "!": 0.017543, "@": 0.058823,
+                "p": 0.04, "u": 0.04, "q": 0.04, "r": 0.026315,
+                "s": 0.03125, "f": 0.022222, "F": 0.034482, "i": 0.016666,
+                "I": 0.022222, "j": 0.016666, "J": 0.017857, "k": 0.034482,
+                "l": 0.016666, "L": 0.034482, "m": 0.0625, "t": 0.023255,
+                "v": 0.033333, "w": 0.052631, "x": 0.034482, "y": 0.033333,
+                "z": 0.030303, "O": 0.052631, "P": 0.04, "Q": 0.052631,
+                "R": 0.04, "S": 0.035714, "T": 0.037037, "U": 0.047619,
+                "V": 0.04, "W": 0.0625, "X": 0.038461, "Y": 0.037037,
+                "Z": 0.037037, "#": 0.041666, "$": 0.037037, "%": 0.055555,
+                "^": 0.037037, "&": 0.047619, "*": 0.035714, "（": 0.066666,
+                "）": 0.066666, "(": 0.019607, ")": 0.019607, "_": 0.028571,
+                "-": 0.020833, "+": 0.037037, "=": 0.037037, "`": 0.018181,
+                "~": 0.037037, "[": 0.021276, "]": 0.021276, "{": 0.025,
+                "}": 0.025, "|": 0.035714, ";": 0.017241, "'": 0.014492,
+                ":": 0.017241, "\"": 0.026315, ",": 0.017241, ".": 0.017241,
+                "/": 0.024390
+            }
+            var trackingWidth = 0
+            for (const item in I_line) {
+                trackingWidth += charWidth[I_line[item]] != undefined ? charWidth[I_line[item]] : 0.0625
+                if (trackingWidth > 1) { return item }
+            }
+        }
+
+        oscChatBoxV2(`${res.data.name.slice(0, fitChars(res.data.name) )}${warnbox}`, 10000, false, true, false, false, true)
+    }
 
     // Summary Chart Data
     avatarStatSummary.totalAvatars++
@@ -735,8 +849,8 @@ function socket_VRC_API_Connect() {
                     // Auto Block if not long enough
                     if (wsContent.link.slice(6) == getInstanceGroupID() && Date.now() < (getWorldJoinTimestamp() + 300_000)) {
 
-                        oscChatBoxV2(`Group performed an undesirable action.\vTaking countermeasures`,10_000,true,true,false,false)
-                        
+                        oscChatBoxV2(`Group performed an undesirable action.\vTaking countermeasures`, 10_000, true, true, false, false)
+
                         // Block Group Owner
                         var resG = await vrchat.getGroup({ 'path': { 'groupId': wsContent.link.slice(6) } })
                         if (resG.data != undefined) {
@@ -748,7 +862,7 @@ function socket_VRC_API_Connect() {
                         var resS = await vrchat.searchUsers({ 'query': { 'search': wsContent.data.managerUserDisplayName } })
                         if (resS.data != undefined && resS.data.length >= 1) {
                             // var resMu2 = await vrchat.moderateUser({'body':{'type':'block','moderated':resS.data[0].id}})
-                            
+
                             // Skip auto-block incase search miss-lands
                             console.log(`User that invited you`, resS.data[0])
                         }

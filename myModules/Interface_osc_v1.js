@@ -116,23 +116,39 @@ function oscChatTyping(active) {
 }
 exports.oscChatTyping = oscChatTyping;
 
-function oscChatBoxV2(I_say = "~", I_display_time_ms = 5000, I_highPriority = false, I_auto_clear = false, isLoop = false, I_playAudio = false) {
+function oscChatBoxV2(I_say = "~", I_display_time_ms = 5000, I_highPriority = false, I_auto_clear = false, isLoop = false, I_playAudio = false, I_splitV = false) {
 	let firstLong = 0
 	if (isLoop == false) {
 		oscChatTyping(1)
 		if (I_highPriority == true) {
-			let msgsplit = I_say.match(/.{0,144}\S(?=$|\s)/g)
-			chatboxQueue.length == 0 ? firstLong = msgsplit.length : 0
-			for (const seg in msgsplit) {
-				chatboxQueue.unshift({ "message": msgsplit[seg], "display_time_ms": I_display_time_ms, "auto_clear": I_auto_clear, "play_audio": I_playAudio })
+			if (I_splitV == false) {
+				var msgsplit = I_say.match(/.{0,144}\S(?=$|\s)/g)
+				chatboxQueue.length == 0 ? firstLong = msgsplit.length : 0
+				for (const seg in msgsplit) {
+					chatboxQueue.unshift({ "message": msgsplit[seg], "display_time_ms": I_display_time_ms, "auto_clear": I_auto_clear, "play_audio": I_playAudio })
+				}
+			} else {
+				var msgsplit = I_say.match(/.{0,144}\S(?=$|\v)/g)
+				chatboxQueue.length == 0 ? firstLong = msgsplit.length : 0
+				for (const seg in msgsplit) {
+					chatboxQueue.unshift({ "message": msgsplit[seg], "display_time_ms": I_display_time_ms, "auto_clear": I_auto_clear, "play_audio": I_playAudio })
+				}
 			}
 			// })
 			// chatboxQueue.unshift({ "message": I_say, "display_time_ms": I_display_time, "auto_clear": I_auto_clear })
 		} else {
-			let msgsplit = I_say.match(/.{0,144}\S(?=$|\s)/g)
-			chatboxQueue.length == 0 ? firstLong = msgsplit.length : 0
-			for (const seg in msgsplit) {
-				chatboxQueue.push({ "message": msgsplit[seg], "display_time_ms": I_display_time_ms, "auto_clear": I_auto_clear, "play_audio": I_playAudio })
+			if (I_splitV == false) {
+				var msgsplit = I_say.match(/.{0,144}\S(?=$|\s)/g)
+				chatboxQueue.length == 0 ? firstLong = msgsplit.length : 0
+				for (const seg in msgsplit) {
+					chatboxQueue.push({ "message": msgsplit[seg], "display_time_ms": I_display_time_ms, "auto_clear": I_auto_clear, "play_audio": I_playAudio })
+				}
+			} else {
+				var msgsplit = I_say.match(/.{0,144}\S(?=$|\v)/g)
+				chatboxQueue.length == 0 ? firstLong = msgsplit.length : 0
+				for (const seg in msgsplit) {
+					chatboxQueue.push({ "message": msgsplit[seg], "display_time_ms": I_display_time_ms, "auto_clear": I_auto_clear, "play_audio": I_playAudio })
+				}
 			}
 			// })
 			// console.log(chatboxQueue)
@@ -225,6 +241,7 @@ async function OSCBinaryBurst(serializedBinary = 11111111, pulseClkHold = 200, b
 exports.OSCBinaryBurst = OSCBinaryBurst
 
 
+var OSCDataBurstState = 'ready'
 async function OSCDataBurst(in_addr, in_dataA, isLoop = false) {
 	/*
 	Usage Chart
@@ -245,6 +262,10 @@ async function OSCDataBurst(in_addr, in_dataA, isLoop = false) {
 	*/
 	if (isLoop == false) { dataBurst.push({ 'addr': in_addr, 'dataA': in_dataA }) }
 	if (dataBurst.length < 2 || isLoop == true) {
+		if (dataBurst.length >= 40) {
+			OSCDataBurstState = 'overloaded'
+			console.log(`${loglv().debug}${selflog} [OSCDataBurst] Overloaded ${dataBurst.length}`)
+		} else { OSCDataBurstState = 'busy' }
 		// console.log(`${loglv().debug}${selflog} [OSCDataBurst] Sending ${JSON.stringify(dataBurst[0])}`)
 		await sendOSCDataBurst_v2(dataBurst[0].addr, dataBurst[0].dataA)
 		dataBurst.shift()
@@ -253,6 +274,7 @@ async function OSCDataBurst(in_addr, in_dataA, isLoop = false) {
 		} else {
 			oscSend(vrcap + 'oscAddr', 0)
 			oscSend(vrcap + 'oscDataA', 1)
+			OSCDataBurstState = 'ready'
 			// console.log(`${loglv().debug}${selflog} [OSCDataBurst] Idle.`)
 		}
 		async function sendOSCDataBurst_v2(addr, dataA) {
@@ -267,6 +289,7 @@ async function OSCDataBurst(in_addr, in_dataA, isLoop = false) {
 	}
 }
 exports.OSCDataBurst = OSCDataBurst;
+exports.OSCDataBurstState = OSCDataBurstState;
 
 
 function oscSendKATmsg(sendStringKAT = '', clearBefore = false, displayColor = 3) {
@@ -465,10 +488,10 @@ async function avatarRoulette() {
 		'avtr_bba034cb-05f7-4159-9ba3-fd5bd08f5526'
 	]
 
-	ownAvatars.forEach((avtr,index)=>{
-		setTimeout(()=>{
-			oscSend('/avatar/change',avtr)
-		},index*120_000)
+	ownAvatars.forEach((avtr, index) => {
+		setTimeout(() => {
+			oscSend('/avatar/change', avtr)
+		}, index * 120_000)
 	})
 }
 
