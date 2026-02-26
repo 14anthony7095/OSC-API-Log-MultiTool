@@ -839,9 +839,8 @@ function eventPlayerAvatarSwitch(logOutputLine) {
 	let playerswitching = logOutputLine.split(`Switching `)[1].split(`to avatar `)[0].trim()
 	let avatarswitchedto = logOutputLine.split(`to avatar `)[1].trim()
 
-	console.log(`${loglv().log}${selflog} [AvatarChange]: ${playerswitching} switching to (${avatarswitchedto})`)
+	// console.log(`${loglv().log}${selflog} [AvatarChange]: ${playerswitching} switching to (${avatarswitchedto})`)
 	logEmitter.emit('avatarchange', playerswitching, avatarswitchedto)
-
 }
 
 function eventAssetDownload(logOutputLine) {
@@ -849,7 +848,11 @@ function eventAssetDownload(logOutputLine) {
 	// console.log(`${loglv().log}${selflog} [AssetBundleDownloadManager]: ${assetbundlelog}`)
 
 	if (assetbundlelog.includes('Unpacking Avatar')) {
-		console.log(`${loglv().log}${selflog} [AssetBundle]: ${assetbundlelog}`)
+		// console.log(`${loglv().log}${selflog} [AssetBundle]: ${assetbundlelog}`)
+		// [AssetBundle]: [593] Unpacking Avatar (Alula v3․48 Basic by 14anthony7095)
+		let avatarswitchedto = assetbundlelog.split('Unpacking Avatar (')[1].split(' by ')[0]
+		let avatarauthor = assetbundlelog.split('Unpacking Avatar (')[1].split(' by ')[1].slice(0, -1)
+		logEmitter.emit('avatarloaded', avatarswitchedto, avatarauthor)
 	}
 
 	if (assetbundlelog.includes('Starting download of')) {

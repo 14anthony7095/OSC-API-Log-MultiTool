@@ -283,6 +283,12 @@ const avatarStatWeights = {
 var avatarStatSummary = {
     "totalAvatars": 0,
     "checkedFileIDs": [],
+    "seenAuthors": [{
+        "id": "", "displayName": ""
+    }],
+    "seenAvatars": [{
+        "name": "", "author": null, "wearers": [], "lastAccessed": 0
+    }],
     "Excellent": 0,
     "Good": 0,
     "Medium": 0,
@@ -324,6 +330,37 @@ var avatarStatSummary = {
 }
 
 
+logEmitter.on('avatarchange', (I_userName, I_avatarName) => {
+    try {
+        avatarStatSummary.seenAvatars.filter(a => a.wearers.includes(I_userName)).map(b => b.wearers.splice(b.wearers.indexOf(I_userName)))
+        avatarStatSummary.seenAvatars.filter(a => a.name == I_avatarName)[0].wearers.push(I_userName)
+    } catch (err) {
+        avatarStatSummary.seenAvatars.push({ "name": I_avatarName, "author": null, "wearers": [I_userName], "lastAccessed": Date.now() })
+    }
+})
+logEmitter.on('avatarloaded', (I_avatarName, I_author) => {
+    var pruneCheckLength = avatarStatSummary.seenAvatars.filter(a => Date.now() > a.lastAccessed + 60000 && a.wearers.length == 0)
+    var pruneLeftover = avatarStatSummary.seenAvatars.filter(a => Date.now() < a.lastAccessed + 60000 || a.wearers.length != 0)
+    if (pruneCheckLength.length > 0) {
+        avatarStatSummary.seenAvatars = pruneLeftover
+        console.log(`${loglv().log}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarCache]: Pruning ${pruneCheckLength.length} avatars from memory.`)
+    }
+
+    try {
+        var assSa = avatarStatSummary.seenAvatars.filter(a => a.name == I_avatarName)[0]
+        assSa.author = I_author
+        console.log(`${loglv().log}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarChange]: ${assSa.wearers.toString()} in avatar (${assSa.name} by ${assSa.author})`)
+    } catch (err) {
+        console.log(`${loglv().hey}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarFallback]: No Wearer for (${I_avatarName} by ${I_author})`)
+        avatarStatSummary.seenAvatars.push({ "name": I_avatarName, "author": I_author, "wearers": [], "lastAccessed": Date.now() })
+    }
+})
+logEmitter.on('playerLeft', (I_userName) => {
+    avatarStatSummary.seenAvatars.filter(a => a.wearers.includes(I_userName)).map(b => b.wearers.splice(b.wearers.indexOf(I_userName)))
+})
+
+// setInterval(() => { console.log(avatarStatSummary.seenAvatars); }, 60_000)
+
 // const { distance, closestMatch } = require("closest-match");
 logEmitter.on('fileanalysis', async (fileid, fileversion) => {
     // Has avatar already been seen while in this instance? - Escape
@@ -337,6 +374,31 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         var fsrdfile = await fsp.readFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', 'utf8')
         console.log(`${loglv().log}${selflog} [AvatarAnalysis] Cached: ${fileid} - ver ${fileversion}`)
         res.data = JSON.parse(fsrdfile)
+        if (avatarStatSummary.seenAuthors.filter(s => s.id == res.data.ownerId).length == 0) {
+            avatarStatSummary.seenAuthors.push({ "id": res.data.ownerId, "displayName": res.data.displayName })
+        }
+        if (res.data.ownerDisplayName == null) {
+            let getName = await vrchat.getFile({ 'path': { 'fileId': fileid } })
+            res.data["name"] = getName.data.name.slice(9).split(' - Asset bundle - ')[0]
+
+            // Check Author
+            res.data["ownerId"] = getName.data.ownerId
+            try {
+                res.data["ownerDisplayName"] = avatarStatSummary.seenAuthors.filter(s => s.id == getName.data.ownerId)[0].displayName
+                console.log(`${loglv().log}${selflog} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
+            } catch (err) {
+                console.log(`${loglv().log}${selflog} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
+
+                let getOwner = await vrchat.getUser({ 'path': { 'userId': getName.data.ownerId } })
+                res.data["ownerDisplayName"] = getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : getOwner.data.displayName
+                if (avatarStatSummary.seenAuthors.filter(s => s.id == res.data.ownerId).length == 0) {
+                    avatarStatSummary.seenAuthors.push({ "id": getName.data.ownerId, "displayName": getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : getOwner.data.displayName })
+                }
+                if (avatarStatSummary.seenAuthors[0].id == "") { avatarStatSummary.seenAuthors.shift() }
+            }
+
+            fs.writeFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', JSON.stringify(res.data), 'utf8', (err) => { if (err) { console.log(err) } })
+        }
     } catch (error) {
         console.log(`${loglv().log}${selflog} [AvatarAnalysis] Fetching: ${fileid} - ver ${fileversion}`)
 
@@ -347,11 +409,29 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         } else if (res.data.avatarStats && res.data.performanceRating) {
             let getName = await vrchat.getFile({ 'path': { 'fileId': fileid } })
             res.data["name"] = getName.data.name.slice(9).split(' - Asset bundle - ')[0]
+
+            // Check Author
+            res.data["ownerId"] = getName.data.ownerId
+            try {
+                res.data["ownerDisplayName"] = avatarStatSummary.seenAuthors.filter(s => s.id == getName.data.ownerId)[0].displayName
+                console.log(`${loglv().log}${selflog} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
+            } catch (err) {
+                console.log(`${loglv().log}${selflog} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
+
+                let getOwner = await vrchat.getUser({ 'path': { 'userId': getName.data.ownerId } })
+                res.data["ownerDisplayName"] = getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : getOwner.data.displayName
+                if (avatarStatSummary.seenAuthors.filter(s => s.id == res.data.ownerId).length == 0) {
+                    avatarStatSummary.seenAuthors.push({ "id": getName.data.ownerId, "displayName": getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : getOwner.data.displayName })
+                }
+                if (avatarStatSummary.seenAuthors[0].id == "") { avatarStatSummary.seenAuthors.shift() }
+            }
+
             fs.writeFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', JSON.stringify(res.data), 'utf8', (err) => { if (err) { console.log(err) } })
         } else {
             return
         }
     }
+    // console.log(avatarStatSummary.seenAuthors)
 
     avatarStatSummary.checkedFileIDs.push(fileid + "-" + fileversion)
 
@@ -381,7 +461,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
     var totalClothVertices = Math.round(res.data.avatarStats.totalClothVertices / avatarStatWeights.totalClothVertices)
     var totalMaxParticles = Math.round(res.data.avatarStats.totalMaxParticles / avatarStatWeights.totalMaxParticles)
     var trailRendererCount = Math.round(res.data.avatarStats.trailRendererCount / avatarStatWeights.trailRendererCount)
-    var totalTextureUsage = Math.floor(res.data.avatarStats.totalTextureUsage / avatarStatWeights.totalTextureUsage)
+    var totalTextureUsage = res.data.avatarStats.totalTextureUsage / avatarStatWeights.totalTextureUsage
     var uncompressedSize = Math.round(res.data.uncompressedSize / avatarStatWeights.uncompressedSize)
     var totalPolygons = Math.round(res.data.avatarStats.totalPolygons / avatarStatWeights.totalPolygons)
     var skinnedMeshCount = Math.round(res.data.avatarStats.skinnedMeshCount / avatarStatWeights.skinnedMeshCount)
@@ -395,12 +475,21 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
     var lightCount = Math.round(res.data.avatarStats.lightCount / avatarStatWeights.lightCount)
     var blendShapeCount = Math.round(res.data.avatarStats.blendShapeCount / avatarStatWeights.blendShapeCount)
 
-    if (totalTextureUsage > avatarStatWeights.lowerLimitWeight) {
-        warnbox += `\v(x${totalTextureUsage}) Texture Memory ${vramTexsize}`;
-        totalavatareval += `\n              Texture Memory:            ${totalTextureUsage} EV ${totalTextureUsage >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
+    if (getInstanceGroupID() == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+        if (res.data.avatarStats.totalTextureUsage > 83886080) {
+            if (totalTextureUsage > avatarStatWeights.lowerLimitWeight) {
+                warnbox += `\v(x${Math.round(totalTextureUsage)}) Texture Mem ${vramTexsize}`;
+            }
+            totalavatareval += `\n              Texture Memory:            ${Math.round(totalTextureUsage)} EV ${totalTextureUsage >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
+        }
+    } else {
+        if (Math.round(totalTextureUsage) > avatarStatWeights.lowerLimitWeight) {
+            // warnbox += `\v(x${totalTextureUsage}) Texture Memory ${vramTexsize}`;
+            totalavatareval += `\n              Texture Memory:            ${Math.round(totalTextureUsage)} EV ${totalTextureUsage >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
+        }
     }
     if (totalPolygons > avatarStatWeights.lowerLimitWeight) {
-        warnbox += `\v(x${totalPolygons}) Polygons ${res.data.avatarStats.totalPolygons}`;
+        // warnbox += `\v(x${totalPolygons}) Polygons ${res.data.avatarStats.totalPolygons}`;
         totalavatareval += `\n              Polygons:                  ${totalPolygons} EV ${totalPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️📐' : ''}`
     }
     if (boundsLongest > avatarStatWeights.lowerLimitWeight) {
@@ -408,15 +497,15 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         totalavatareval += `\n              Bounds:                    ${boundsLongest} EV ${boundsLongest >= avatarStatWeights.higherLimitWeight ? '⚠️🧊' : ''}`
     }
     if (skinnedMeshCount > avatarStatWeights.lowerLimitWeight) {
-        warnbox += `\v(x${skinnedMeshCount}) SkinnedMeshes ${res.data.avatarStats.skinnedMeshCount}`;
+        // warnbox += `\v(x${skinnedMeshCount}) SkinnedMeshes ${res.data.avatarStats.skinnedMeshCount}`;
         totalavatareval += `\n              Skinned Meshes:            ${skinnedMeshCount} EV ${skinnedMeshCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.skinnedMeshCount : ''}`
     }
     if (meshCount > avatarStatWeights.lowerLimitWeight) {
-        warnbox += `\v(x${meshCount}) Basic Meshes ${res.data.avatarStats.meshCount}`;
+        // warnbox += `\v(x${meshCount}) Basic Meshes ${res.data.avatarStats.meshCount}`;
         totalavatareval += `\n              Basic Meshes:              ${meshCount} EV ${meshCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.meshCount : ''}`
     }
     if (materialSlotsUsed > avatarStatWeights.lowerLimitWeight) {
-        warnbox += `\v(x${materialSlotsUsed}) Material Slots ${res.data.avatarStats.materialSlotsUsed}`;
+        // warnbox += `\v(x${materialSlotsUsed}) Material Slots ${res.data.avatarStats.materialSlotsUsed}`;
         totalavatareval += `\n              Material Slots:            ${materialSlotsUsed} EV ${materialSlotsUsed >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.materialSlotsUsed : ''}`
     }
     if (materialCount > avatarStatWeights.lowerLimitWeight) {
@@ -488,7 +577,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         totalavatareval += `\n              Cloth Meshes:               ${clothCount} EV ${clothCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.clothCount : ''}`
     }
     if (totalClothVertices > avatarStatWeights.lowerLimitWeight) {
-        warnbox += `\v(x${totalClothVertices}) Cloth Vertices ${res.data.avatarStats.totalClothVertices}`;
+        // warnbox += `\v(x${totalClothVertices}) Cloth Vertices ${res.data.avatarStats.totalClothVertices}`;
         totalavatareval += `\n              Cloth Vertices:            ${totalClothVertices} EV ${totalClothVertices >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.totalClothVertices : ''}`
     }
     if (physicsColliders > avatarStatWeights.lowerLimitWeight) {
@@ -524,40 +613,30 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
 
         function fitChars(I_line) {
             const charWidth = {
-                " ": 0.018181, "a": 0.037037, "A": 0.041666,
-                "b": 0.04, "B": 0.043478, "c": 0.03125, "C": 0.041666,
-                "d": 0.04, "D": 0.047619, "e": 0.037037, "<": 0.037037,
-                "g": 0.04, "G": 0.047619, "0": 0.037037, "1": 0.037037,
-                "2": 0.037037, "3": 0.037037, "4": 0.037037, "5": 0.037037,
-                "6": 0.037037, "7": 0.037037, "8": 0.037037, "9": 0.037037,
-                "h": 0.04, "H": 0.05, ">": 0.037037, "K": 0.04,
-                "?": 0.028571, "E": 0.037037, "M": 0.058823, "n": 0.04,
-                "N": 0.05, "o": 0.04, "!": 0.017543, "@": 0.058823,
-                "p": 0.04, "u": 0.04, "q": 0.04, "r": 0.026315,
-                "s": 0.03125, "f": 0.022222, "F": 0.034482, "i": 0.016666,
-                "I": 0.022222, "j": 0.016666, "J": 0.017857, "k": 0.034482,
-                "l": 0.016666, "L": 0.034482, "m": 0.0625, "t": 0.023255,
-                "v": 0.033333, "w": 0.052631, "x": 0.034482, "y": 0.033333,
-                "z": 0.030303, "O": 0.052631, "P": 0.04, "Q": 0.052631,
-                "R": 0.04, "S": 0.035714, "T": 0.037037, "U": 0.047619,
-                "V": 0.04, "W": 0.0625, "X": 0.038461, "Y": 0.037037,
-                "Z": 0.037037, "#": 0.041666, "$": 0.037037, "%": 0.055555,
-                "^": 0.037037, "&": 0.047619, "*": 0.035714, "（": 0.066666,
-                "）": 0.066666, "(": 0.019607, ")": 0.019607, "_": 0.028571,
-                "-": 0.020833, "+": 0.037037, "=": 0.037037, "`": 0.018181,
-                "~": 0.037037, "[": 0.021276, "]": 0.021276, "{": 0.025,
-                "}": 0.025, "|": 0.035714, ";": 0.017241, "'": 0.014492,
-                ":": 0.017241, "\"": 0.026315, ",": 0.017241, ".": 0.017241,
+                " ": 0.018181, "a": 0.037037, "A": 0.041666, "b": 0.04, "B": 0.043478, "c": 0.03125, "C": 0.041666,
+                "d": 0.04, "D": 0.047619, "e": 0.037037, "<": 0.037037, "g": 0.04, "G": 0.047619, "0": 0.037037, "1": 0.037037,
+                "2": 0.037037, "3": 0.037037, "4": 0.037037, "5": 0.037037, "6": 0.037037, "7": 0.037037, "8": 0.037037, "9": 0.037037,
+                "h": 0.04, "H": 0.05, ">": 0.037037, "K": 0.04, "?": 0.028571, "E": 0.037037, "M": 0.058823, "n": 0.04,
+                "N": 0.05, "o": 0.04, "!": 0.017543, "@": 0.058823, "p": 0.04, "u": 0.04, "q": 0.04, "r": 0.026315,
+                "s": 0.03125, "f": 0.022222, "F": 0.034482, "i": 0.016666, "I": 0.022222, "j": 0.016666, "J": 0.017857, "k": 0.034482,
+                "l": 0.016666, "L": 0.034482, "m": 0.0625, "t": 0.023255, "v": 0.033333, "w": 0.052631, "x": 0.034482, "y": 0.033333,
+                "z": 0.030303, "O": 0.052631, "P": 0.04, "Q": 0.052631, "R": 0.04, "S": 0.035714, "T": 0.037037, "U": 0.047619,
+                "V": 0.04, "W": 0.0625, "X": 0.038461, "Y": 0.037037, "Z": 0.037037, "#": 0.041666, "$": 0.037037, "%": 0.055555,
+                "^": 0.037037, "&": 0.047619, "*": 0.035714, "（": 0.066666, "）": 0.066666, "(": 0.019607, ")": 0.019607, "_": 0.028571,
+                "-": 0.020833, "+": 0.037037, "=": 0.037037, "`": 0.018181, "~": 0.037037, "[": 0.021276, "]": 0.021276, "{": 0.025,
+                "}": 0.025, "|": 0.035714, ";": 0.017241, "'": 0.014492, ":": 0.017241, "\"": 0.026315, ",": 0.017241, ".": 0.017241,
                 "/": 0.024390
             }
             var trackingWidth = 0
+            var limitLength = 0
             for (const item in I_line) {
                 trackingWidth += charWidth[I_line[item]] != undefined ? charWidth[I_line[item]] : 0.0625
-                if (trackingWidth > 1) { return item }
+                if (trackingWidth > 1) { limitLength = item; break; }
             }
+            return I_line.slice(0, limitLength != 0 ? limitLength : I_line.length)
         }
 
-        oscChatBoxV2(`${res.data.name.slice(0, fitChars(res.data.name) )}${warnbox}`, 10000, false, true, false, false, true)
+        oscChatBoxV2(`${fitChars(res.data.name)}${warnbox}`, 10000, false, true, false, false, true)
     }
 
     // Summary Chart Data
@@ -618,6 +697,12 @@ async function scanAllAvatarStats() {
                 avatarStatSummary = {
                     "totalAvatars": 0,
                     "checkedFileIDs": [],
+                    "seenAuthors": [{
+                        "id": "", "displayName": ""
+                    }],
+                    "seenAvatars": [{
+                        "name": "", "author": null, "wearers": [], "lastAccessed": 0
+                    }],
                     "Excellent": 0,
                     "Good": 0,
                     "Medium": 0,
@@ -705,6 +790,12 @@ async function scanListAvatarStats(I_list = []) {
                 avatarStatSummary = {
                     "totalAvatars": 0,
                     "checkedFileIDs": [],
+                    "seenAuthors": [{
+                        "id": "", "displayName": ""
+                    }],
+                    "seenAvatars": [{
+                        "name": "", "author": null, "wearers": [], "lastAccessed": 0
+                    }],
                     "Excellent": 0,
                     "Good": 0,
                     "Medium": 0,
@@ -1682,6 +1773,12 @@ async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, 
                 avatarStatSummary = {
                     "totalAvatars": 0,
                     "checkedFileIDs": [],
+                    "seenAuthors": [{
+                        "id": "", "displayName": ""
+                    }],
+                    "seenAvatars": [{
+                        "name": "", "author": null, "wearers": [], "lastAccessed": 0
+                    }],
                     "Excellent": 0,
                     "Good": 0,
                     "Medium": 0,
