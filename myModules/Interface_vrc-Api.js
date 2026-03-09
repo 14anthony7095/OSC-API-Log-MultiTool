@@ -81,10 +81,9 @@ var vrchat = new VRChat({
 
 // Global Vars
 var vrcDataCache = {}
-var vrcIsOpen = false
-exports.vrcIsOpen = vrcIsOpen
 var lastFetchGroupLogs;
 var currentUser;
+var elAlbaWarnings = false
 var userAutoAcceptWhiteList = []
 var worldQueueTxt = './datasets/worldQueue.txt'
 var exploreMode = false
@@ -117,6 +116,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 -   avatars
 -   allavatars
 -   listavatars [fileID...]
+-   albawarnings [BOOL]
 `)
     }
     if (cmd == 'api' && args[0] == 'requestall') { requestAllOnlineFriends(currentUser) }
@@ -126,6 +126,8 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
     if (cmd == 'avatars') { requestAvatarStatTable(false, 0.05, false) }
     if (cmd == 'allavatars') { scanAllAvatarStats() }
     if (cmd == 'listavatars') { scanListAvatarStats(raw.slice(12).split(',')) }
+    if (cmd == 'wearers') { console.log(avatarStatSummary.seenAvatars) }
+    if (cmd == 'albawarnings') { elAlbaWarnings = JSON.parse(args[0]) }
     // if (cmd == 'explore' && args[0] == 'start') { getOnlineWorlds('worlds1', false) }
 })
 
@@ -331,6 +333,13 @@ var avatarStatSummary = {
 
 
 logEmitter.on('avatarchange', (I_userName, I_avatarName) => {
+    var pruneCheckLength = avatarStatSummary.seenAvatars.filter(a => Date.now() > a.lastAccessed + 60000 && a.wearers.length == 0)
+    var pruneLeftover = avatarStatSummary.seenAvatars.filter(a => Date.now() < a.lastAccessed + 60000 || a.wearers.length != 0)
+    if (pruneCheckLength.length > 0) {
+        avatarStatSummary.seenAvatars = pruneLeftover
+        console.log(`${loglv().log}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarCache]: Pruning ${pruneCheckLength.length} avatars from memory.`)
+    }
+
     try {
         avatarStatSummary.seenAvatars.filter(a => a.wearers.includes(I_userName)).map(b => b.wearers.splice(b.wearers.indexOf(I_userName)))
         avatarStatSummary.seenAvatars.filter(a => a.name == I_avatarName)[0].wearers.push(I_userName)
@@ -339,13 +348,6 @@ logEmitter.on('avatarchange', (I_userName, I_avatarName) => {
     }
 })
 logEmitter.on('avatarloaded', (I_avatarName, I_author) => {
-    var pruneCheckLength = avatarStatSummary.seenAvatars.filter(a => Date.now() > a.lastAccessed + 60000 && a.wearers.length == 0)
-    var pruneLeftover = avatarStatSummary.seenAvatars.filter(a => Date.now() < a.lastAccessed + 60000 || a.wearers.length != 0)
-    if (pruneCheckLength.length > 0) {
-        avatarStatSummary.seenAvatars = pruneLeftover
-        console.log(`${loglv().log}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarCache]: Pruning ${pruneCheckLength.length} avatars from memory.`)
-    }
-
     try {
         var assSa = avatarStatSummary.seenAvatars.filter(a => a.name == I_avatarName)[0]
         assSa.author = I_author
@@ -356,6 +358,13 @@ logEmitter.on('avatarloaded', (I_avatarName, I_author) => {
     }
 })
 logEmitter.on('playerLeft', (I_userName) => {
+    var pruneCheckLength = avatarStatSummary.seenAvatars.filter(a => Date.now() > a.lastAccessed + 60000 && a.wearers.length == 0)
+    var pruneLeftover = avatarStatSummary.seenAvatars.filter(a => Date.now() < a.lastAccessed + 60000 || a.wearers.length != 0)
+    if (pruneCheckLength.length > 0) {
+        avatarStatSummary.seenAvatars = pruneLeftover
+        console.log(`${loglv().log}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarCache]: Pruning ${pruneCheckLength.length} avatars from memory.`)
+    }
+
     avatarStatSummary.seenAvatars.filter(a => a.wearers.includes(I_userName)).map(b => b.wearers.splice(b.wearers.indexOf(I_userName)))
 })
 
@@ -608,7 +617,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
 
 
     if (totalavatareval.length > 1) { console.log(totalavatareval.replace(/\n/, '') + "\n") }
-    if (warnbox.length > 0 && getInstanceGroupID() == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+    if (warnbox.length > 0 && getInstanceGroupID() == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && elAlbaWarnings == true) {
         // if (warnbox.length > 0) {
 
         function fitChars(I_line) {
@@ -636,7 +645,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
             return I_line.slice(0, limitLength != 0 ? limitLength : I_line.length)
         }
 
-        oscChatBoxV2(`${fitChars(res.data.name)}${warnbox}`, 10000, false, true, false, false, true)
+        oscChatBoxV2(`${fitChars(res.data.name)}${warnbox}`, 15000, false, true, false, true, true)
     }
 
     // Summary Chart Data
@@ -911,16 +920,17 @@ function socket_VRC_API_Connect() {
 
                     if (userAutoAcceptWhiteList.includes(wsContent.senderUsername)) {
                         // Requester is Whitelisted
-                        let instanceId = getSelfLocation()
-                        if (instanceId == undefined || instanceId == '') {
+                        if (getSelfLocation() == undefined || getSelfLocation() == '') {
                             let res = await vrchat.getCurrentUser()
                             if (res.data.presence.world != 'offline') {
-                                await vrchat.inviteUser({ 'path': { 'userId': wsContent.senderUserId }, 'body': { 'instanceId': res.data.presence.world + ":" + res.data.presence.instance, 'messageSlot': 0 } })
+                                let resIU = await vrchat.inviteUser({ 'path': { 'userId': wsContent.senderUserId }, 'body': { 'instanceId': res.data.presence.world + ":" + res.data.presence.instance, 'messageSlot': 0 } })
+                                resIU.data == undefined ? console.log(resIU.error) : console.log(resIU.data)
                             } else {
                                 await vrchat.respondInvite({ 'body': { 'responseSlot': 0 }, 'path': { 'notificationId': wsContent.id } })
                             }
                         } else {
-                            await vrchat.inviteUser({ 'path': { 'userId': wsContent.senderUserId }, 'body': { 'instanceId': instanceId, 'messageSlot': 0 } })
+                            let resIU = await vrchat.inviteUser({ 'path': { 'userId': wsContent.senderUserId }, 'body': { 'instanceId': getSelfLocation(), 'messageSlot': 0 } })
+                            resIU.data == undefined ? console.log(resIU.error) : console.log(resIU.data)
                         }
                     }
                 } else {
@@ -946,7 +956,7 @@ function socket_VRC_API_Connect() {
                         var resG = await vrchat.getGroup({ 'path': { 'groupId': wsContent.link.slice(6) } })
                         if (resG.data != undefined) {
                             var resMu1 = await vrchat.moderateUser({ 'body': { 'type': 'block', 'moderated': resG.data.ownerId } })
-                            console.log(resMu1)
+                            console.log(`You've blocked Group Owner: ${resMu1.data.targetDisplayName}`)
                         } else { console.log(resG) }
 
                         // Block Inviter
@@ -955,7 +965,7 @@ function socket_VRC_API_Connect() {
                             // var resMu2 = await vrchat.moderateUser({'body':{'type':'block','moderated':resS.data[0].id}})
 
                             // Skip auto-block incase search miss-lands
-                            console.log(`User that invited you`, resS.data[0])
+                            console.log(`User that invited you`, resS.data[0].displayName, resS.data[0].id)
                         }
 
                         // Block Group
@@ -1651,6 +1661,9 @@ async function requestAllOnlineFriends() {
                 console.log(`${loglv().log}${selflog} [BulkFrendRequestInviter] (${index + 1}/${friendArr.length}) ${friend.displayName} is Busy`)
             }
             if (index + 1 == friendArr.length) {
+                setTimeout(() => {
+                    console.log(`${loglv().log}${selflog} [BulkFrendRequestInviter] 10 minutes has past since sending Requests`)
+                }, 600_000);
                 console.log(`${loglv().log}${selflog} [BulkFrendRequestInviter] Done Requesting`)
             }
         }, (2_000 * index) + Math.random())

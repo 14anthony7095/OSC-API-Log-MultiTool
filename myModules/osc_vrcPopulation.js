@@ -7,9 +7,9 @@
 */
 //	--	Libraries	--
 var { loglv, playerCounter, graphTimeRangeMinutes } = require('./config.js');
-const { oscSend, oscEmitter, OSCDataBurst, OSCDataBurstState } = require('./Interface_osc_v1.js');
+const { oscSend, oscEmitter, OSCDataBurst, getOSCDataBurstState } = require('./Interface_osc_v1.js');
 const { getVisitsCount, apiEmitter } = require('./Interface_vrc-Api.js');
-const { logEmitter } = require('./Interface_vrc-Log.js');
+const { logEmitter, getVrchatRunning } = require('./Interface_vrc-Log.js');
 
 
 //	--	Global Vars	--
@@ -56,23 +56,6 @@ function stop() {
 
 var worldcount_mem = 0
 apiEmitter.on('switch', (data, type) => {
-	/* if (data >= 1 && type == 'population') {
-		stop()
-		if (isWorlding == false) {
-			isWorlding = true
-			worldcount_mem = data
-			// console.log(`setting 13 to true`)
-			OSCDataBurst(13, parseFloat(1))
-			workload(worldcount_mem)
-			worldTimer = setInterval(() => {
-				// console.log(`setting 13 to true`)
-				OSCDataBurst(13, parseFloat(1))
-				workload(worldcount_mem)
-			}, 10000)
-		} else if (isWorlding == true) {
-			worldcount_mem = data
-		}
-	} else  */
 	if (data >= 1) {
 		stop()
 		if (isWorlding == false) {
@@ -97,10 +80,14 @@ apiEmitter.on('switch', (data, type) => {
 	}
 })
 logEmitter.on('gameclose', () => {
-	isWorlding = false
-	start()
-	clearInterval(worldTimer)
-	worldTimer = null
+	setTimeout(() => {
+		if (isWorlding == true) {
+			isWorlding = false
+			start()
+			clearInterval(worldTimer)
+			worldTimer = null
+		}
+	}, 60000);
 })
 
 
@@ -136,13 +123,10 @@ Int Double DATA handling
   __ = 255
  */
 
-	/*
-	OSCDataBurst(7, playersInInstance.length > 80 ? 80 : playersInInstance.length)
-	playerHardLimit < 10 ? OSCDataBurst(8, (playerHardLimit > 80 ? 80 : playerHardLimit) + 200) : OSCDataBurst(8, playerHardLimit > 80 ? 80 : playerHardLimit)
-	OSCDataBurst(9, parseFloat(playerRatio))
-	*/
 
-	if (OSCDataBurstState != 'overloaded') {
+
+	// BUFFER COST 6
+	if (getOSCDataBurstState() != 'overloaded' && getVrchatRunning() == true) {
 		let digitSeg = playerCount.toString().padStart(6, '0')
 		let digitLen = playerCount.toString().length
 		digitLen == 6 ? OSCDataBurst(1, parseInt(digitSeg[0]) / 10) : OSCDataBurst(1, parseFloat(1))

@@ -7,7 +7,7 @@
 */
 // Libraries
 var { loglv, printAllLogs, ChatVideoURL, ChatVideoTitle, ttvAlwaysRun, ttvFetchFrom, ChatImageStringURL, ChatDownSpeed, logStickers, downloadStickers } = require('./config.js')
-var { oscSend, oscChatBox, OSCDataBurst, oscEmitter, oscChatBoxV2 } = require('./Interface_osc_v1.js')
+var { oscSend, oscChatBox, OSCDataBurst, oscEmitter, oscChatBoxV2, getOSCDataBurstState } = require('./Interface_osc_v1.js')
 var { switchChannel, joinChannel, leaveChannel } = require('./Interface_twitch.js');
 var fs = require('fs')
 var ytdl = require('ytdl-core');
@@ -204,6 +204,9 @@ var G_groupID = ``
 var instanceType = ''
 var lastSetUserStatus = ''
 var cooldownPortalVanish = false
+var vrchatRunning = false
+function getVrchatRunning() { return vrchatRunning }
+exports.getVrchatRunning = getVrchatRunning;
 
 function getInstanceGroupID() { return G_groupID }
 exports.getInstanceGroupID = getInstanceGroupID;
@@ -216,6 +219,7 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 	if (printAllLogs == true) {
 		console.log(`${loglv().debug}${selflog} [${currentLineIndexFromBuffer}/${totalLinesInBuffer}] ${line}`)
 	}
+	if (vrchatRunning == false) { vrchatRunning = true }
 
 	logEmitter.emit('log', line)
 
@@ -280,6 +284,23 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 			}
 		}
 	}
+
+	// Fish! [RELEASE]
+	if (G_worldID == 'wrld_ae001ea3-ed05-42f0-adf2-3d47efd10a77') {
+		if (line.includes(`[PlayerStats] `)) {
+			var plystats = line.split(`[PlayerStats] `)[1].split(' ')
+			console.log(`${loglv().log}${selflog} [FISH] You're Level ${plystats[2].slice(2)} with ${plystats[3].slice(3)} XP and ${plystats[4].slice(6)} Gold.`)
+			console.log(`${loglv().log}${selflog} [FISH] You've caught ${plystats[5].slice(5)} fish (${plystats[6].slice(5)} rare). Sold ${plystats[7].slice(5)}. Turned in ${plystats[8].slice(9)} Bounties`)
+			console.log(`${loglv().log}${selflog} [FISH] With a Playtime of ${plystats[9].slice(11, -1) >= 86400 ? "" + Math.floor(plystats[9].slice(11, -1) / 86400) + ":" : ""}${new Date(plystats[9].slice(11, -1) * 1000).toISOString().substring(11, 19)}`)
+		}
+
+		if (line.includes(`[VersionChecker] Lobby version stamped: `)) {
+			var lobbyver = line.split('[VersionChecker] Lobby version stamped: ')[1]
+			console.log(`${loglv().log}${selflog} [FISH] Lobby Version ${lobbyver}.`)
+			logEmitter.emit('setstatus', 'Fishing - Lobby ver '+lobbyver)
+		}
+	}
+
 
 	// Portal Manager
 	if (line.includes(`[PortalManager]`)) {
@@ -355,11 +376,14 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 }
 
 function queueInstanceDataBurst() {
-	OSCDataBurst(7, parseFloat((playersInInstance.length > 80 ? 80 : playersInInstance.length).toString().padStart(2, '0')[0] == 0 ? 10 : (playersInInstance.length > 80 ? 80 : playersInInstance.length).toString().padStart(2, '0')[0]) / 10)
-	OSCDataBurst(8, parseFloat((playersInInstance.length > 80 ? 80 : playersInInstance.length).toString().padStart(2, '0')[1]) / 10)
-	OSCDataBurst(9, parseFloat((playerHardLimit > 80 ? 80 : playerHardLimit) < 10 ? (playerHardLimit > 80 ? 80 : playerHardLimit) : (playerHardLimit > 80 ? 80 : playerHardLimit).toString()[0]) / 10)
-	OSCDataBurst(10, parseFloat((playerHardLimit > 80 ? 80 : playerHardLimit) < 10 ? 10 : (playerHardLimit > 80 ? 80 : playerHardLimit).toString()[1]) / 10)
-	OSCDataBurst(11, parseFloat(playerRatio))
+	// BUFFER COST 5
+	if (getOSCDataBurstState() != 'overloaded' && vrchatRunning == true) {
+		OSCDataBurst(7, parseFloat((playersInInstance.length > 80 ? 80 : playersInInstance.length).toString().padStart(2, '0')[0] == 0 ? 10 : (playersInInstance.length > 80 ? 80 : playersInInstance.length).toString().padStart(2, '0')[0]) / 10)
+		OSCDataBurst(8, parseFloat((playersInInstance.length > 80 ? 80 : playersInInstance.length).toString().padStart(2, '0')[1]) / 10)
+		OSCDataBurst(9, parseFloat((playerHardLimit > 80 ? 80 : playerHardLimit) < 10 ? (playerHardLimit > 80 ? 80 : playerHardLimit) : (playerHardLimit > 80 ? 80 : playerHardLimit).toString()[0]) / 10)
+		OSCDataBurst(10, parseFloat((playerHardLimit > 80 ? 80 : playerHardLimit) < 10 ? 10 : (playerHardLimit > 80 ? 80 : playerHardLimit).toString()[1]) / 10)
+		OSCDataBurst(11, parseFloat(playerRatio))
+	}
 	// membersInInstance.length
 	// memberRatio
 }
@@ -543,6 +567,11 @@ function eventGameClose() {
 		seenVideoURLs = []
 	}
 	console.log(buildLog)
+	if (vrchatRunning == true) {
+		setTimeout(() => {
+			vrchatRunning = false
+		}, 10_000);
+	}
 }
 exports.eventGameClose = eventGameClose;
 
@@ -567,6 +596,7 @@ function eventPropSpawned(propID) {
 
 function getSelfLocation() { return G_currentLocation }
 exports.getSelfLocation = getSelfLocation;
+
 function eventHeadingToWorld(logOutputLine) {
 	clearTimeout(worldHopTimeout)
 	worldHopTimeout = null
@@ -657,6 +687,7 @@ function eventInstanceClosed() {
 	}
 	worldID_Closed = true
 	oscSend('/avatar/parameters/log/instance_closed', true)
+
 }
 
 function eventReceivedNotification(line) {
@@ -839,7 +870,7 @@ function eventPlayerAvatarSwitch(logOutputLine) {
 	let playerswitching = logOutputLine.split(`Switching `)[1].split(`to avatar `)[0].trim()
 	let avatarswitchedto = logOutputLine.split(`to avatar `)[1].trim()
 
-	// console.log(`${loglv().log}${selflog} [AvatarChange]: ${playerswitching} switching to (${avatarswitchedto})`)
+	console.log(`${loglv().log}${selflog} [AvatarChange]: ${playerswitching} switching to (${avatarswitchedto})`)
 	logEmitter.emit('avatarchange', playerswitching, avatarswitchedto)
 }
 
