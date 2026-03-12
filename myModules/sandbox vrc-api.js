@@ -64,18 +64,23 @@ async function main() {
     const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
     console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
 
-    // 2026.01.28 01:35:17 Debug      -  [Behaviour] Switching Yugenki to avatar 01 - Akiho Nagase V2
+    /* 
+        for (const item in vrcFriendsList.friends) {
+            var res = await vrchat.getUser({ 'path': { 'userId': vrcFriendsList.friends[item] } })
+            res.data.discordId != undefined ? console.log(`${res.data.displayName} - ${res.data.discordId}`) : ''
+        }
+    */
 
 
-    /* for (const item in vrcFriendsList.friends) {
-        var res = await vrchat.getUser({ 'path': { 'userId': vrcFriendsList.friends[item] } })
-        res.data.discordId != undefined ? console.log(`${res.data.displayName} - ${res.data.discordId}`) : ''
-    } */
+    // Search for anti-avatar-flight worlds
+    var sw1 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_hidden' } })
+    console.log('admin_hidden', sw1.data.map((e) => { return e.name }))
 
-    var gModr = await vrchat.getModerationReports({ 'query': { 'reportingUserId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752', 'n': 100, 'offset': 0 } })
-    console.log(JSON.stringify(gModr.data))
-    // [Behaviour] Switching USER_DISPLAYNAME to avatar AVATAR_NAME
-    // [API] Requesting Get analysis/FILE_ID/FILE_VERISON/security {{}} retryCount: 2
+
+    // Get Feedback Reports
+    // var gModr = await vrchat.getModerationReports({ 'query': { 'reportingUserId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752', 'n': 100, 'offset': 0 } })
+    // console.log(JSON.stringify(gModr.data))
+
 
 
 }

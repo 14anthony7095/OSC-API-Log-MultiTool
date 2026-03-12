@@ -128,7 +128,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
     if (cmd == 'listavatars') { scanListAvatarStats(raw.slice(12).split(',')) }
     if (cmd == 'wearers') { console.log(avatarStatSummary.seenAvatars) }
     if (cmd == 'albawarnings') { elAlbaWarnings = JSON.parse(args[0]) }
-    // if (cmd == 'explore' && args[0] == 'start') { getOnlineWorlds('worlds1', false) }
+    if (cmd == 'explore' && args[0] == 'prefill') { addLabWorldsToLocalQueue() }
 })
 
 function sleep(time) {
@@ -142,7 +142,8 @@ function sleep(time) {
 var exploreNextCountDownTimer
 oscEmitter.on('osc', (address, value) => {
     if (address == `/avatar/parameters/api/explore/start` && value == true) {
-        getOnlineWorlds('worlds1', false)
+        // getOnlineWorlds('worlds1', false)
+        inviteHubQueue()
     }
     if (address == `/avatar/parameters/api/explore/next` && value == true) {
         if (exploreMode == true) {
@@ -153,6 +154,7 @@ oscEmitter.on('osc', (address, value) => {
             inviteLocalQueue()
         }
     }
+    // if (address == `/avatar/parameters/api/explore/hub` && value == true) { }
     if (address == `/avatar/parameters/api/explore/stop` && value == true) {
         apiEmitter.emit('switch', 0, 'world')
         if (exploreMode == true) {
@@ -1404,10 +1406,33 @@ async function inviteOnlineWorlds_Loop(world_id) {
     }
 }
 
+function inviteHubQueue() {
+    var instanceBody = {
+        'worldId': 'wrld_10000000-0000-0000-0000-000000000000',
+        'type': 'group',
+        'region': 'use',
+        // 'displayName': 'World Hop',
+        'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
+        'groupAccessType': 'plus',
+        'queueEnabled': true
+    }
+
+    console.log(`${loglv().hey}${selflog} Creating group instance for wrld_10000000-0000-0000-0000-000000000000`)
+
+    vrchat.createInstance({ body: instanceBody })
+        .then(created_instance => { startvrc(created_instance.data.location, false) })
+        .catch(err => { console.log(`${loglv().warn}${selflog}` + err) })
+}
+
 function inviteLocalQueue(I_autoNext = false) {
     fs.readFile(worldQueueTxt, 'utf8', async (err, data) => {
         // err ? console.log(err); return : ''
-        let localQueueList = data.split('===')[0].split(`\r\n`)
+        let localQueueList = data.split('\r\n===')[0].split(`\r\n`)
+        if (localQueueList.length == 0) {
+            console.log(`${loglv().hey}${selflog} Explore queue is empty${data.includes('===') ? `: Remove bookmark` : ``}`);
+            oscChatBoxV2(`~Explore Queue is empty${data.includes('===') ? `\vRemove bookmark.` : ``}`, 5000, true, true, false, false, false);
+            return
+        }
         let randnum = Math.round(Math.random() * (localQueueList.length - 1))
         let world_id = localQueueList[randnum]
 
@@ -1490,7 +1515,7 @@ function inviteLocalQueue(I_autoNext = false) {
             apiEmitter.emit('switch', localQueueList.length, 'world')
             console.log(`${loglv().log}${selflog} Auto-Close set for ${created_instance.data.closedAt}.`)
         }).catch(err => {
-            oscChatBox(`instance create failed.\vTry another.`, 5)
+            oscChatBoxV2(`instance create failed.\vTry another.`, 5000, true, true)
             console.log(`${loglv().warn}${selflog}` + err)
             fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
                 // err ? console.log(err); return : ''

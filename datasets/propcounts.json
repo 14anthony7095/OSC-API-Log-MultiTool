@@ -1,11 +1,11 @@
 {
   "89be973f-9e1a-4260-8deb-211e32da8196": {
     "name": "Rainbow Ribbon",
-    "count": 613
+    "count": 614
   },
   "829ba6f6-b837-49d9-b9a9-056b82103b58": {
     "name": "THE REFERENCE CUBE",
-    "count": 1322
+    "count": 1323
   },
   "5c54ccdb-cafb-461b-b07f-91d189fc7b72": {
     "name": "Bubble Blaster",
@@ -13,7 +13,7 @@
   },
   "79789b58-e020-4b2e-aa25-ba21a1938eec": {
     "name": "Mori Calliope Penlight",
-    "count": 416
+    "count": 418
   },
   "49fec698-f0cb-475c-9bc3-8f24e1bcc4eb": {
     "name": "Campfire",
@@ -41,7 +41,7 @@
   },
   "0fd9deb0-6ca8-4c69-acbe-17035f93792b": {
     "name": "Groan Tube",
-    "count": 560
+    "count": 562
   },
   "e9d0bc1f-f7fd-4886-abec-d299745b2264": {
     "name": "MagicPotion",
@@ -53,7 +53,7 @@
   },
   "81ce8d80-72d8-4f60-9d6b-689a8340f55d": {
     "name": "Consumable Cube",
-    "count": 103
+    "count": 104
   },
   "afbc0df4-da97-4036-bb84-b4513350fd2a": {
     "name": "Open Flight Prop Port Test",
@@ -65,7 +65,7 @@
   },
   "062e8001-d338-4dd1-b3c7-ecfb4f30eb1c": {
     "name": "SnowPen",
-    "count": 103
+    "count": 107
   },
   "b121c206-666e-4a61-ba8b-5315d2303276": {
     "name": "Portable Winterizer",
@@ -85,7 +85,7 @@
   },
   "d974e56d-443e-4409-99c2-f5c9e5705d5b": {
     "name": "Party Popper",
-    "count": 244
+    "count": 247
   },
   "a1573c82-9767-4b42-a45d-4050e42a92b9": {
     "name": "Fortune Box",
@@ -101,7 +101,7 @@
   },
   "ce118c16-53d9-4d56-bcb2-717057eca102": {
     "name": "Roman Candle",
-    "count": 73
+    "count": 75
   },
   "cb3cad70-5354-4ce6-810b-9e0364264e2f": {
     "name": "Fiery Sky Fireworks Show",
@@ -109,7 +109,7 @@
   },
   "036389b7-3c9d-4e0d-96d1-f23cb195e76b": {
     "name": "Snow Blaster",
-    "count": 156
+    "count": 158
   },
   "25a95ca1-bba4-48d0-8a31-249bbc3af78e": {
     "name": "MAGFest26 Coin",
@@ -133,7 +133,7 @@
   },
   "011784ff-8885-4626-aa04-975f2a57d3c6": {
     "name": "Good Fortune Coin",
-    "count": 19
+    "count": 21
   },
   "cfa88cde-520a-4e28-83f4-bb40dadda5c2": {
     "name": "Pellet Drum",
@@ -145,14 +145,14 @@
   },
   "6cda1bd0-11a6-440a-93a0-6fa423252f97": {
     "name": "Flyswatter",
-    "count": 7
+    "count": 17
   },
   "99576fc3-8b16-434c-92fd-1aba605d3fac": {
     "name": "The Plunger",
-    "count": 8
+    "count": 10
   },
   "abbc7df2-2be2-47aa-8d2a-3f4c245da22f": {
     "name": "Shopping Cart",
-    "count": 5
+    "count": 6
   }
 }

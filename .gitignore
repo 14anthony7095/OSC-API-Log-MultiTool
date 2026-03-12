@@ -150,3 +150,6 @@ worldThumbnails/output/thumbnail.mp4
 datasets/avatarStatSummarys/
 datasets/avatarStatCache/
 myModules/sandbox vrc-api.js
+datasets/vrc-X-dis.json
+datasets/vrchat-X-discord.db
+datasets/groupMembers El Alba.json

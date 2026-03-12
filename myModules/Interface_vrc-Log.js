@@ -20,6 +20,8 @@ const { config } = require('process');
 const logEmitter = new EventEmitter
 exports.logEmitter = logEmitter;
 require('dotenv').config({ 'quiet': true })
+// const sqlite3 = require('sqlite3').verbose();
+// const db = new sqlite3.Database('datasets/vrchat-X-discord.db');
 
 let selflog = `\x1b[0m[\x1b[32mVRC_Log\x1b[0m]`
 var path = 'C:/Users/14anthony7095/AppData/LocalLow/VRChat/VRChat/'
@@ -32,6 +34,8 @@ var playerHardLimit = 99
 var playerRatio = 0.5
 var memberRatio = 0.5
 var G_autoNextWorldHop = false
+var worldHoppers = []
+var vrchatDiscord; fs.readFile('datasets/vrc-X-dis.json', 'utf8', (err, data) => { vrchatDiscord = JSON.parse(data) })
 
 //	--	On Load	--
 console.log(`${loglv().log}${selflog} Loaded -> ${loglv(printAllLogs)}printAllLogs${loglv().reset} , ${loglv(ChatVideoURL)}ChatVideoURL${loglv().reset} , ${loglv(ChatVideoTitle)}ChatVideoTitle${loglv().reset}`)
@@ -44,7 +48,13 @@ cmdEmitter.on('cmd', (cmd, args) => {
 -	log printall [true/false]
 -	log queue [true/false]
 -	log speed [true/false]
--	explore autonext [true/false]`)
+-	explore autonext [true/false]
+-	twitch alwaysrun
+-	twitch join ["channel"]
+-	twitch leave ["channel"]
+-	twitch switch ["channel"]
+-	twitch from [mode]
+-	elalbahoppers`)
 	}
 	if (cmd == 'log' && args[0] == 'vidurl') { ChatVideoURL = JSON.parse(args[1]) }
 	if (cmd == 'log' && args[0] == 'vidtitle') { ChatVideoTitle = JSON.parse(args[1]) }
@@ -58,6 +68,13 @@ cmdEmitter.on('cmd', (cmd, args) => {
 	if (cmd == 'twitch' && args[0] == 'leave') { ttvFetchFrom = 2; setTimeout(() => { leaveChannel(args[1].toString()) }, 100) }
 	if (cmd == 'twitch' && args[0] == 'switch') { ttvFetchFrom = 1; setTimeout(() => { switchChannel(args[1].toString()) }, 100) }
 	if (cmd == 'twitch' && args[0] == 'from') { ttvFetchFrom = args[1] }
+	if (cmd == 'hoppers') {
+		var string = ''
+		worldHoppers.forEach((a) => {
+			string += `${string.length == 0 ? '' : '\n'}${new Date(a.playtime).toISOString().substring(11, 19)} ${a.name} [profile](<https://vrchat.com/home/user/${a.id}>)`
+		})
+		console.log(string)
+	}
 })
 
 function fetchLogFile() {
@@ -200,6 +217,7 @@ var G_worldID = ``
 var G_currentLocation = ''
 var worldID_Closed = false
 oscSend('/avatar/parameters/log/instance_closed', false)
+var G_groupID_last = ``
 var G_groupID = ``
 var instanceType = ''
 var lastSetUserStatus = ''
@@ -297,8 +315,26 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 		if (line.includes(`[VersionChecker] Lobby version stamped: `)) {
 			var lobbyver = line.split('[VersionChecker] Lobby version stamped: ')[1]
 			console.log(`${loglv().log}${selflog} [FISH] Lobby Version ${lobbyver}.`)
-			logEmitter.emit('setstatus', 'Fishing - Lobby ver '+lobbyver)
+			logEmitter.emit('setstatus', 'Fishing - Lobby ver ' + lobbyver)
 		}
+
+		if (line.includes('[NetworkProcessing]')) {
+			var pooltype = line.slice(line.includes('because 14anthony7095 already owner') ? 86 : 79).split(' ')
+			if (['School Event',
+				'Sandy Updraft',
+				'Savanna Rift',
+				'Shadow Chasm',
+				'Sparkling Pool',
+				'Ionized Fissure',
+				'Celestial Chasm',
+				'Midas Rift',
+				'Occult Pool',
+				'Strange Whirlpool'].includes(pooltype[0] + ' ' + pooltype[1])) {
+				console.log(`${loglv().log}${selflog} [FISH] ${pooltype[0]} ${pooltype[1]} Pool has Spawned.`)
+				oscChatBoxV2(`A ${pooltype[0]} ${pooltype[1]} has Spawned`, 10_000, true, false, false, false, false)
+			}
+		}
+
 	}
 
 
@@ -603,6 +639,7 @@ function eventHeadingToWorld(logOutputLine) {
 	clearTimeout(worldHopTimeoutHour)
 	worldHopTimeoutHour = null
 
+	G_groupID_last = G_groupID
 	G_worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
 	console.log(`${loglv().debug}${selflog} World ID ${G_worldID}`)
 
@@ -637,6 +674,11 @@ function eventHeadingToWorld(logOutputLine) {
 	G_currentLocation = 'wrld_' + logOutputLine.split('wrld_')[1]
 	logEmitter.emit('headingToWorld', G_worldID, G_groupID, instanceType)
 
+	// El Alba starting world
+	if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && G_worldID == 'wrld_f6445b27-037d-4926-b51f-d79ada716b31') { worldHoppers = [] }
+	// 14aHop starting world
+	if (G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce' && G_worldID == 'wrld_10000000-0000-0000-0000-000000000000') { worldHoppers = [] }
+
 	console.log(`${loglv().debug}${selflog} Instance Type ${instanceType}`)
 }
 
@@ -662,7 +704,20 @@ function eventJoinWorld() {
 	membersInInstance = []
 	playersInstanceObject = []
 
-
+	if (G_groupID_last == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' || G_groupID_last == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+		if (G_groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && G_groupID != 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+			var string = ''
+			worldHoppers.forEach((a) => {
+				var discordInfo = vrchatDiscord.filter(e=>e.vrcUUID==a.id)
+				if(discordInfo.length != 0){
+					string += `${string.length == 0 ? '' : '\n'}${new Date(a.playtime).toISOString().substring(11, 19)} ${a.name} <@${discordInfo.discordid}> - [${discordInfo.discordid}]`
+				}else{
+					string += `${string.length == 0 ? '' : '\n'}${new Date(a.playtime).toISOString().substring(11, 19)} ${a.name} [profile](<https://vrchat.com/home/user/${a.id}>)`
+				}
+			})
+			console.log(string)
+		}
+	}
 
 	fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
 		if (data.includes(G_worldID) && G_worldID != '') {
@@ -723,7 +778,6 @@ function eventReceivedNotification(line) {
 	// message: "This is a generated invite to A Simple Fishing World">
 }
 
-
 var currentAccountInUse = { name: process.env["VRC_ACC_NAME_1"], id: process.env["VRC_ACC_ID_1"] }
 function getCurrentAccountInUse() { return currentAccountInUse }; exports.getCurrentAccountInUse = getCurrentAccountInUse;
 function eventPlayerInitialized(logOutputLine) {
@@ -732,12 +786,15 @@ function eventPlayerInitialized(logOutputLine) {
 	if (playerDisplayName != undefined) {
 		console.log(`${loglv().log}${selflog} Player Joined: ` + playerDisplayName)
 		logEmitter.emit('playerJoin', playerDisplayName)
+
+		// Terrors of Nowhere alert friend join
 		if (G_worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd' &&
 			[`invite`, `invitePlus`, `friends`, `friendsPlus`].includes(instanceType) &&
 			Date.now() > (worldjointimestamp + 120_000)) {
 			oscChatBox(`~Someone is joining if you want to wait for them: ${playerDisplayName}`)
 		}
 
+		// No Orange status Group
 		if (G_groupID == 'grp_cacf2dd8-8958-4412-be78-dedd798e6df4' && playerDisplayName != '14anthony7095') {
 			logEmitter.emit('scanPlayerStatus4Ban', playerDisplayName)
 		}
@@ -802,6 +859,21 @@ async function eventPlayerJoin(logOutputLine) {
 			logEmitter.emit('joinedworld', G_worldID)
 		}
 
+		// El Alba starting world
+		if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' || G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+			var filteredhoppers = worldHoppers.find(a => a.id == playerID)
+			if (filteredhoppers != undefined) {
+				worldHoppers[worldHoppers.findIndex(a => a.id == playerID)]["joinTime"] = Date.now()
+			} else {
+				worldHoppers.push({
+					"name": playerDisplayName,
+					"id": playerID,
+					"playtime": 0,
+					"joinTime": Date.now()
+				})
+			}
+		}
+
 		try {
 			playersInstanceObject[pioIndex].id = playerID
 		} catch (error) {
@@ -836,6 +908,21 @@ function eventPlayerLeft(logOutputLine) {
 			console.log(`${loglv().log}${selflog} There are now ${membersInInstance.length} / ${playersInInstance.length} group members in the instance. [ ${memberRatio} ]`)
 		} */
 		// logEmitter.emit('playerLeft', playerDisplayName, playerID, playersInInstance)
+
+		// El Alba starting world
+		if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' || G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce' ||
+			G_groupID_last == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' || G_groupID_last == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+			var filteredhoppers = worldHoppers.find(a => a.name == playerDisplayName)
+			if (filteredhoppers != undefined) {
+				var foundindex = worldHoppers.findIndex(a => a.name == playerDisplayName)
+				console.debug(worldHoppers[foundindex]["playtime"])
+				console.debug(worldHoppers[foundindex]["joinTime"])
+				console.debug(Date.now() - worldHoppers[foundindex]["joinTime"])
+				worldHoppers[foundindex]["playtime"] += Date.now() - worldHoppers[foundindex]["joinTime"]
+			} else {
+				console.log(`${loglv().hey}${selflog} [WorldHoppers] Skipping undetected join`)
+			}
+		}
 
 		if (playerDisplayName == getCurrentAccountInUse().name) {
 			clearTimeout(worldHopTimeout)
