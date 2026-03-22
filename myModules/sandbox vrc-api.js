@@ -19,7 +19,7 @@ let selflog = `\x1b[0m[\x1b[33mVRC_API\x1b[0m]`
 console.log(`${loglv().log}${selflog} Loaded`)
 
 var vrchat = new VRChat({ application: { name: "Api-Osc-Interface_DEV", version: "1.2-DEV", contact: process.env["CONTACT_EMAIL"] }, authentication: { credentials: { username: process.env["VRC_ACC_LOGIN_1"], password: process.env["VRC_ACC_PASSWORD_1"], totpSecret: process.env["VRC_ACC_TOTPSECRET_1"] } }, keyv: new KeyvFile({ filename: "./datasets/vrcA.json" }) });
-
+var isApiErrorSkip = false
 
 var vrcpropcount = {
     'prop_id': {
@@ -61,8 +61,12 @@ function maindev() {
 
 main()
 async function main() {
-    const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
-    console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
+    console.log('MAIN')
+    try {
+        const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
+        console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
+    } catch (error) { if (error.statusCode == 500) { isApiErrorSkip = true }; return }
+
 
     /* 
         for (const item in vrcFriendsList.friends) {
@@ -72,11 +76,12 @@ async function main() {
     */
 
 
+
     // Search for anti-avatar-flight worlds
-    var sw1 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_hidden' } })
-    console.log('admin_hidden', sw1.data.map((e) => { return e.name }))
-
-
+    // var sw1 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_collision' } })
+    // var sw2 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_stations' } })
+    // console.log('admin_disable_avatar_collision', sw1.data.map((e) => { return e.name }))
+    // console.log('admin_disable_avatar_stations', sw2.data.map((e) => { return e.name }))
     // Get Feedback Reports
     // var gModr = await vrchat.getModerationReports({ 'query': { 'reportingUserId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752', 'n': 100, 'offset': 0 } })
     // console.log(JSON.stringify(gModr.data))

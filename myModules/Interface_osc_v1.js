@@ -242,7 +242,7 @@ exports.OSCBinaryBurst = OSCBinaryBurst
 
 
 var OSCDataBurstState = 'ready'
-function getOSCDataBurstState(){ return OSCDataBurstState }
+function getOSCDataBurstState() { return OSCDataBurstState }
 exports.getOSCDataBurstState = getOSCDataBurstState;
 async function OSCDataBurst(in_addr, in_dataA, isLoop = false) {
 	/*
@@ -264,18 +264,20 @@ async function OSCDataBurst(in_addr, in_dataA, isLoop = false) {
 	*/
 	if (isLoop == false) { dataBurst.push({ 'addr': in_addr, 'dataA': in_dataA }) }
 	if (dataBurst.length < 2 || isLoop == true) {
-		if (dataBurst.length >= 50 ) {
+		if (dataBurst.length >= 50) {
 			OSCDataBurstState = 'overloaded'
-			dataBurst = []
 			console.log(`${loglv().debug}${selflog} [OSCDataBurst] ${OSCDataBurstState} by: ${dataBurst.length} - ${dataBurst[0].addr}, ${dataBurst[0].dataA}`)
+			dataBurst = []
 			/* if(dataBurst.length >= 100){
 				console.log(`${loglv().hey}${selflog} [OSCDataBurst] ${OSCDataBurstState}: PURGING BUFFER of ${dataBurst.length} entries`)
 								
 			} */
 		} else { OSCDataBurstState = 'busy' }
 		// console.log(`${loglv().debug}${selflog} [OSCDataBurst] ${OSCDataBurstState} Sending: ${dataBurst[0].addr}, ${dataBurst[0].dataA}`)
-		await sendOSCDataBurst_v2(dataBurst[0].addr, dataBurst[0].dataA)
-		dataBurst.shift()
+		if (dataBurst.length != 0) {
+			await sendOSCDataBurst_v2(dataBurst[0].addr, dataBurst[0].dataA)
+			dataBurst.shift()
+		}
 		if (dataBurst.length != 0) {
 			setTimeout(() => { OSCDataBurst(undefined, undefined, true) }, 200)
 		} else {

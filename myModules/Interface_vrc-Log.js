@@ -54,7 +54,7 @@ cmdEmitter.on('cmd', (cmd, args) => {
 -	twitch leave ["channel"]
 -	twitch switch ["channel"]
 -	twitch from [mode]
--	elalbahoppers`)
+-	hoppers`)
 	}
 	if (cmd == 'log' && args[0] == 'vidurl') { ChatVideoURL = JSON.parse(args[1]) }
 	if (cmd == 'log' && args[0] == 'vidtitle') { ChatVideoTitle = JSON.parse(args[1]) }
@@ -70,8 +70,13 @@ cmdEmitter.on('cmd', (cmd, args) => {
 	if (cmd == 'twitch' && args[0] == 'from') { ttvFetchFrom = args[1] }
 	if (cmd == 'hoppers') {
 		var string = ''
-		worldHoppers.forEach((a) => {
-			string += `${string.length == 0 ? '' : '\n'}${new Date(a.playtime).toISOString().substring(11, 19)} ${a.name} [profile](<https://vrchat.com/home/user/${a.id}>)`
+		worldHoppers.sort((a, b) => { return b.playtime - a.playtime }).forEach((a) => {
+			var discordInfo = vrchatDiscord.filter(e => e.vrcUUID == a.id)
+			if (discordInfo.length != 0) {
+				string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` ${a.name} <@${discordInfo[0].discordid}> - [${discordInfo[0].discordid}]`
+			} else {
+				string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` ${a.name} [profile](<https://vrchat.com/home/user/${a.id}>)`
+			}
 		})
 		console.log(string)
 	}
@@ -223,6 +228,7 @@ var instanceType = ''
 var lastSetUserStatus = ''
 var cooldownPortalVanish = false
 var vrchatRunning = false
+var loadingAvatarTimer;
 function getVrchatRunning() { return vrchatRunning }
 exports.getVrchatRunning = getVrchatRunning;
 
@@ -263,10 +269,19 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 
 	if (line.includes(`[VRCX] VideoPlay(PopcornPalace) `)) { eventPopcornPalace(line.split('[VRCX] VideoPlay(PopcornPalace) ')[1]) }
 
+	// [Behaviour] Could not enter room because: If the instance exists‚ you're not allowed to access it․ (You are not allowed to travel to that location. If the instance exists‚ you're not allowed to access it․ (Code: 403))
+	if (line.includes(`[Behaviour] Could not enter room because: ` && line.includes('You are not allowed to travel to that location'))) {
+		logEmitter.emit('notAllowedToTravel')
+	}
+
 
 	if (line.includes(`[API] Requesting Get analysis/`)) {
 		const fileAPIreq = line.split(`[API] Requesting Get analysis/`)[1].split('/')
 		logEmitter.emit('fileanalysis', fileAPIreq[0], parseInt(fileAPIreq[1]))
+		clearTimeout(loadingAvatarTimer)
+		loadingAvatarTimer = setTimeout(() => {
+			logEmitter.emit('avatarQueueFinish', true)
+		}, 10000);
 	}
 
 	if (line.includes(`VRCNP: Received URL`) && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
@@ -318,7 +333,7 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 			logEmitter.emit('setstatus', 'Fishing - Lobby ver ' + lobbyver)
 		}
 
-		if (line.includes('[NetworkProcessing]')) {
+		if (line.includes('[NetworkProcessing]') && lastSetUserStatus.includes('Fishing - Lobby ver')) {
 			var pooltype = line.slice(line.includes('because 14anthony7095 already owner') ? 86 : 79).split(' ')
 			if (['School Event',
 				'Sandy Updraft',
@@ -331,7 +346,7 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 				'Occult Pool',
 				'Strange Whirlpool'].includes(pooltype[0] + ' ' + pooltype[1])) {
 				console.log(`${loglv().log}${selflog} [FISH] ${pooltype[0]} ${pooltype[1]} Pool has Spawned.`)
-				oscChatBoxV2(`A ${pooltype[0]} ${pooltype[1]} has Spawned`, 10_000, true, false, false, false, false)
+				oscChatBoxV2(`A ${pooltype[0]} ${pooltype[1]} has Spawned`, 10_000, false, true, false, false, false)
 			}
 		}
 
@@ -703,22 +718,22 @@ function eventJoinWorld() {
 	playersInInstance = []
 	membersInInstance = []
 	playersInstanceObject = []
-
-	if (G_groupID_last == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' || G_groupID_last == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
-		if (G_groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && G_groupID != 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
-			var string = ''
-			worldHoppers.forEach((a) => {
-				var discordInfo = vrchatDiscord.filter(e=>e.vrcUUID==a.id)
-				if(discordInfo.length != 0){
-					string += `${string.length == 0 ? '' : '\n'}${new Date(a.playtime).toISOString().substring(11, 19)} ${a.name} <@${discordInfo.discordid}> - [${discordInfo.discordid}]`
-				}else{
-					string += `${string.length == 0 ? '' : '\n'}${new Date(a.playtime).toISOString().substring(11, 19)} ${a.name} [profile](<https://vrchat.com/home/user/${a.id}>)`
-				}
-			})
-			console.log(string)
+	/*
+		if (G_groupID_last == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' || G_groupID_last == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+			if (G_groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && G_groupID != 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+				var string = ''
+				worldHoppers.sort((a,b)=>{return b.playtime - a.playtime}).forEach((a) => {
+					var discordInfo = vrchatDiscord.filter(e => e.vrcUUID == a.id)
+					if (discordInfo.length != 0) {
+						string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` ${a.name} <@${discordInfo[0].discordid}> - [${discordInfo[0].discordid}]`
+					} else {
+						string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` ${a.name} [profile](<https://vrchat.com/home/user/${a.id}>)`
+					}
+				})
+				console.log(string)
+			}
 		}
-	}
-
+	*/
 	fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
 		if (data.includes(G_worldID) && G_worldID != '') {
 			fs.writeFile(worldQueueTxt, data.replace(`${G_worldID}\r\n`, ''), (err) => {
@@ -871,6 +886,7 @@ async function eventPlayerJoin(logOutputLine) {
 					"playtime": 0,
 					"joinTime": Date.now()
 				})
+
 			}
 		}
 
@@ -926,6 +942,8 @@ function eventPlayerLeft(logOutputLine) {
 
 		if (playerDisplayName == getCurrentAccountInUse().name) {
 			clearTimeout(worldHopTimeout)
+			clearTimeout(loadingAvatarTimer)
+			loadingAvatarTimer = null
 			worldHopTimeout = null
 			cooldownUrl = true
 			if (worldID_Closed == true) {
@@ -959,7 +977,12 @@ function eventPlayerAvatarSwitch(logOutputLine) {
 
 	console.log(`${loglv().log}${selflog} [AvatarChange]: ${playerswitching} switching to (${avatarswitchedto})`)
 	logEmitter.emit('avatarchange', playerswitching, avatarswitchedto)
+	clearTimeout(loadingAvatarTimer)
+	loadingAvatarTimer = setTimeout(() => {
+		logEmitter.emit('avatarQueueFinish', true)
+	}, 10000);
 }
+
 
 function eventAssetDownload(logOutputLine) {
 	var assetbundlelog = logOutputLine.split(`[AssetBundleDownloadManager] `)[1]
@@ -971,6 +994,10 @@ function eventAssetDownload(logOutputLine) {
 		let avatarswitchedto = assetbundlelog.split('Unpacking Avatar (')[1].split(' by ')[0]
 		let avatarauthor = assetbundlelog.split('Unpacking Avatar (')[1].split(' by ')[1].slice(0, -1)
 		logEmitter.emit('avatarloaded', avatarswitchedto, avatarauthor)
+		clearTimeout(loadingAvatarTimer)
+		loadingAvatarTimer = setTimeout(() => {
+			logEmitter.emit('avatarQueueFinish', true)
+		}, 10000);
 	}
 
 	if (assetbundlelog.includes('Starting download of')) {
@@ -988,6 +1015,31 @@ function eventAssetDownload(logOutputLine) {
 	// 		oscChatBox(`~Average avatar download speed ${avyspeed}KB/s`)
 	// 	}
 	// }
+}
+
+function fitChars(I_line, lineCount = 1) {
+	const charWidth = {
+		" ": 0.018181, "a": 0.037037, "A": 0.041666, "b": 0.04, "B": 0.043478, "c": 0.03125, "C": 0.041666,
+		"d": 0.04, "D": 0.047619, "e": 0.037037, "<": 0.037037, "g": 0.04, "G": 0.047619, "0": 0.037037, "1": 0.037037,
+		"2": 0.037037, "3": 0.037037, "4": 0.037037, "5": 0.037037, "6": 0.037037, "7": 0.037037, "8": 0.037037, "9": 0.037037,
+		"h": 0.04, "H": 0.05, ">": 0.037037, "K": 0.04, "?": 0.028571, "E": 0.037037, "M": 0.058823, "n": 0.04,
+		"N": 0.05, "o": 0.04, "!": 0.017543, "@": 0.058823, "p": 0.04, "u": 0.04, "q": 0.04, "r": 0.026315,
+		"s": 0.03125, "f": 0.022222, "F": 0.034482, "i": 0.016666, "I": 0.022222, "j": 0.016666, "J": 0.017857, "k": 0.034482,
+		"l": 0.016666, "L": 0.034482, "m": 0.0625, "t": 0.023255, "v": 0.033333, "w": 0.052631, "x": 0.034482, "y": 0.033333,
+		"z": 0.030303, "O": 0.052631, "P": 0.04, "Q": 0.052631, "R": 0.04, "S": 0.035714, "T": 0.037037, "U": 0.047619,
+		"V": 0.04, "W": 0.0625, "X": 0.038461, "Y": 0.037037, "Z": 0.037037, "#": 0.041666, "$": 0.037037, "%": 0.055555,
+		"^": 0.037037, "&": 0.047619, "*": 0.035714, "（": 0.066666, "）": 0.066666, "(": 0.019607, ")": 0.019607, "_": 0.028571,
+		"-": 0.020833, "+": 0.037037, "=": 0.037037, "`": 0.018181, "~": 0.037037, "[": 0.021276, "]": 0.021276, "{": 0.025,
+		"}": 0.025, "|": 0.035714, ";": 0.017241, "'": 0.014492, ":": 0.017241, "\"": 0.026315, ",": 0.017241, ".": 0.017241,
+		"/": 0.024390
+	}
+	var trackingWidth = 0
+	var limitLength = 0
+	for (const item in I_line) {
+		trackingWidth += charWidth[I_line[item]] != undefined ? charWidth[I_line[item]] : 0.0625
+		if (trackingWidth >= lineCount) { limitLength = item; break; }
+	}
+	return I_line.slice(0, limitLength != 0 ? limitLength : I_line.length)
 }
 
 var cooldownUrl = false
@@ -1010,7 +1062,7 @@ function videoUrlResolver(videourl) {
 
 	//	--- Print Video URL ---
 	console.log(`${loglv().log}${selflog} Video URL: ${videourl}`)
-	if (ChatVideoURL == true) { oscChatBoxV2(`~VideoURL:\v${videourl}`, 5000, true, true) }
+	if (ChatVideoURL == true) { oscChatBoxV2(`~VideoURL:\v${fitChars(videourl, 3)}`, 5000, true, true) }
 
 	//	---	Twitch Channel URL Resolver	---
 	if (videourl.includes('twitch.tv/') && !videourl.includes('twitch.tv/videos')) {
@@ -1063,7 +1115,7 @@ function videoUrlResolver(videourl) {
 			.then((data) => {
 				setTimeout(() => {
 					console.log(`${loglv().log}${selflog} Video Title: ${data.videoDetails.title}`)
-					if (ChatVideoTitle == true) { oscChatBoxV2(`~VideoTitle:\v` + data.videoDetails.title, 2000, true, true) }
+					if (ChatVideoTitle == true) { oscChatBoxV2(`~VideoTitle:\v${fitChars(data.videoDetails.title, 3)}`, 2000, true, true) }
 				}, 2000)
 			})
 			.catch((err) => {

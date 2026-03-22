@@ -31,7 +31,7 @@ async function main() {
 
     } catch (error) {
         connected = false
-        console.error('Failed to connect', error.code, error.message);
+        console.error('OBS is not currently running');
         setTimeout(() => { main() }, 300000)
     }
 }

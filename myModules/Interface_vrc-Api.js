@@ -83,7 +83,7 @@ var vrchat = new VRChat({
 var vrcDataCache = {}
 var lastFetchGroupLogs;
 var currentUser;
-var elAlbaWarnings = false
+var statWarnings = false
 var userAutoAcceptWhiteList = []
 var worldQueueTxt = './datasets/worldQueue.txt'
 var exploreMode = false
@@ -116,7 +116,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 -   avatars
 -   allavatars
 -   listavatars [fileID...]
--   albawarnings [BOOL]
+-   statwarn [BOOL]
 `)
     }
     if (cmd == 'api' && args[0] == 'requestall') { requestAllOnlineFriends(currentUser) }
@@ -125,9 +125,11 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
     if (cmd == 'preload') { worldAutoPreloadQueue(args[0].split(',')) }
     if (cmd == 'avatars') { requestAvatarStatTable(false, 0.05, false) }
     if (cmd == 'allavatars') { scanAllAvatarStats() }
+    if (cmd == 'collectavatars') { collectActiveInstanceStats() }
+    if (cmd == 'collectavatars2') { collectActiveInstanceStats(true) }
     if (cmd == 'listavatars') { scanListAvatarStats(raw.slice(12).split(',')) }
     if (cmd == 'wearers') { console.log(avatarStatSummary.seenAvatars) }
-    if (cmd == 'albawarnings') { elAlbaWarnings = JSON.parse(args[0]) }
+    if (cmd == 'statwarn') { statWarnings = JSON.parse(args[0]) }
     if (cmd == 'explore' && args[0] == 'prefill') { addLabWorldsToLocalQueue() }
 })
 
@@ -215,24 +217,30 @@ logEmitter.on('stopworld', (output) => {
 })
 
 var authToken = null
+var isApiErrorSkip = false
 async function main() {
     console.log(`${loglv().debug}${selflog} start main function`)
-    const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
-    console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
-    const { data: auth } = await vrchat.verifyAuthToken()
-    if (auth.ok == true) {
-        authToken = auth.token
-        // console.log(authToken)
-        socket_VRC_API_Connect()
-        // sendBoop('usr_e86f244d-31ba-4d25-9f82-65b91bf21aee', 'inv_eb8fed52-3198-43d7-bea4-ed2f2c02f9e6')
-        // await getAllInventory(0)
+    try {
+        const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
+        console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
+        const { data: auth } = await vrchat.verifyAuthToken()
+        if (auth.ok == true) {
+            authToken = auth.token
+            // console.log(authToken)
+            socket_VRC_API_Connect()
+            // sendBoop('usr_e86f244d-31ba-4d25-9f82-65b91bf21aee', 'inv_eb8fed52-3198-43d7-bea4-ed2f2c02f9e6')
+            // await getAllInventory(0)
+        }
+    } catch (error) {
+        console.log(`${loglv().warn}${selflog} API is down.. Cry`)
+        isApiErrorSkip = true
     }
 }
 
 
 function formatBytes(bytes, decimals = 1) {
     return new Promise((resolve, reject) => {
-        if (bytes === 0) return '0 Bytes';
+        if (bytes === 0) { resolve('0 Bytes') };
         const k = 1024;
         const dm = decimals < 0 ? 0 : decimals;
         const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -430,9 +438,9 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
                 console.log(`${loglv().log}${selflog} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
 
                 let getOwner = await vrchat.getUser({ 'path': { 'userId': getName.data.ownerId } })
-                res.data["ownerDisplayName"] = getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : getOwner.data.displayName
+                res.data["ownerDisplayName"] = getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : (getOwner.data || "").displayName
                 if (avatarStatSummary.seenAuthors.filter(s => s.id == res.data.ownerId).length == 0) {
-                    avatarStatSummary.seenAuthors.push({ "id": getName.data.ownerId, "displayName": getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : getOwner.data.displayName })
+                    avatarStatSummary.seenAuthors.push({ "id": getName.data.ownerId, "displayName": getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : (getOwner.data || "").displayName })
                 }
                 if (avatarStatSummary.seenAuthors[0].id == "") { avatarStatSummary.seenAuthors.shift() }
             }
@@ -450,7 +458,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
     let uncompresssize = await formatBytes(res.data.uncompressedSize)
     let vramTexsize = await formatBytes(res.data.avatarStats.totalTextureUsage)
     console.log(`${loglv().log}${selflog} [AvatarAnalysis] ${res.data.performanceRating == 'VeryPoor' ? '❌ VeryPoor' : res.data.performanceRating == 'Poor' ? '🔴 Poor' : res.data.performanceRating == 'Medium' ? '🟡 Medium' : res.data.performanceRating == 'Good' ? '🟢 Good' : res.data.performanceRating == 'Excellent' ? '✅ Excellent' : ''} - ${res.data.name}
-             📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)}`)
+             📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount}`)
 
     // - Performance Marks-
     let totalavatareval = ``
@@ -485,144 +493,342 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
     var materialSlotsUsed = Math.round(res.data.avatarStats.materialSlotsUsed / avatarStatWeights.materialSlotsUsed)
     var lightCount = Math.round(res.data.avatarStats.lightCount / avatarStatWeights.lightCount)
     var blendShapeCount = Math.round(res.data.avatarStats.blendShapeCount / avatarStatWeights.blendShapeCount)
+    var statPunish = []
 
-    if (getInstanceGroupID() == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+    /*if (getInstanceGroupID() == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
         if (res.data.avatarStats.totalTextureUsage > 83886080) {
             if (totalTextureUsage > avatarStatWeights.lowerLimitWeight) {
                 warnbox += `\v(x${Math.round(totalTextureUsage)}) Texture Mem ${vramTexsize}`;
             }
             totalavatareval += `\n              Texture Memory:            ${Math.round(totalTextureUsage)} EV ${totalTextureUsage >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
         }
-    } else {
-        if (Math.round(totalTextureUsage) > avatarStatWeights.lowerLimitWeight) {
-            // warnbox += `\v(x${totalTextureUsage}) Texture Memory ${vramTexsize}`;
-            totalavatareval += `\n              Texture Memory:            ${Math.round(totalTextureUsage)} EV ${totalTextureUsage >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
-        }
+    } else {*/
+    if (Math.round(totalTextureUsage) > avatarStatWeights.lowerLimitWeight) {
+        // warnbox += `\v(x${totalTextureUsage}) Texture Memory ${vramTexsize}`;
+        statPunish.push({
+            "weight": 0,
+            "multi": Math.round(totalTextureUsage),
+            "log": `\v(x${Math.round(totalTextureUsage)}) Texture Mem ${vramTexsize}`,
+            "print": `\n              Texture Memory:            ${Math.round(totalTextureUsage)} EV ${totalTextureUsage >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
+        })
+        totalavatareval += `\n              Texture Memory:            ${Math.round(totalTextureUsage)} EV ${totalTextureUsage >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
     }
     if (totalPolygons > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${totalPolygons}) Polygons ${res.data.avatarStats.totalPolygons}`;
+        statPunish.push({
+            "weight": 1,
+            "multi": Math.round(totalPolygons),
+            "log": `\v(x${totalPolygons}) Polygons ${res.data.avatarStats.totalPolygons}`,
+            "print": `\n              Polygons:                  ${totalPolygons} EV ${totalPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️📐' : ''}`
+        })
         totalavatareval += `\n              Polygons:                  ${totalPolygons} EV ${totalPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️📐' : ''}`
     }
     if (boundsLongest > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${boundsLongest}) Bounds ${Math.max(...res.data.avatarStats.bounds)}m`;
+        statPunish.push({
+            "weight": 2,
+            "multi": Math.round(boundsLongest),
+            "log": `\v(x${boundsLongest}) Bounds ${Math.max(...res.data.avatarStats.bounds)}m`,
+            "print": `\n              Bounds:                    ${boundsLongest} EV ${boundsLongest >= avatarStatWeights.higherLimitWeight ? '⚠️🧊' : ''}`
+        })
         totalavatareval += `\n              Bounds:                    ${boundsLongest} EV ${boundsLongest >= avatarStatWeights.higherLimitWeight ? '⚠️🧊' : ''}`
     }
     if (skinnedMeshCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${skinnedMeshCount}) SkinnedMeshes ${res.data.avatarStats.skinnedMeshCount}`;
+        statPunish.push({
+            "weight": 3,
+            "multi": Math.round(skinnedMeshCount),
+            "log": `\v(x${skinnedMeshCount}) SkinnedMeshes ${res.data.avatarStats.skinnedMeshCount}`,
+            "print": `\n              Skinned Meshes:            ${skinnedMeshCount} EV ${skinnedMeshCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.skinnedMeshCount : ''}`
+        })
         totalavatareval += `\n              Skinned Meshes:            ${skinnedMeshCount} EV ${skinnedMeshCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.skinnedMeshCount : ''}`
     }
     if (meshCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${meshCount}) Basic Meshes ${res.data.avatarStats.meshCount}`;
+        statPunish.push({
+            "weight": 4,
+            "multi": Math.round(meshCount),
+            "log": `\v(x${meshCount}) Basic Meshes ${res.data.avatarStats.meshCount}`,
+            "print": `\n              Basic Meshes:              ${meshCount} EV ${meshCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.meshCount : ''}`
+        })
         totalavatareval += `\n              Basic Meshes:              ${meshCount} EV ${meshCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.meshCount : ''}`
     }
     if (materialSlotsUsed > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${materialSlotsUsed}) Material Slots ${res.data.avatarStats.materialSlotsUsed}`;
+        statPunish.push({
+            "weight": 5,
+            "multi": Math.round(materialSlotsUsed),
+            "log": `\v(x${materialSlotsUsed}) Material Slots ${res.data.avatarStats.materialSlotsUsed}`,
+            "print": `\n              Material Slots:            ${materialSlotsUsed} EV ${materialSlotsUsed >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.materialSlotsUsed : ''}`
+        })
         totalavatareval += `\n              Material Slots:            ${materialSlotsUsed} EV ${materialSlotsUsed >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.materialSlotsUsed : ''}`
     }
     if (materialCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${materialCount}) Material Count ${res.data.avatarStats.materialCount}`;
+        statPunish.push({
+            "weight": 6,
+            "multi": Math.round(materialCount),
+            "log": `\v(x${materialCount}) Material Count ${res.data.avatarStats.materialCount}`,
+            "print": `\n              Material Count:            ${materialCount} EV ${materialCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.materialCount : ''}`
+        })
         totalavatareval += `\n              Material Count:            ${materialCount} EV ${materialCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.materialCount : ''}`
     }
     if (physBoneComponentCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${physBoneComponentCount}) PhysBone Components ${res.data.avatarStats.physBoneComponentCount}`;
+        statPunish.push({
+            "weight": 7,
+            "multi": Math.round(physBoneComponentCount),
+            "log": `\v(x${physBoneComponentCount}) PhysBones ${res.data.avatarStats.physBoneComponentCount}`,
+            "print": `\n              PhysBone Components:       ${physBoneComponentCount} EV ${physBoneComponentCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneComponentCount : ''}`
+        })
         totalavatareval += `\n              PhysBone Components:       ${physBoneComponentCount} EV ${physBoneComponentCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneComponentCount : ''}`
     }
     if (physBoneTransformCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${physBoneTransformCount}) PhysBone Transforms ${res.data.avatarStats.physBoneTransformCount}`;
+        statPunish.push({
+            "weight": 8,
+            "multi": Math.round(physBoneTransformCount),
+            "log": `\v(x${physBoneTransformCount}) PhysBone Transforms ${res.data.avatarStats.physBoneTransformCount}`,
+            "print": `\n              PhysBone Transforms:       ${physBoneTransformCount} EV ${physBoneTransformCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneTransformCount : ''}`
+        })
         totalavatareval += `\n              PhysBone Transforms:       ${physBoneTransformCount} EV ${physBoneTransformCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneTransformCount : ''}`
     }
     if (physBoneColliderCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${physBoneColliderCount}) PhysBone Colliders ${res.data.avatarStats.physBoneColliderCount}`;
+        statPunish.push({
+            "weight": 9,
+            "multi": Math.round(physBoneColliderCount),
+            "log": `\v(x${physBoneColliderCount}) PhysBone Colliders ${res.data.avatarStats.physBoneColliderCount}`,
+            "print": `\n              PhysBone Colliders:        ${physBoneColliderCount} EV ${physBoneColliderCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneColliderCount : ''}`
+        })
         totalavatareval += `\n              PhysBone Colliders:        ${physBoneColliderCount} EV ${physBoneColliderCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneColliderCount : ''}`
     }
     if (physBoneCollisionCheckCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${physBoneCollisionCheckCount}) PhysBone Collision Checks ${res.data.avatarStats.physBoneCollisionCheckCount}`;
+        statPunish.push({
+            "weight": 10,
+            "multi": Math.round(physBoneCollisionCheckCount),
+            "log": `\v(x${physBoneCollisionCheckCount}) PhysBone Collision Checks ${res.data.avatarStats.physBoneCollisionCheckCount}`,
+            "print": `\n              PhysBone Collision Checks: ${physBoneCollisionCheckCount} EV ${physBoneCollisionCheckCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneCollisionCheckCount : ''}`
+        })
         totalavatareval += `\n              PhysBone Collision Checks: ${physBoneCollisionCheckCount} EV ${physBoneCollisionCheckCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneCollisionCheckCount : ''}`
     }
     if (contactCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${contactCount}) Contacts ${res.data.avatarStats.contactCount}`;
+        statPunish.push({
+            "weight": 11,
+            "multi": Math.round(contactCount),
+            "log": `\v(x${contactCount}) Contacts ${res.data.avatarStats.contactCount}`,
+            "print": `\n              Contact Count:             ${contactCount} EV ${contactCount >= avatarStatWeights.higherLimitWeight ? '⚠️🥎' : ''}`
+        })
         totalavatareval += `\n              Contact Count:             ${contactCount} EV ${contactCount >= avatarStatWeights.higherLimitWeight ? '⚠️🥎' : ''}`
     }
     if (constraintCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${constraintCount}) Constraints ${res.data.avatarStats.constraintCount}`;
+        statPunish.push({
+            "weight": 12,
+            "multi": Math.round(constraintCount),
+            "log": `\v(x${constraintCount}) Constraints ${res.data.avatarStats.constraintCount}`,
+            "print": `\n              Constraint Count:           ${constraintCount} EV ${constraintCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.constraintCount : ''}`
+        })
         totalavatareval += `\n              Constraint Count:           ${constraintCount} EV ${constraintCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.constraintCount : ''}`
     }
     if (constraintDepth > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${constraintDepth}) Constraint Depth ${res.data.avatarStats.constraintDepth}`;
+        statPunish.push({
+            "weight": 13,
+            "multi": Math.round(constraintDepth),
+            "log": `\v(x${constraintDepth}) Constraint Depth ${res.data.avatarStats.constraintDepth}`,
+            "print": `\n              Constraint Depth:          ${constraintDepth} EV ${constraintDepth >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.constraintDepth : ''}`
+        })
         totalavatareval += `\n              Constraint Depth:          ${constraintDepth} EV ${constraintDepth >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.constraintDepth : ''}`
     }
     if (animatorCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${animatorCount}) Animators ${res.data.avatarStats.animatorCount}`;
+        statPunish.push({
+            "weight": 14,
+            "multi": Math.round(animatorCount),
+            "log": `\v(x${animatorCount}) Animators ${res.data.avatarStats.animatorCount}`,
+            "print": `\n              Animator Count:            ${animatorCount} EV ${animatorCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.animatorCount : ''}`
+        })
         totalavatareval += `\n              Animator Count:            ${animatorCount} EV ${animatorCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.animatorCount : ''}`
     }
     if (boneCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${boneCount}) Bones ${res.data.avatarStats.boneCount}`;
+        statPunish.push({
+            "weight": 15,
+            "multi": Math.round(boneCount),
+            "log": `\v(x${boneCount}) Bones ${res.data.avatarStats.boneCount}`,
+            "print": `\n              Bones:                     ${boneCount} EV ${boneCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.boneCount : ''}`
+        })
         totalavatareval += `\n              Bones:                     ${boneCount} EV ${boneCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.boneCount : ''}`
     }
     if (lightCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${lightCount}) Light Count ${res.data.avatarStats.lightCount}`;
+        statPunish.push({
+            "weight": 16,
+            "multi": Math.round(lightCount),
+            "log": `\v(x${lightCount}) Light Count ${res.data.avatarStats.lightCount}`,
+            "print": `\n              Light Count:               ${lightCount} EV ${lightCount >= avatarStatWeights.higherLimitWeight ? '⚠️💡' : ''}`
+        })
         totalavatareval += `\n              Light Count:               ${lightCount} EV ${lightCount >= avatarStatWeights.higherLimitWeight ? '⚠️💡' : ''}`
     }
     if (particleSystemCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${particleSystemCount}) Particle Systems ${res.data.avatarStats.particleSystemCount}`;
+        statPunish.push({
+            "weight": 17,
+            "multi": Math.round(particleSystemCount),
+            "log": `\v(x${particleSystemCount}) Particle Systems ${res.data.avatarStats.particleSystemCount}`,
+            "print": `\n              Particle System Count:     ${particleSystemCount} EV ${particleSystemCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.particleSystemCount : ''}`
+        })
         totalavatareval += `\n              Particle System Count:     ${particleSystemCount} EV ${particleSystemCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.particleSystemCount : ''}`
     }
     if (totalMaxParticles > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${totalMaxParticles}) Max Particles ${res.data.avatarStats.totalMaxParticles}`;
+        statPunish.push({
+            "weight": 18,
+            "multi": Math.round(totalMaxParticles),
+            "log": `\v(x${totalMaxParticles}) Max Particles ${res.data.avatarStats.totalMaxParticles}`,
+            "print": `\n              Max Particles:             ${totalMaxParticles} EV ${totalMaxParticles >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.totalMaxParticles : ''}`
+        })
         totalavatareval += `\n              Max Particles:             ${totalMaxParticles} EV ${totalMaxParticles >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.totalMaxParticles : ''}`
     }
     if (meshParticleMaxPolygons > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${meshParticleMaxPolygons}) Particle Polygons ${res.data.avatarStats.meshParticleMaxPolygons}`;
+        statPunish.push({
+            "weight": 19,
+            "multi": Math.round(meshParticleMaxPolygons),
+            "log": `\v(x${meshParticleMaxPolygons}) Particle Polys ${res.data.avatarStats.meshParticleMaxPolygons}`,
+            "print": `\n              Mesh Particle Max Polygons:${meshParticleMaxPolygons} EV ${meshParticleMaxPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.meshParticleMaxPolygons : ''}`
+        })
         totalavatareval += `\n              Mesh Particle Max Polygons:${meshParticleMaxPolygons} EV ${meshParticleMaxPolygons >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.meshParticleMaxPolygons : ''}`
     }
     if (trailRendererCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${trailRendererCount}) Trail Renderers ${res.data.avatarStats.trailRendererCount}`;
+        statPunish.push({
+            "weight": 20,
+            "multi": Math.round(trailRendererCount),
+            "log": `\v(x${trailRendererCount}) Trail Renderers ${res.data.avatarStats.trailRendererCount}`,
+            "print": `\n              Trail Renderer Count:      ${trailRendererCount} EV ${trailRendererCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.trailRendererCount : ''}`
+        })
         totalavatareval += `\n              Trail Renderer Count:      ${trailRendererCount} EV ${trailRendererCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.trailRendererCount : ''}`
     }
     if (lineRendererCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${lineRendererCount}) Line Renderers ${res.data.avatarStats.lineRendererCount}`;
+        statPunish.push({
+            "weight": 21,
+            "multi": Math.round(lineRendererCount),
+            "log": `\v(x${lineRendererCount}) Line Renderers ${res.data.avatarStats.lineRendererCount}`,
+            "print": `\n              Line Renderer Count:       ${lineRendererCount} EV ${lineRendererCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.lineRendererCount : ''}`
+        })
         totalavatareval += `\n              Line Renderer Count:       ${lineRendererCount} EV ${lineRendererCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.lineRendererCount : ''}`
     }
     if (clothCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${clothCount}) Cloth Meshes ${res.data.avatarStats.clothCount}`;
+        statPunish.push({
+            "weight": 22,
+            "multi": Math.round(clothCount),
+            "log": `\v(x${clothCount}) Cloth Meshes ${res.data.avatarStats.clothCount}`,
+            "print": `\n              Cloth Meshes:               ${clothCount} EV ${clothCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.clothCount : ''}`
+        })
         totalavatareval += `\n              Cloth Meshes:               ${clothCount} EV ${clothCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.clothCount : ''}`
     }
     if (totalClothVertices > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${totalClothVertices}) Cloth Vertices ${res.data.avatarStats.totalClothVertices}`;
+        statPunish.push({
+            "weight": 23,
+            "multi": Math.round(totalClothVertices),
+            "log": `\v(x${totalClothVertices}) Cloth Vertices ${res.data.avatarStats.totalClothVertices}`,
+            "print": `\n              Cloth Vertices:            ${totalClothVertices} EV ${totalClothVertices >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.totalClothVertices : ''}`
+        })
         totalavatareval += `\n              Cloth Vertices:            ${totalClothVertices} EV ${totalClothVertices >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.totalClothVertices : ''}`
     }
     if (physicsColliders > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${physicsColliders}) Unity Colliders ${res.data.avatarStats.physicsColliders}`;
+        statPunish.push({
+            "weight": 24,
+            "multi": Math.round(physicsColliders),
+            "log": `\v(x${physicsColliders}) Unity Colliders ${res.data.avatarStats.physicsColliders}`,
+            "print": `\n              Physics Colliders:         ${physicsColliders} EV ${physicsColliders >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physicsColliders : ''}`
+        })
         totalavatareval += `\n              Physics Colliders:         ${physicsColliders} EV ${physicsColliders >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physicsColliders : ''}`
     }
     if (physicsRigidbodies > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${physicsRigidbodies}) Rigidbodies ${res.data.avatarStats.physicsRigidbodies}`;
+        statPunish.push({
+            "weight": 25,
+            "multi": Math.round(physicsRigidbodies),
+            "log": `\v(x${physicsRigidbodies}) Rigidbodies ${res.data.avatarStats.physicsRigidbodies}`,
+            "print": `\n              Physics Rigidbodies:       ${physicsRigidbodies} EV ${physicsRigidbodies >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physicsRigidbodies : ''}`
+        })
         totalavatareval += `\n              Physics Rigidbodies:       ${physicsRigidbodies} EV ${physicsRigidbodies >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physicsRigidbodies : ''}`
     }
     if (audioSourceCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${audioSourceCount}) AudioSources ${res.data.avatarStats.audioSourceCount}`;
+        statPunish.push({
+            "weight": 26,
+            "multi": Math.round(audioSourceCount),
+            "log": `\v(x${audioSourceCount}) AudioSources ${res.data.avatarStats.audioSourceCount}`,
+            "print": `\n              AudioSource Count:         ${audioSourceCount} EV ${audioSourceCount >= avatarStatWeights.higherLimitWeight ? '⚠️🔊' : ''}`
+        })
         totalavatareval += `\n              AudioSource Count:         ${audioSourceCount} EV ${audioSourceCount >= avatarStatWeights.higherLimitWeight ? '⚠️🔊' : ''}`
     }
+    /*
+    // Future Proofing for NYI stat
+    if (rayCasts > avatarStatWeights.lowerLimitWeight) {
+        statPunish.push({
+            "weight": 27,
+            "multi": Math.round(rayCasts),
+            "log": `\v(x${rayCasts}) Raycasts ${res.data.avatarStats.rayCastCount}`
+        })
+        totalavatareval += `\nRaycast Count: ${rayCasts} EV ${rayCasts >= avatarStatWeights.higherLimitWeight ? '⚠️'+res.data.avatarStats.rayCastCount : ''}`
+    } */
     if (blendShapeCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${blendShapeCount}) BlendShapes ${res.data.avatarStats.blendShapeCount}`;
+        statPunish.push({
+            "weight": 27,
+            "multi": Math.round(blendShapeCount),
+            "log": `\v(x${blendShapeCount}) BlendShapes ${res.data.avatarStats.blendShapeCount}`,
+            "print": `\n              BlendShapes:               ${blendShapeCount} EV ${blendShapeCount >= avatarStatWeights.higherLimitWeight ? '⚠️🧲' : ''}`
+        })
         totalavatareval += `\n              BlendShapes:               ${blendShapeCount} EV ${blendShapeCount >= avatarStatWeights.higherLimitWeight ? '⚠️🧲' : ''}`
     }
     if (cameraCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${cameraCount}) Cameras ${res.data.avatarStats.cameraCount}`;
+        statPunish.push({
+            "weight": 28,
+            "multi": Math.round(cameraCount),
+            "log": `\v(x${cameraCount}) Cameras ${res.data.avatarStats.cameraCount}`,
+            "print": `\n              Camera Count:              ${cameraCount} EV ${cameraCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.cameraCount : ''}`
+        })
         totalavatareval += `\n              Camera Count:              ${cameraCount} EV ${cameraCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.cameraCount : ''}`
     }
     if (uncompressedSize > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${uncompressedSize}) RAM ${uncompresssize}`;
+        statPunish.push({
+            "weight": 29,
+            "multi": Math.round(uncompressedSize),
+            "log": `\v(x${uncompressedSize}) RAM ${uncompresssize}`,
+            "print": `\n              Uncompressed Size:         ${uncompressedSize} EV ${uncompressedSize >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
+        })
         totalavatareval += `\n              Uncompressed Size:         ${uncompressedSize} EV ${uncompressedSize >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
     }
 
+    var statPunished = statPunish.sort((a, b) => {
+        const sortmulti = b.multi - a.multi; if (sortmulti !== 0) { return sortmulti }
+        const sortweight = a.weight - b.weight; if (sortweight !== 0) { return sortweight }
+    }).filter(r => r.multi >= 2)
+    var statTotalAvatarEV = statPunish.sort((a, b) => {
+        const sortmulti = b.multi - a.multi; if (sortmulti !== 0) { return sortmulti }
+        const sortweight = a.weight - b.weight; if (sortweight !== 0) { return sortweight }
+    })
 
 
-    if (totalavatareval.length > 1) { console.log(totalavatareval.replace(/\n/, '') + "\n") }
-    if (warnbox.length > 0 && getInstanceGroupID() == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && elAlbaWarnings == true) {
+    if (statTotalAvatarEV.length > 0) { console.log(statTotalAvatarEV.map(e => { return e.print }).toString().replace(/\n/, '')) }
+    if (statPunished.length > 0 && statWarnings == true) {
         // if (warnbox.length > 0) {
 
-        function fitChars(I_line) {
+        function fitChars(I_line, lineCount = 1) {
             const charWidth = {
                 " ": 0.018181, "a": 0.037037, "A": 0.041666, "b": 0.04, "B": 0.043478, "c": 0.03125, "C": 0.041666,
                 "d": 0.04, "D": 0.047619, "e": 0.037037, "<": 0.037037, "g": 0.04, "G": 0.047619, "0": 0.037037, "1": 0.037037,
@@ -642,12 +848,14 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
             var limitLength = 0
             for (const item in I_line) {
                 trackingWidth += charWidth[I_line[item]] != undefined ? charWidth[I_line[item]] : 0.0625
-                if (trackingWidth > 1) { limitLength = item; break; }
+                if (trackingWidth >= lineCount) { limitLength = item; break; }
             }
-            return I_line.slice(0, limitLength != 0 ? limitLength : I_line.length)
+            if (I_line == undefined) { return '' } else {
+                return I_line.slice(0, limitLength != 0 ? limitLength : I_line.length)
+            }
         }
 
-        oscChatBoxV2(`${fitChars(res.data.name)}${warnbox}`, 15000, false, true, false, true, true)
+        oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunished[0].log)}${fitChars(statPunished[1]?.log)}${fitChars(statPunished[2]?.log)}`, 15000, false, true, false, false, true)
     }
 
     // Summary Chart Data
@@ -668,23 +876,35 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
 })
 
 async function scanAllAvatarStats() {
+    console.time('Full-Avatar-Scan')
 
     G_lastlocation = `All Avatar Stats in Cache`
 
     var fsrddir = await fsp.readdir('./datasets/avatarStatCache/', 'utf8')
-    fsrddir.forEach(async (file, index, arr) => {
+    for (const findex in fsrddir) {
         var res = {}
-        var fsrdfile = await fsp.readFile('./datasets/avatarStatCache/' + file, 'utf8')
-        console.log(`${loglv().log}${selflog} [AvatarAnalysis] Cached: ${file}`)
-        res.data = JSON.parse(fsrdfile)
+        // console.log('Opening: ', findex)
+        var fd;
+        try {
+            fd = await fsp.open('./datasets/avatarStatCache/' + fsrddir[findex], 'r')
+            var fsrdfile = await fd.readFile('utf8')
+            // var fsrdfile = await fsp.readFile('./datasets/avatarStatCache/' + file, 'utf8')
+            console.log(`${loglv().log}${selflog} [AvatarAnalysis] Cached: ${fsrddir[findex]}`)
+            res.data = JSON.parse(fsrdfile)
+        } catch (error) {
+            console.log(`${loglv().warn}${selflog} [AvatarAnalysis] `, error)
+        } finally {
+            if (fd) {
+                await fd.close()
+                // console.log('Closed: ', findex)
+            }
+        }
 
-
-        let filesize = await formatBytes(res.data.fileSize)
+        let filesize = await formatBytes(res.data?.fileSize)
         let uncompresssize = await formatBytes(res.data.uncompressedSize)
         let vramTexsize = await formatBytes(res.data.avatarStats.totalTextureUsage)
         console.log(`${loglv().log}${selflog} [AvatarAnalysis] ${res.data.performanceRating == 'VeryPoor' ? '❌ VeryPoor' : res.data.performanceRating == 'Poor' ? '🔴 Poor' : res.data.performanceRating == 'Medium' ? '🟡 Medium' : res.data.performanceRating == 'Good' ? '🟢 Good' : res.data.performanceRating == 'Excellent' ? '✅ Excellent' : ''} - ${res.data.name}
              📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)}`)
-
         // Summary Chart Data
         avatarStatSummary.totalAvatars++
         avatarStatSummary[res.data.performanceRating]++
@@ -700,7 +920,9 @@ async function scanAllAvatarStats() {
             }
         })
 
-        if (index == arr.length - 1) {
+        // console.log('progress: ', findex, fsrddir.length-1)
+        if (findex == fsrddir.length - 1) {
+            console.timeEnd('Full-Avatar-Scan')
             setTimeout(() => {
                 requestAvatarStatTable(false, 0.05, true)
             }, 2000)
@@ -756,7 +978,7 @@ async function scanAllAvatarStats() {
             }, 10_000)
         }
 
-    })
+    }
 }
 
 
@@ -850,6 +1072,67 @@ async function scanListAvatarStats(I_list = []) {
         }
 
     })
+}
+
+
+async function collectActiveInstanceStats(skipLaunch = false) {
+    var instanceList = []
+    // Active World List
+    var activeworlds = await vrchat.getActiveWorlds({ 'query': { 'n': 100, 'order': 'ascending' } })
+    // Worlds Data
+    for (const wrld in activeworlds.data) {
+        console.log(`${loglv().log}${selflog} [BulkStatCollection] World Target: ${activeworlds.data[wrld].name}`)
+        var maxPlayers = activeworlds.data[wrld].capacity
+        var gotworld = await vrchat.getWorld({ 'path': { 'worldId': activeworlds.data[wrld].id } })
+
+        // Instances Data
+        for (const ints in gotworld.data.instances) {
+            // Within Player count range
+            if (gotworld.data.instances[ints][1] >= 5 && gotworld.data.instances[ints][1] < (maxPlayers - 2)) {
+                var location = `${activeworlds.data[wrld].id}:${gotworld.data.instances[ints][0]}`
+                // console.log(`${loglv().log}${selflog} [BulkStatCollection] ${wrld} ${ints}`)
+                await gotoInstance(location)
+            }
+        }
+    }
+    console.log(`${loglv().log}${selflog} [BulkStatCollection] Finished Collecting Stats.. Going Home.`)
+    if (skipLaunch == false) {
+        startvrc('wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5:91151~private(usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752)~canRequestInvite~region(use)', true)
+    }
+
+    async function gotoInstance(I_instanceLocation) {
+        return new Promise(async (resolve, reject) => {
+            var gotinstance = await vrchat.getInstance({ 'path': { 'worldId': I_instanceLocation.split(':')[0], 'instanceId': I_instanceLocation.split(':')[1] } })
+            // console.debug(gotinstance.data)
+            if (gotinstance.data.full == false && gotinstance.data.n_users >= 5 && gotinstance.data.userCount >= 5 && gotinstance.data.closedAt == null) {
+                console.log(`${loglv().log}${selflog} [BulkStatCollection] Traveling to ${I_instanceLocation.split(':')[1].slice(0, 63)}`)
+                if (skipLaunch == false) {
+                    startvrc(I_instanceLocation, true)
+                    logEmitter.once('joinedworld', async () => {
+                        // console.debug('JOINED WORLD');
+                        // logEmitter.once('notAllowedToTravel', () => { console.debug('NOT ALLOWED TO TRAVEL'); resolve(true) })
+                        await once(logEmitter, 'avatarQueueFinish')
+                        resolve(true)
+                    })
+                } else {
+                    setTimeout(() => {
+                        resolve(true)
+                    }, 30_000);
+                }
+
+            } else if (gotinstance.data.closedAt != null) {
+                console.log(`${loglv().log}${selflog} [BulkStatCollection] Instance Closed: - ${I_instanceLocation.split(':')[1].slice(0, 57)}`)
+                setTimeout(() => { resolve(true) }, 2_000)
+            } else if (gotinstance.data.n_users < 5 || gotinstance.data.userCount < 5) {
+                console.log(`${loglv().log}${selflog} [BulkStatCollection] Not enough people: - ${I_instanceLocation.split(':')[1].slice(0, 55)}`)
+                setTimeout(() => { resolve(true) }, 2_000)
+            } else {
+                console.log(`${loglv().log}${selflog} [BulkStatCollection] Instance Full: - ${I_instanceLocation.split(':')[1].slice(0, 59)}`)
+                setTimeout(() => { resolve(true) }, 2_000)
+            }
+        })
+    }
+
 }
 
 
@@ -968,6 +1251,8 @@ function socket_VRC_API_Connect() {
 
                             // Skip auto-block incase search miss-lands
                             console.log(`User that invited you`, resS.data[0].displayName, resS.data[0].id)
+                            const { default: open } = require('open');
+                            open(`vrcx://user/${resS.data[0].id}`)
                         }
 
                         // Block Group
@@ -1010,7 +1295,7 @@ function socket_VRC_API_Connect() {
                     console.log(`${loglv().log}${selflogWS} [GPS] ${notif_user_displayName} - Offline`);
                 } else {
                     notif_user_displayName = await vrchat.getUser({ 'path': { 'userId': wsContent.userId } })
-                    console.log(`${loglv().log}${selflogWS} [GPS] ${notif_user_displayName.data.displayName} - Offline`);
+                    console.log(`${loglv().log}${selflogWS} [GPS] ${(notif_user_displayName.data || "").displayName} - Offline`);
                 }
                 break;
 
@@ -1233,7 +1518,7 @@ async function addLabWorldsToLocalQueue() {
             console.log(`${loglv().hey}${selflog} Cancelled list appendage, Queue already contains part of latest batch`)
             oscChatBox(`Cancelled queue append:\v Queue already contains latest labs batch`)
         } else {
-            fs.appendFile(worldQueueTxt, worldlist + `\r\n`, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
+            fs.appendFile(worldQueueTxt, `\r\n` + worldlist, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
         }
     })
 }
@@ -1408,7 +1693,7 @@ async function inviteOnlineWorlds_Loop(world_id) {
 
 function inviteHubQueue() {
     var instanceBody = {
-        'worldId': 'wrld_10000000-0000-0000-0000-000000000000',
+        'worldId': 'wrld_112c5336-0329-4293-83ac-96f37f8a6405',
         'type': 'group',
         'region': 'use',
         // 'displayName': 'World Hop',
@@ -1417,7 +1702,7 @@ function inviteHubQueue() {
         'queueEnabled': true
     }
 
-    console.log(`${loglv().hey}${selflog} Creating group instance for wrld_10000000-0000-0000-0000-000000000000`)
+    console.log(`${loglv().hey}${selflog} Creating group instance for wrld_112c5336-0329-4293-83ac-96f37f8a6405`)
 
     vrchat.createInstance({ body: instanceBody })
         .then(created_instance => { startvrc(created_instance.data.location, false) })
@@ -1544,13 +1829,15 @@ var highestCount = 0
 fs.readFile('./datasets/vrcMaxPop.txt', 'utf-8', (err, data) => { highestCount = data })
 function getVisitsCount() {
     return new Promise(async (resolve, reject) => {
-        let { data: visitsCount } = await vrchat.getCurrentOnlineUsers()
-        resolve(visitsCount == undefined ? 0 : visitsCount)
+        if (isApiErrorSkip == true) { resolve(0) } else {
+            let { data: visitsCount } = await vrchat.getCurrentOnlineUsers()
+            resolve(visitsCount == undefined ? 0 : visitsCount)
 
-        if (visitsCount > highestCount) {
-            highestCount = visitsCount
-            console.log(`${loglv().hey}\x1b[0m[\x1b[36mCounter\x1b[0m] New Highest Population reached: ${visitsCount}`)
-            fs.writeFile('./datasets/vrcMaxPop.txt', visitsCount.toString(), 'utf-8', (err) => { if (err) { console.log(err) } })
+            if (visitsCount > highestCount) {
+                highestCount = visitsCount
+                console.log(`${loglv().hey}\x1b[0m[\x1b[36mCounter\x1b[0m] New Highest Population reached: ${visitsCount}`)
+                fs.writeFile('./datasets/vrcMaxPop.txt', visitsCount.toString(), 'utf-8', (err) => { if (err) { console.log(err) } })
+            }
         }
     })
 }
@@ -1579,7 +1866,7 @@ exports.startvrc = startvrc;
 var tenMinuteTick = 0
 console.log(`${loglv().hey}${selflog} First Audit scan at ${new Date(new Date().getTime() + 600_000).toTimeString()}`)
 setTimeout(() => {
-    scanGroupAuditLogs()
+    if (isApiErrorSkip == false) { scanGroupAuditLogs() }
 }, 600_000)
 
 

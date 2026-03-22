@@ -1,66 +1,80 @@
 // const { oscSend } = require('./Interface_osc_v1')
 var fs = require('fs')
 
+var nodes = [
+  [-1.200000, 13.400004, 38.900002],
+  [-122.199989, 15.300006, 35.100002],
+  [-24.400002, 11.700004, 20.499998],
+  [-29.599998, 17.800013, 66.500000],
+  [-381.699982, 22.899937, -433.500061],
+  [-393.500031, 20.699938, -426.800018],
+  [-393.900024, 24.999931, -464.399994],
+  [-398.500031, 16.499941, -383.000031],
+  [-406.199982, 11.899935, -423.800018],
+  [-407.700012, 12.499925, -494.200012],
+  [-408.900024, 20.199926, -469.799988],
+  [-411.799988, 21.899927, -454.299988],
+  [-436.799988, 20.099932, -457.899994],
+  [-443.599976, 11.799927, -484.500061],
+  [-45.700005, 12.700012, 90.799988],
+  [-490.599976, 12.799931, -459.399994],
+  [-491.000031, 11.899944, -363.900024],
+  [-5.400000, 16.000006, 46.099998],
+  [-519.999939, 14.100056, 376.199982],
+  [-538.299927, 14.400045, 292.299988],
+  [-56.099998, 18.100010, 75.399994],
+  [-572.099976, 11.800053, 347.400024],
+  [-590.099976, 14.500049, 311.900024],
+  [-603.000000, 11.900039, 270.099976],
+  [-650.299927, 20.300051, 319.999969],
+  [-674.500000, 20.200054, 346.399994],
+  [-674.799927, 20.200050, 336.899994],
+  [-683.499939, 11.800063, 420.599976],
+  [-689.000000, 19.400049, 319.199982],
+  [-695.100037, 16.900053, 364.099976],
+  [-695.899963, 11.900047, 304.500031],
+  [-83.099998, 13.100007, 35.900002],
+  [-88.299995, 13.600007, 32.500000],
+  [325.899994, 12.700058, 393.999969],
+  [611.100037, 19.599989, -83.100006],
+  [642.799988, 11.699963, -255.799973],
+  [652.100037, 36.699993, -52.599998],
+  [679.299988, 32.099968, -191.900009],
+  [704.999939, 18.099970, -209.299988],
+  [736.600098, 16.599989, -82.600006],
+  [748.999939, 27.399979, -99.800003],
+  [763.200012, 16.099976, -152.699982],
+  [766.299988, 24.199991, -72.500000],
+  [774.299988, 15.799957, -275.099976],
+  [792.200012, 16.999985, -89.499992],
+  [794.100098, 12.899963, -243.999985],
+]
 
-function old() {
-  var dataCache = {}
-  memberlist.forEach((mem, index, arr) => {
-    var dataTarget = mem.isRepresenting
-    if (isNaN(dataCache[dataTarget])) {
-      dataCache[dataTarget] = 1
-    } else {
-      dataCache[dataTarget]++
-    }
+var nodeGraph = []
 
-    if (index + 1 == arr.length) {
-      console.log(dataCache)
-    }
+function vec3dist(Avec3 = [0, 0, 0], Bvec3 = [0, 0, 0]) {
+  return Math.sqrt(Math.pow((Bvec3[0] - Avec3[0]), 2) + Math.pow((Bvec3[1] - Avec3[1]), 2) + Math.pow((Bvec3[2] - Avec3[2]), 2))
+}
+
+async function sleep(time = 1) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(true)
+    }, time);
   })
 }
 
-var cycleParamList = {
-  'Hat Toggle': 'bool',
-  'Uniform Toggle': 'bool',
-  'reinit': 'bool'
-}
-function cycleParams(List) {
-  Object.keys(List).forEach(param => {
-    let valtype = List[param]
-    oscSend('/avatar/parameters/' + param, valtype == 'bool' ? Math.random() > 0.5 : false)
+main()
+async function main() {
+  var order = [0, 17, 3, 20, 14, 31, 32, 1, 2, 33, 36, 34, 39, 40, 42, 44, 41, 38, 37, 35, 43, 45, 4, 5, 8, 11, 10, 6, 9, 13, 12, 15, 16, 7, 23, 22, 21, 18, 19, 24, 26, 25, 29, 28, 30, 27]
+  var string = ''
+  for (const item in order) {
+    string += `${string == '' ? '' : `\n`}Vector3(${nodes[order[item]]})`
+  }
+
+  fs.writeFile('./output.json', string, (err) => {
+    if (err) { console.error(err) }
   })
-  setTimeout(() => { cycleParams(List) }, 1000)
-}
-// cycleParams(cycleParamList)
-
-function makeEpisodeQueueList(series = 'unnamed', type = 'TV-Show', seasondata = [10, 11, 4]) {
-  var eplist = `# ${series}
-**${type}**`
-  seasondata.forEach((s, index, arr) => {
-    eplist += `\n    Season ${index + 1}
-\``
-    for (i = 0; i < s; i++) {
-      eplist += ` ${i + 1}`.padStart(2, "0")
-    }
-    eplist += `\``
-  })
-
-  console.log(eplist)
 }
 
-// makeEpisodeQueueList(`Samurai Jack`,`Anime`,[13,13,13,13,10])
-
-
-
-// countEntries(``)
-function countEntries(list) {
-  let counts = {}
-  list.split(`\n`).forEach(name => {
-    if (!counts[name]) {
-      counts[name] = 1
-    } else {
-      counts[name]++
-    }
-  })
-  console.log(counts)
-}
-setInterval(() => { }, 30)
+// setInterval(() => { }, 30)
