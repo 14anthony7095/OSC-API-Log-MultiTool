@@ -117,6 +117,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 -   allavatars
 -   listavatars [fileID...]
 -   statwarn [BOOL]
+-   forceaudit
 `)
     }
     if (cmd == 'api' && args[0] == 'requestall') { requestAllOnlineFriends(currentUser) }
@@ -125,6 +126,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
     if (cmd == 'preload') { worldAutoPreloadQueue(args[0].split(',')) }
     if (cmd == 'avatars') { requestAvatarStatTable(false, 0.05, false) }
     if (cmd == 'allavatars') { scanAllAvatarStats() }
+    if (cmd == 'forceaudit') { scanGroupAuditLogs() }
     if (cmd == 'collectavatars') { collectActiveInstanceStats() }
     if (cmd == 'collectavatars2') { collectActiveInstanceStats(true) }
     if (cmd == 'listavatars') { scanListAvatarStats(raw.slice(12).split(',')) }
@@ -404,7 +406,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
             res.data["ownerId"] = getName.data.ownerId
             try {
                 res.data["ownerDisplayName"] = avatarStatSummary.seenAuthors.filter(s => s.id == getName.data.ownerId)[0].displayName
-                console.log(`${loglv().log}${selflog} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
+                console.log(`${loglv().log}${selflog} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data.ownerDisplayName}`)
             } catch (err) {
                 console.log(`${loglv().log}${selflog} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
 
@@ -2315,11 +2317,10 @@ function scanaudit(logoutput, groupID) {
                         console.log(`Avatar Pic ${userData.currentAvatarImageUrl}`)
                     }
 
-                    userData.badges.forEach(udbd => {
-                        if (udbd.badgeDescription.includes('Joined VRChat')) {
-                            userBadgeYearNum = parseInt(udbd.badgeDescription.split('Joined VRChat ')[1].split(' ')[0])
-                        }
-                    })
+                    findHighestBadage = userData.badges
+                        .filter(e => e.badgeDescription.includes('Joined VRChat'))
+                        .sort((a, b) => parseInt(b.badgeName.substring(0, 2).trim()) - parseInt(a.badgeName.substring(0, 2).trim()))
+                    userBadgeYearNum = findHighestBadage.length > 0 ? parseInt(findHighestBadage[0].badgeName.substring(0, 2).trim()) : 0
                     if (userBadgeYearNum == 0) {
                         console.log(`No year badge found? Falling back on Date Joined`)
                         userBadgeYearNum = parseInt(new Date(Date.now() - userData.date_joined.getTime()).toISOString().substring(0, 4) - 1970)

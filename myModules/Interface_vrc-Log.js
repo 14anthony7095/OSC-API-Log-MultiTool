@@ -330,24 +330,6 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 		if (line.includes(`[VersionChecker] Lobby version stamped: `)) {
 			var lobbyver = line.split('[VersionChecker] Lobby version stamped: ')[1]
 			console.log(`${loglv().log}${selflog} [FISH] Lobby Version ${lobbyver}.`)
-			logEmitter.emit('setstatus', 'Fishing - Lobby ver ' + lobbyver)
-		}
-
-		if (line.includes('[NetworkProcessing]') && lastSetUserStatus.includes('Fishing - Lobby ver')) {
-			var pooltype = line.slice(line.includes('because 14anthony7095 already owner') ? 86 : 79).split(' ')
-			if (['School Event',
-				'Sandy Updraft',
-				'Savanna Rift',
-				'Shadow Chasm',
-				'Sparkling Pool',
-				'Ionized Fissure',
-				'Celestial Chasm',
-				'Midas Rift',
-				'Occult Pool',
-				'Strange Whirlpool'].includes(pooltype[0] + ' ' + pooltype[1])) {
-				console.log(`${loglv().log}${selflog} [FISH] ${pooltype[0]} ${pooltype[1]} Pool has Spawned.`)
-				oscChatBoxV2(`A ${pooltype[0]} ${pooltype[1]} has Spawned`, 10_000, false, true, false, false, false)
-			}
 		}
 
 	}
