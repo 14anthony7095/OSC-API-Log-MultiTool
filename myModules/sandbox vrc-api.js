@@ -130,7 +130,7 @@ async function fileCheck(fileid, fileversion) {
     let res = await vrchat.getFile({ 'path': { 'fileId': fileid, 'versionId': fileversion } }); console.log(res)
     let res2 = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } }); console.log(res2)
 }
-// fileCheck('file_3a33b02c-be35-472e-b814-c0d767b739a9', 2)
+fileCheck('file_df21475c-c974-428d-acb6-00fe82ed5e04', 4)
 
 
 

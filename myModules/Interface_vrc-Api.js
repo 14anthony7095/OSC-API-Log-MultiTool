@@ -406,7 +406,8 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
             res.data["ownerId"] = getName.data.ownerId
             try {
                 res.data["ownerDisplayName"] = avatarStatSummary.seenAuthors.filter(s => s.id == getName.data.ownerId)[0].displayName
-                console.log(`${loglv().log}${selflog} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data.ownerDisplayName}`)
+                if( res.data["ownerDisplayName"] == undefined ){ throw new Error('no displayname') }
+                console.log(`${loglv().log}${selflog} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
             } catch (err) {
                 console.log(`${loglv().log}${selflog} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
 
@@ -426,6 +427,10 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         res = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } })
         if (res.data == undefined) {
             console.log(`${loglv().warn}${selflog} [AvatarAnalysis] ErrorFile: ${fileid} - ver ${fileversion}`)
+            setTimeout(async () => {
+                res = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } })
+                console.log( res.data )
+            }, 10_000);
             return
         } else if (res.data.avatarStats && res.data.performanceRating) {
             let getName = await vrchat.getFile({ 'path': { 'fileId': fileid } })
@@ -435,6 +440,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
             res.data["ownerId"] = getName.data.ownerId
             try {
                 res.data["ownerDisplayName"] = avatarStatSummary.seenAuthors.filter(s => s.id == getName.data.ownerId)[0].displayName
+                if( res.data["ownerDisplayName"] == undefined ){ throw new Error('no displayname') }
                 console.log(`${loglv().log}${selflog} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
             } catch (err) {
                 console.log(`${loglv().log}${selflog} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
@@ -610,7 +616,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         statPunish.push({
             "weight": 10,
             "multi": Math.round(physBoneCollisionCheckCount),
-            "log": `\v(x${physBoneCollisionCheckCount}) PhysBone Collision Checks ${res.data.avatarStats.physBoneCollisionCheckCount}`,
+            "log": `\v(x${physBoneCollisionCheckCount}) PhysBone Collisions ${res.data.avatarStats.physBoneCollisionCheckCount}`,
             "print": `\n              PhysBone Collision Checks: ${physBoneCollisionCheckCount} EV ${physBoneCollisionCheckCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneCollisionCheckCount : ''}`
         })
         totalavatareval += `\n              PhysBone Collision Checks: ${physBoneCollisionCheckCount} EV ${physBoneCollisionCheckCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.physBoneCollisionCheckCount : ''}`
@@ -790,7 +796,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         statPunish.push({
             "weight": 27,
             "multi": Math.round(blendShapeCount),
-            "log": `\v(x${blendShapeCount}) BlendShapes ${res.data.avatarStats.blendShapeCount}`,
+            // "log": `\v(x${blendShapeCount}) BlendShapes ${res.data.avatarStats.blendShapeCount}`,
             "print": `\n              BlendShapes:               ${blendShapeCount} EV ${blendShapeCount >= avatarStatWeights.higherLimitWeight ? '⚠️🧲' : ''}`
         })
         totalavatareval += `\n              BlendShapes:               ${blendShapeCount} EV ${blendShapeCount >= avatarStatWeights.higherLimitWeight ? '⚠️🧲' : ''}`
@@ -800,7 +806,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         statPunish.push({
             "weight": 28,
             "multi": Math.round(cameraCount),
-            "log": `\v(x${cameraCount}) Cameras ${res.data.avatarStats.cameraCount}`,
+            // "log": `\v(x${cameraCount}) Cameras ${res.data.avatarStats.cameraCount}`,
             "print": `\n              Camera Count:              ${cameraCount} EV ${cameraCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.cameraCount : ''}`
         })
         totalavatareval += `\n              Camera Count:              ${cameraCount} EV ${cameraCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.cameraCount : ''}`
@@ -810,7 +816,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         statPunish.push({
             "weight": 29,
             "multi": Math.round(uncompressedSize),
-            "log": `\v(x${uncompressedSize}) RAM ${uncompresssize}`,
+            // "log": `\v(x${uncompressedSize}) RAM ${uncompresssize}`,
             "print": `\n              Uncompressed Size:         ${uncompressedSize} EV ${uncompressedSize >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
         })
         totalavatareval += `\n              Uncompressed Size:         ${uncompressedSize} EV ${uncompressedSize >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
@@ -819,7 +825,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
     var statPunished = statPunish.sort((a, b) => {
         const sortmulti = b.multi - a.multi; if (sortmulti !== 0) { return sortmulti }
         const sortweight = a.weight - b.weight; if (sortweight !== 0) { return sortweight }
-    }).filter(r => r.multi >= 2)
+    }).filter(r => r.multi >= 2 && r.log.length != 0)
     var statTotalAvatarEV = statPunish.sort((a, b) => {
         const sortmulti = b.multi - a.multi; if (sortmulti !== 0) { return sortmulti }
         const sortweight = a.weight - b.weight; if (sortweight !== 0) { return sortweight }
