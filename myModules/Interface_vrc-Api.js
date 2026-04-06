@@ -127,6 +127,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
     if (cmd == 'avatars') { requestAvatarStatTable(false, 0.05, false) }
     if (cmd == 'allavatars') { scanAllAvatarStats() }
     if (cmd == 'forceaudit') { scanGroupAuditLogs() }
+    if (cmd == 'addworlds') { addSearchToLocalQueue(raw.slice(10)) }
     if (cmd == 'collectavatars') { collectActiveInstanceStats() }
     if (cmd == 'collectavatars2') { collectActiveInstanceStats(true) }
     if (cmd == 'listavatars') { scanListAvatarStats(raw.slice(12).split(',')) }
@@ -406,7 +407,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
             res.data["ownerId"] = getName.data.ownerId
             try {
                 res.data["ownerDisplayName"] = avatarStatSummary.seenAuthors.filter(s => s.id == getName.data.ownerId)[0].displayName
-                if( res.data["ownerDisplayName"] == undefined ){ throw new Error('no displayname') }
+                if (res.data["ownerDisplayName"] == undefined) { throw new Error('no displayname') }
                 console.log(`${loglv().log}${selflog} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
             } catch (err) {
                 console.log(`${loglv().log}${selflog} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
@@ -429,7 +430,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
             console.log(`${loglv().warn}${selflog} [AvatarAnalysis] ErrorFile: ${fileid} - ver ${fileversion}`)
             setTimeout(async () => {
                 res = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } })
-                console.log( res.data )
+                console.log(res.data)
             }, 10_000);
             return
         } else if (res.data.avatarStats && res.data.performanceRating) {
@@ -440,7 +441,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
             res.data["ownerId"] = getName.data.ownerId
             try {
                 res.data["ownerDisplayName"] = avatarStatSummary.seenAuthors.filter(s => s.id == getName.data.ownerId)[0].displayName
-                if( res.data["ownerDisplayName"] == undefined ){ throw new Error('no displayname') }
+                if (res.data["ownerDisplayName"] == undefined) { throw new Error('no displayname') }
                 console.log(`${loglv().log}${selflog} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
             } catch (err) {
                 console.log(`${loglv().log}${selflog} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
@@ -515,7 +516,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         // warnbox += `\v(x${totalTextureUsage}) Texture Memory ${vramTexsize}`;
         statPunish.push({
             "weight": 0,
-            "multi": Math.round(totalTextureUsage),
+            "multi": Math.ceil(totalTextureUsage),
             "log": `\v(x${Math.round(totalTextureUsage)}) Texture Mem ${vramTexsize}`,
             "print": `\n              Texture Memory:            ${Math.round(totalTextureUsage)} EV ${totalTextureUsage >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
         })
@@ -796,6 +797,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         statPunish.push({
             "weight": 27,
             "multi": Math.round(blendShapeCount),
+            "log": `skip`,
             // "log": `\v(x${blendShapeCount}) BlendShapes ${res.data.avatarStats.blendShapeCount}`,
             "print": `\n              BlendShapes:               ${blendShapeCount} EV ${blendShapeCount >= avatarStatWeights.higherLimitWeight ? '⚠️🧲' : ''}`
         })
@@ -806,6 +808,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         statPunish.push({
             "weight": 28,
             "multi": Math.round(cameraCount),
+            "log": `skip`,
             // "log": `\v(x${cameraCount}) Cameras ${res.data.avatarStats.cameraCount}`,
             "print": `\n              Camera Count:              ${cameraCount} EV ${cameraCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.cameraCount : ''}`
         })
@@ -816,6 +819,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
         statPunish.push({
             "weight": 29,
             "multi": Math.round(uncompressedSize),
+            "log": `skip`,
             // "log": `\v(x${uncompressedSize}) RAM ${uncompresssize}`,
             "print": `\n              Uncompressed Size:         ${uncompressedSize} EV ${uncompressedSize >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
         })
@@ -825,7 +829,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
     var statPunished = statPunish.sort((a, b) => {
         const sortmulti = b.multi - a.multi; if (sortmulti !== 0) { return sortmulti }
         const sortweight = a.weight - b.weight; if (sortweight !== 0) { return sortweight }
-    }).filter(r => r.multi >= 2 && r.log.length != 0)
+    }).filter(r => r.multi >= 2 && r.log != 'skip')
     var statTotalAvatarEV = statPunish.sort((a, b) => {
         const sortmulti = b.multi - a.multi; if (sortmulti !== 0) { return sortmulti }
         const sortweight = a.weight - b.weight; if (sortweight !== 0) { return sortweight }
@@ -1507,7 +1511,9 @@ async function addLabWorldsToQueue() {
 
 async function addLabWorldsToLocalQueue() {
     console.log(`${loglv().log}${selflog} Adding 100 Community Labs worlds to queue`)
+    console.log(`${loglv().log}${selflog} Adding 100 New-and-Noteworthy worlds to queue`)
     let { data: worldData } = await vrchat.searchWorlds({ query: { n: 100, sort: 'labsPublicationDate', order: 'descending', offset: 0, tag: 'system_labs' } })
+    let { data: newAndNote } = await vrchat.searchWorlds({ query: { n: 100, sort: 'heat', order: 'descending', offset: 0, tag: 'system_approved,system_published_recently' } })
     fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
         let localQueueList = data.split(`\r\n`)
         let lastInQueue = localQueueList[localQueueList.length - 2]
@@ -1521,6 +1527,12 @@ async function addLabWorldsToLocalQueue() {
             lastInQueue == w.id ? skipAdd = true : ''
             index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
         })
+        newAndNote.forEach((w, index, arr) => {
+            console.log(`${loglv().log}${selflog} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
+            // console.log(`${loglv().log}${selflog} (${index + 1}/${arr.length}) ${w.id}`)
+            lastInQueue == w.id ? skipAdd = true : ''
+            index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
+        })
 
         if (worldlist.includes(lastInQueue) || skipAdd == true) {
             console.log(`${loglv().hey}${selflog} Cancelled list appendage, Queue already contains part of latest batch`)
@@ -1528,6 +1540,33 @@ async function addLabWorldsToLocalQueue() {
         } else {
             fs.appendFile(worldQueueTxt, `\r\n` + worldlist, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
         }
+    })
+}
+
+async function addSearchToLocalQueue(i_searchString) {
+    console.log(`${loglv().log}${selflog} Adding searched worlds to queue`)
+    let { data: worldData } = await vrchat.searchWorlds({ query: { n: 100, search: i_searchString, sort: 'labsPublicationDate', order: 'descending', offset: 0, tag: 'system_labs' } })
+    let { data: worldData2 } = await vrchat.searchWorlds({ query: { n: 100, search: i_searchString, order: 'descending', offset: 0, notag: 'system_labs' } })
+    fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
+        let localQueueList = data.split(`\r\n`)
+        let lastInQueue = localQueueList[localQueueList.length - 2]
+        // console.log(lastInQueue)
+
+        let worldlist = ''
+        let skipAdd = false
+        worldData.forEach((w, index, arr) => {
+            console.log(`${loglv().log}${selflog} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
+            // console.log(`${loglv().log}${selflog} (${index + 1}/${arr.length}) ${w.id}`)
+            lastInQueue == w.id ? skipAdd = true : ''
+            index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
+        })
+        worldData2.forEach((w, index, arr) => {
+            console.log(`${loglv().log}${selflog} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
+            // console.log(`${loglv().log}${selflog} (${index + 1}/${arr.length}) ${w.id}`)
+            lastInQueue == w.id ? skipAdd = true : ''
+            index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
+        })
+        fs.appendFile(worldQueueTxt, `\r\n` + worldlist, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
     })
 }
 

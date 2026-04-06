@@ -64,7 +64,17 @@ async function sleep(time = 1) {
   })
 }
 
-main()
+function elo(iRating, iVsRating, score, newPlayer) {
+  var diff = iVsRating - iRating
+  var expected = 1 / (Math.pow(10, diff / 400) + 1)
+  var eloChange = (newPlayer == true ? 40 : 20) * (score - expected)
+  var eloOutcome = Math.round((iRating + eloChange) * 10) / 10
+  console.log(`(${iRating}) ${Math.sign(eloChange) == 1 ? '+' : ''}${Math.round(eloChange * 10) / 10} = ${eloOutcome}`)
+  return eloOutcome
+}
+console.log(elo(520, 1100, 2, true))
+
+// main()
 async function main() {
   var order = [0, 17, 3, 20, 14, 31, 32, 1, 2, 33, 36, 34, 39, 40, 42, 44, 41, 38, 37, 35, 43, 45, 4, 5, 8, 11, 10, 6, 9, 13, 12, 15, 16, 7, 23, 22, 21, 18, 19, 24, 26, 25, 29, 28, 30, 27]
   var string = ''

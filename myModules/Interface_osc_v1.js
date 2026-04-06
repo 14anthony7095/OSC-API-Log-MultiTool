@@ -161,7 +161,7 @@ function oscChatBoxV2(I_say = "~", I_display_time_ms = 5000, I_highPriority = fa
 	if (chatboxQueue.length < 2 + firstLong || isLoop == true) {
 
 		udpPort.send({ address: "/chatbox/input", args: [chatboxQueue[0].message.slice(0, 144), true, chatboxQueue[0].play_audio] }, deviceIP, remotePort);
-		console.log(`${loglv().debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m]${chatboxQueue[0].play_audio == true ? '🔊' : '🔇'} ${chatboxQueue[0].message.slice(0, 144)}`)
+		console.log(`${loglv().debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m]${chatboxQueue[0].play_audio == true ? '🔊' : '🔇'} ${chatboxQueue[0].message.slice(0, 144).replace(/\v/g,'\n                                       ')}`)
 
 		// console.log(`${loglv().debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m] Delay`+Math.max(5000, chatboxQueue[0].display_time_ms))		
 
