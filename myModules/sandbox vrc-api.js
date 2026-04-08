@@ -75,20 +75,13 @@ async function main() {
         }
     */
 
-    
 
-    /* var sw3_labs = await vrchat.searchWorlds({ query: { n: 100, search: 'ikea', tag: 'system_labs' } })
-    var sw3 = await vrchat.searchWorlds({ query: { n: 100, search: 'ikea', notag: 'system_labs' } })
-    var sw3_merged = sw3.data.concat(sw3_labs.data)
-    for (const item in sw3_merged) {
-        console.log(sw3_merged[item].id)
-    } */
 
     // Search for anti-avatar-flight worlds
-     /* var sw1 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_collision' } })
-    var sw2 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_stations' } })
-    console.log('admin_disable_avatar_collision', sw1.data.map((e) => { return e.name }))
-    console.log('admin_disable_avatar_stations', sw2.data.map((e) => { return e.name }))  */
+    /* var sw1 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_collision' } })
+   var sw2 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_stations' } })
+   console.log('admin_disable_avatar_collision', sw1.data.map((e) => { return e.name }))
+   console.log('admin_disable_avatar_stations', sw2.data.map((e) => { return e.name }))  */
 
     // Get Feedback Reports
     // var gModr = await vrchat.getModerationReports({ 'query': { 'reportingUserId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752', 'n': 100, 'offset': 0 } })

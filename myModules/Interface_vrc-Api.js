@@ -267,7 +267,7 @@ const avatarStatWeights = {
     "boundsLongest": 6,               //🔒locked in - from suggestion list
     "constraintCount": 350,           //🔒locked in - from suggestion list
     "constraintDepth": 100,            //🔒locked in - from suggestion list
-    "totalTextureUsage": 157391240,       //🔒locked in - from suggestion list
+    "totalTextureUsage": 157286400,       //🔒locked in - from suggestion list
     "totalPolygons": 70000,              //🔒locked in - from suggestion list
     "skinnedMeshCount": 16,            //🔒locked in - from suggestion list
     "meshCount": 24,                   //🔒locked in - from suggestion list
@@ -512,7 +512,7 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
             totalavatareval += `\n              Texture Memory:            ${Math.round(totalTextureUsage)} EV ${totalTextureUsage >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
         }
     } else {*/
-    if (Math.round(totalTextureUsage) > avatarStatWeights.lowerLimitWeight) {
+    if (totalTextureUsage > avatarStatWeights.totalTextureUsage) {
         // warnbox += `\v(x${totalTextureUsage}) Texture Memory ${vramTexsize}`;
         statPunish.push({
             "weight": 0,
