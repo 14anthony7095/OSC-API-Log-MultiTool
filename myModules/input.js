@@ -4,7 +4,7 @@ const { loglv } = require('./config');
 const cmdEmitter = new EventEmitter();
 exports.cmdEmitter = cmdEmitter;
 
-const cmdInputFile = "C:/Users/14anthony7095/Documents/14aOSC-API-Log/input.txt"
+const cmdInputFile = "C:/Users/14anthony7095/Documents/14aOSC_Multi-Interface/input.txt"
 let selflog = `\x1b[0m[INPUT\x1b[0m]`
 
 cmdEmitter.on('cmd',(cmd,args)=>{

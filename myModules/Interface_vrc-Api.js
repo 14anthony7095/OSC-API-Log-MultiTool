@@ -113,6 +113,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 -   years close
 -   preload [wrldID...]
 -   explore start
+-   addworlds ["Search Term"]
 -   avatars
 -   allavatars
 -   listavatars [fileID...]
@@ -1168,6 +1169,7 @@ async function worldAutoPreloadQueue(worldList = []) {
                     'type': 'hidden',
                     'region': 'use',
                     // 'displayName': 'Preloading Worlds',
+                    'minimumAvatarPerformance': 'Poor',
                     'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752'
                 }
             }).then(created_instance => {
@@ -1674,6 +1676,7 @@ async function inviteOnlineWorlds_Loop(world_id) {
                     'type': 'group',
                     'region': 'use',
                     // 'displayName': 'World Hop',
+                    'minimumAvatarPerformance': 'Poor',
                     'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
                     'groupAccessType': 'public',
                     'queueEnabled': true,
@@ -1686,6 +1689,7 @@ async function inviteOnlineWorlds_Loop(world_id) {
                     'type': 'group',
                     'region': 'use',
                     // 'displayName': 'World Hop',
+                    'minimumAvatarPerformance': 'Poor',
                     'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
                     'groupAccessType': 'plus',
                     'queueEnabled': true,
@@ -1744,6 +1748,7 @@ function inviteHubQueue() {
         'type': 'group',
         'region': 'use',
         // 'displayName': 'World Hop',
+        'minimumAvatarPerformance': 'Poor',
         'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
         'groupAccessType': 'plus',
         'queueEnabled': true
@@ -1798,6 +1803,7 @@ function inviteLocalQueue(I_autoNext = false) {
                     'type': 'group',
                     'region': 'use',
                     // 'displayName': 'World Hop',
+                    'minimumAvatarPerformance': 'Poor',
                     'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
                     'groupAccessType': 'public',
                     'queueEnabled': true,
@@ -1810,6 +1816,7 @@ function inviteLocalQueue(I_autoNext = false) {
                     'type': 'group',
                     'region': 'use',
                     // 'displayName': 'World Hop',
+                    'minimumAvatarPerformance': 'Poor',
                     'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
                     'groupAccessType': 'plus',
                     'queueEnabled': true,
@@ -1899,7 +1906,7 @@ async function startvrc(vrclocation, autoGo = false, openToHome = false) {
         await open(`vrchat://launch/?ref=vrchat.com&id=${vrclocation}&attach=1`)
         if (autoGo == true) {
             setTimeout(() => {
-                require('child_process').execSync(`"C:\\Users\\14Anthony7095\\Documents\\14aOSC-API-Log\\bin\\vrcPressGoOnWorldPage.exe"`)
+                require('child_process').execSync(`"C:\\Users\\14Anthony7095\\Documents\\14aOSC_Multi-Interface\\bin\\vrcPressGoOnWorldPage.exe"`)
             }, 2000);
         }
     }

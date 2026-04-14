@@ -285,7 +285,7 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
 	}
 
 	if (line.includes(`VRCNP: Received URL`) && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
-		// require('child_process').execSync(`"C:\\Users\\14Anthony7095\\Documents\\14aOSC-API-Log\\bin\\vrcPressGoOnWorldPage.exe"`)
+		// require('child_process').execSync(`"C:\\Users\\14Anthony7095\\Documents\\14aOSC_Multi-Interface\\bin\\vrcPressGoOnWorldPage.exe"`)
 	}
 
 

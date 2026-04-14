@@ -4,7 +4,7 @@ const fs = require('fs')
 var execSync = require('child_process').execSync;
 
 var cooldown = false
-fs.watch('C:/Users/14anthony7095/Documents/14aOSC-API-Log/assets/crazoTimer.png', 'utf8', (eventType, filename) => {
+fs.watch('C:/Users/14anthony7095/Documents/14aOSC_Multi-Interface/assets/crazoTimer.png', 'utf8', (eventType, filename) => {
     if(cooldown == true){ return }
     cooldown = true
     setTimeout(() => {
@@ -16,7 +16,7 @@ fs.watch('C:/Users/14anthony7095/Documents/14aOSC-API-Log/assets/crazoTimer.png'
     readStreamPixels()
 })
 
-var cmd = `ffmpeg -y -i "https://stream.vrcdn.live/live/crazco.live.ts" -frames:v 1 "C:/Users/14anthony7095/Documents/14aOSC-API-Log/assets/crazoTimer.png"`;
+var cmd = `ffmpeg -y -i "https://stream.vrcdn.live/live/crazco.live.ts" -frames:v 1 "C:/Users/14anthony7095/Documents/14aOSC_Multi-Interface/assets/crazoTimer.png"`;
 var options = {
   encoding: 'utf8'
 };
@@ -67,7 +67,7 @@ function colorLookUp(r,g,b){
 }
 
 function readStreamPixels() {
-    Jimp.read('C:/Users/14anthony7095/Documents/14aOSC-API-Log/assets/crazoTimer.png', (err,image)=>{
+    Jimp.read('C:/Users/14anthony7095/Documents/14aOSC_Multi-Interface/assets/crazoTimer.png', (err,image)=>{
         if (err) { console.log(err) };
         let topLeft = image.getPixelColour(0,0)
         let topRight = image.getPixelColour(175,0)

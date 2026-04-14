@@ -67,15 +67,20 @@ async function main() {
         console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
     } catch (error) { if (error.statusCode == 500) { isApiErrorSkip = true }; return }
 
-
     /* 
         for (const item in vrcFriendsList.friends) {
             var res = await vrchat.getUser({ 'path': { 'userId': vrcFriendsList.friends[item] } })
             res.data.discordId != undefined ? console.log(`${res.data.displayName} - ${res.data.discordId}`) : ''
         }
     */
+    // await sleep(10000)
 
+    foundMemberMutualGroups(`grp_cd14f221-79c4-451d-913c-333b8fc163a8`)
 
+    // foundMemberMutualGroups(undefined, undefined, [])
+
+    // var gi = await vrchat.getInstance({'path':{'worldId':'wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5','instanceId':'01234~group(grp_c4754b89-80f3-45f6-ac8f-ec9db953adce)~groupAccessType(plus)~region(us)'}})
+    // console.log( gi.data )
 
     // Search for anti-avatar-flight worlds
     /* var sw1 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_collision' } })
@@ -89,6 +94,144 @@ async function main() {
 
 
 
+}
+
+var backoffTime = 30
+var backoffExp = 1
+async function sleep(timeMS) { return new Promise((resolve, reject) => { setTimeout(() => { resolve('done') }, timeMS) }) }
+async function foundMemberMutualGroups(groupID, membersOverride, membersIDs) {
+    var members = []
+    var chkMembers = []
+    var groups = []
+    const sleeptime = 1500
+    fs.readFile('datasets/groupMembers-mutualGroups.json', (err, data) => {
+        if (err) { console.error(err) }
+        if (data.length != 0) { groups = JSON.parse(data).groups; chkMembers = JSON.parse(data).members }
+    })
+
+    // Get current group's members
+    console.log('[API] Fetching Group')
+    if (groupID == undefined) {
+        console.log(`[14A] No group specified`)
+        if (membersOverride != undefined) {
+            console.log(`[14A] Using member override`)
+            members = membersOverride
+        } else {
+            console.log(`[14A] Using member id list`)
+            for (const id in membersIDs) {
+                console.log(`[API][${id}/${membersIDs.length - 1}][${Math.round(id / (membersIDs.length - 1) * 100)}%] Fetching user ${membersIDs[id]}`)
+                var gotUser = await vrchat.getUser({ 'path': { 'userId': membersIDs[id] } })
+                if (gotUser.data == undefined) {
+                    backoffExp++
+                    console.log(gotUser.error.statusCode, gotUser.error.response.statusText, ` - RateLimit: Exp ${backoffExp} , Delay ${(backoffTime * Math.pow(2, backoffExp))}`)
+                    await sleep(1000 * (backoffTime * Math.pow(2, backoffExp)));
+                }
+                console.log(`[API] Got user ${gotUser.data.displayName}`)
+
+                if (!chkMembers.includes(gotUser.data.displayName)) {
+                    members.push({
+                        'id': gotUser.data.id,
+                        'name': gotUser.data.displayName
+                    })
+                }
+
+                await sleep(sleeptime * backoffExp)
+            }
+        }
+    } else {
+        var gotGroup = await vrchat.getGroup({ 'path': { 'groupId': groupID } })
+        if (gotGroup.data == undefined) {
+            backoffExp++
+            console.log(userGroups.error.statusCode, userGroups.error.response.statusText, ` - RateLimit: Exp ${backoffExp} , Delay ${(backoffTime * Math.pow(2, backoffExp))}`)
+            await sleep(1000 * (backoffTime * Math.pow(2, backoffExp)));
+        } else {
+            if (backoffExp > 1) { backoffExp = backoffExp - backoffExp * 0.1 }
+            else if (backoffExp < 1) { backoffExp = 1 }
+        }
+        console.log(`[API] Found ${gotGroup.data.name} with ${gotGroup.data.memberCount} members`)
+
+        var forAmount = new Array(1 + Math.floor(gotGroup.data.memberCount / 100)).fill(0)
+        console.log(forAmount)
+        for (const i in forAmount) {
+            console.log(`[API][${i}/${forAmount.length - 1}][${Math.round(i / (forAmount.length - 1) * 100)}%] Fetching GroupMembers offset ${i * 100}`)
+            var groupMembers = await vrchat.getGroupMembers({ 'path': { 'groupId': groupID }, 'query': { 'n': 100, 'offset': i * 100 } })
+            if (groupMembers.data == undefined) {
+                backoffExp++
+                console.log(groupMembers.error.statusCode, groupMembers.error.response.statusText, ` - RateLimit: Exp ${backoffExp} , Delay ${(backoffTime * Math.pow(2, backoffExp))}`);
+                await sleep(1000 * (backoffTime * Math.pow(2, backoffExp)));
+                continue
+            } else {
+                if (backoffExp > 1) { backoffExp = backoffExp - backoffExp * 0.1 }
+                else if (backoffExp < 1) { backoffExp = 1 }
+            }
+            console.log(`[API] Found ${groupMembers.data.length} members`)
+
+            for (const memberIndex in groupMembers.data) {
+                // console.log(`[API] Member: ${groupMembers.data[memberIndex].user.displayName}`)
+                if (!chkMembers.includes(groupMembers.data[memberIndex].user.displayName)) {
+                    members.push({
+                        'id': groupMembers.data[memberIndex].userId,
+                        'name': groupMembers.data[memberIndex].user.displayName
+                    })
+                }
+            }
+            await sleep(sleeptime * backoffExp)
+        }
+    }
+
+
+    console.log(`Switching to Members' Groups - Pausing for 1 min`)
+    await sleep(60000)
+
+    // Get each member's group list
+    for (const memberIndex in members) {
+        console.log(`[API][${memberIndex}/${members.length - 1}][${Math.round(memberIndex / (members.length - 1) * 100)}%] Fetching Groups for ${members[memberIndex].name}`)
+        var userGroups = await vrchat.getUserGroups({ 'path': { 'userId': members[memberIndex].id } })
+        if (userGroups.data == undefined) {
+            fs.writeFile('datasets/groupMembers-mutualGroups.json', JSON.stringify({ 'groups': groups, 'members': chkMembers }), (err) => { if (err) { console.error(err) } })
+            backoffExp++
+            console.log(userGroups.error.statusCode, userGroups.error.response.statusText, ` - RateLimit: Exp ${backoffExp} , Delay ${(backoffTime * Math.pow(2, backoffExp))}`);
+            await sleep(1000 * (backoffTime * Math.pow(2, backoffExp)));
+            continue
+        } else {
+            if (backoffExp > 1) { backoffExp = backoffExp - backoffExp * 0.1 }
+            else if (backoffExp < 1) { backoffExp = 1 }
+        }
+        console.log(`[API] Found ${userGroups.data.length} groups`)
+
+        let cntCreated = 0
+        let cntAdds = 0
+        let cntDupes = 0
+        for (const groupIndex in userGroups.data) {
+            // console.log(`[MEM] Checking if group is in cache`)
+            var foundGroup = groups.find(e => e.name == userGroups.data[groupIndex].name)
+            if (foundGroup == undefined) {
+                cntCreated++
+                // console.log(`[MEM] Creating ${userGroups.data[groupIndex].name}`)
+                // console.log(`[MEM] Adding ${members[memberIndex].name} to ${userGroups.data[groupIndex].name}`)
+                groups.push({ 'name': userGroups.data[groupIndex].name, 'members': [members[memberIndex].name] })
+            } else {
+                cntAdds++
+                // console.log(`[MEM] Adding ${members[memberIndex].name} to ${foundGroup.name} [Users: ${foundGroup.members.length}]`)
+                if (!groups[groups.indexOf(foundGroup)].members.includes(members[memberIndex].name)) {
+                    groups[groups.indexOf(foundGroup)].members.push(members[memberIndex].name)
+                } else {
+                    cntDupes++
+                }
+            }
+        }
+        console.log(`[MEM] Added ${cntAdds} | Created ${cntCreated} | Dupes? ${cntDupes}`)
+        chkMembers.push(members[memberIndex].name)
+        await sleep(sleeptime * backoffExp)
+    }
+
+    var stringToWrite = ``
+    groups.forEach(gr => {
+        stringToWrite += `${stringToWrite.length == 0 ? '' : '\n'}"${gr.name}","${gr.members.toString().replaceAll(',','","')}"`
+    })
+    console.log(stringToWrite)
+    fs.writeFile('./output_memberMutualGroups.csv', stringToWrite, (err) => { if (err) { console.err(err) } })
+    fs.writeFile('datasets/groupMembers-mutualGroups.json', JSON.stringify({ 'groups': groups, 'members': chkMembers }), (err) => { if (err) { console.error(err) } })
 }
 
 function formatBytes(bytes, decimals = 1) {

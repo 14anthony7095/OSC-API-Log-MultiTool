@@ -2,7 +2,7 @@
 echo Going up into "14aOSC"
 cd ..
 echo Starting JavaScript
-"C:/Program Files/nodejs/node.exe" "C:/Users/14Anthony7095/Documents/14aOSC-API-Log/myModules/genaratePortalLibraryList.js"
+"C:/Program Files/nodejs/node.exe" "C:/Users/14Anthony7095/Documents/14aOSC_Multi-Interface/myModules/genaratePortalLibraryList.js"
 echo Finished with JavaScript
 timeout /T 5 /nobreak>nul
 echo Going down into "worldThumbnails"
