@@ -115,9 +115,11 @@ var vrchat = new VRChat({
 class ratelimitHandler {
     pause_sec = 30
     pause_exp = 1
-    constructor(pause_exp, pause_sec) {
+    requestQueue = []
+    constructor(pause_exp, pause_sec, requestQueue) {
         this.pause_sec
         this.pause_exp
+        this.requestQueue
     }
     get waitTimeMS() { return 1000 * (this.pause_sec * Math.pow(2, this.pause_exp)) }
     get waitTimeSec() { return this.pause_sec * Math.pow(2, this.pause_exp) }
@@ -134,8 +136,9 @@ class ratelimitHandler {
     }
     async req(I_request) {
         return new Promise((resolve, reject) => {
+            if (limiter.requestQueue.length == 0) { limiter.requestQueue.push(I_request); attemptRequest() } else { limiter.requestQueue.push(I_request) }
             async function attemptRequest() {
-                var res = await I_request
+                var res = await limiter.requestQueue[0]
                 if (res.error?.statusCode == 429 || res.error?.statusCode == 500) {
                     console.debug(res)
                     await limiter.backoff()
@@ -143,9 +146,10 @@ class ratelimitHandler {
                 } else {
                     resolve(res)
                     limiter.cooloff()
+                    limiter.requestQueue.shift()
+                    if (limiter.requestQueue.length >= 1) { attemptRequest() }
                 }
             }
-            attemptRequest()
         })
     }
 }
@@ -218,9 +222,9 @@ cmdEmitter.on('cmd', (cmd, args) => {
         worldHoppers.sort((a, b) => { return b.playtime - a.playtime }).forEach((a) => {
             var discordInfo = vrchatDiscord.filter(e => e.vrcUUID == a.id)
             if (discordInfo.length != 0) {
-                string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` ${a.groupMember == true ? `👥` : `👻`} ${a.name} <@${discordInfo[0].discordid}> - [${discordInfo[0].discordid}]`
+                string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` ${a.groupMember == true ? `💜` : `👻`} ${a.name} <@${discordInfo[0].discordid}> - [${discordInfo[0].discordid}]`
             } else {
-                string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` ${a.groupMember == true ? `👥` : `👻`} ${a.name} [profile](<https://vrchat.com/home/user/${a.id}>)`
+                string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` ${a.groupMember == true ? `💜` : `👻`} ${a.name} [profile](<https://vrchat.com/home/user/${a.id}>)`
             }
         })
         console.log(string)
@@ -583,91 +587,6 @@ function readLogFile(cooldownSkip) {
     }
 }
 
-// - Avatar Perf Allowance -
-//  Stat / Value >= Threshold
-const avatarStatWeights = {
-    "lowerLimitWeight": 1,             // Display Evaluation Value
-    "higherLimitWeight": 1,            // Warn Icon + True Stat
-    "boundsLongest": 6,               //🔒locked in - from suggestion list
-    "constraintCount": 350,           //🔒locked in - from suggestion list
-    "constraintDepth": 100,            //🔒locked in - from suggestion list
-    "totalTextureUsage": 157286400,       //🔒locked in - from suggestion list
-    "totalPolygons": 70000,              //🔒locked in - from suggestion list
-    "skinnedMeshCount": 16,            //🔒locked in - from suggestion list
-    "meshCount": 24,                   //🔒locked in - from suggestion list
-    "physBoneCollisionCheckCount": 512,  //🔒locked in - from suggestion list
-    "physBoneColliderCount": 32,       //🔒locked in - from suggestion list
-    "physBoneComponentCount": 32,      //🔒locked in - from suggestion list
-    "physBoneTransformCount": 256,       //🔒locked in - from suggestion list
-    "contactCount": 32,               //🔒locked in - from suggestion list
-    "animatorCount": 32,
-    "audioSourceCount": 8,
-    "boneCount": 400,
-    "cameraCount": 12,
-    "clothCount": 4,
-    "lineRendererCount": 8,
-    "materialCount": 99999,
-    "meshParticleMaxPolygons": 5000,
-    "particleSystemCount": 16,
-    "physicsColliders": 8,
-    "physicsRigidbodies": 8,
-    "totalClothVertices": 200,
-    "totalMaxParticles": 2500,
-    "trailRendererCount": 8,
-    "materialSlotsUsed": 32,
-    "lightCount": 1,
-    "blendShapeCount": 99999
-}
-
-var avatarStatSummary = {
-    "totalAvatars": 0,
-    "checkedFileIDs": [],
-    "seenAuthors": [{
-        "id": "", "displayName": ""
-    }],
-    "seenAvatars": [{
-        "name": "", "author": null, "wearers": [], "lastAccessed": 0
-    }],
-    "Excellent": 0,
-    "Good": 0,
-    "Medium": 0,
-    "Poor": 0,
-    "VeryPoor": 0,
-    "stats": {
-        "totalPolygons": { "label": "Polygons", "values": [] },
-        "boundsLongest": { "label": "Bounds (Longest Edge)", "values": [] },
-        "skinnedMeshCount": { "label": "Skinned Meshes", "values": [] },
-        "meshCount": { "label": "Basic Meshes", "values": [] },
-        "materialSlotsUsed": { "label": "Material Slots", "values": [] },
-        "materialCount": { "label": "Material Count", "values": [] },
-        "physBoneColliderCount": { "label": "PhysBone Colliders", "values": [] },
-        "physBoneCollisionCheckCount": { "label": "PhysBone Collision Checks", "values": [] },
-        "physBoneComponentCount": { "label": "PhysBone Components", "values": [] },
-        "physBoneTransformCount": { "label": "PhysBone Transforms", "values": [] },
-        "contactCount": { "label": "Contacts", "values": [] },
-        "constraintCount": { "label": "Constraint Count", "values": [] },
-        "constraintDepth": { "label": "Constraint Depth", "values": [] },
-        "animatorCount": { "label": "Animators", "values": [] },
-        "boneCount": { "label": "Bones", "values": [] },
-        "lightCount": { "label": "Lights", "values": [] },
-        "particleSystemCount": { "label": "Particle Systems", "values": [] },
-        "totalMaxParticles": { "label": "Max Particles", "values": [] },
-        "meshParticleMaxPolygons": { "label": "Particle Max Polygons", "values": [] },
-        "trailRendererCount": { "label": "Trail Renderers", "values": [] },
-        "lineRendererCount": { "label": "Line Renderers", "values": [] },
-        "clothCount": { "label": "Cloth Count", "values": [] },
-        "totalClothVertices": { "label": "Cloth Vertices", "values": [] },
-        "physicsColliders": { "label": "Unity Colliders", "values": [] },
-        "physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
-        "audioSourceCount": { "label": "AudioSources", "values": [] },
-        "blendShapeCount": { "label": "BlendShapes", "values": [] },
-        "cameraCount": { "label": "Cameras", "values": [] },
-        "totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
-        "fileSize": { "label": "Download Size", "values": [] },
-        "uncompressedSize": { "label": "Uncompressed Size (RAM)", "values": [] }
-    }
-}
-
 function getPlayersInInstance() { return playersInInstance }
 exports.getPlayersInInstance = getPlayersInInstance;
 function getPlayersInstanceObject() { return playersInstanceObject }
@@ -879,6 +798,92 @@ async function getIsUserInGroup(F_userid, F_groupid) {
     })
 }
 
+// - Avatar Perf Allowance -
+//  Stat / Value >= Threshold
+const avatarStatWeights = {
+    "lowerLimitWeight": 1,             // Display Evaluation Value
+    "higherLimitWeight": 1,            // Warn Icon + True Stat
+    "boundsLongest": 6,               //🔒locked in - from suggestion list
+    "constraintCount": 350,           //🔒locked in - from suggestion list
+    "constraintDepth": 100,            //🔒locked in - from suggestion list
+    "totalTextureUsage": 157286400,       //🔒locked in - from suggestion list
+    "totalPolygons": 70000,              //🔒locked in - from suggestion list
+    "skinnedMeshCount": 16,            //🔒locked in - from suggestion list
+    "meshCount": 24,                   //🔒locked in - from suggestion list
+    "physBoneCollisionCheckCount": 512,  //🔒locked in - from suggestion list
+    "physBoneColliderCount": 32,       //🔒locked in - from suggestion list
+    "physBoneComponentCount": 32,      //🔒locked in - from suggestion list
+    "physBoneTransformCount": 256,       //🔒locked in - from suggestion list
+    "contactCount": 32,               //🔒locked in - from suggestion list
+    "animatorCount": 32,
+    "audioSourceCount": 8,
+    "boneCount": 400,
+    "cameraCount": 12,
+    "clothCount": 4,
+    "lineRendererCount": 8,
+    "materialCount": 99999,
+    "meshParticleMaxPolygons": 5000,
+    "particleSystemCount": 16,
+    "physicsColliders": 8,
+    "physicsRigidbodies": 8,
+    "totalClothVertices": 200,
+    "totalMaxParticles": 2500,
+    "trailRendererCount": 8,
+    "materialSlotsUsed": 32,
+    "rayCastCount": 15,
+    "lightCount": 1,
+    "blendShapeCount": 99999
+}
+
+var avatarStatSummary = {
+    "totalAvatars": 0,
+    "checkedFileIDs": [],
+    "seenAuthors": [{
+        "id": "", "displayName": ""
+    }],
+    "seenAvatars": [{
+        "name": "", "author": null, "wearers": [], "lastAccessed": 0
+    }],
+    "Excellent": 0,
+    "Good": 0,
+    "Medium": 0,
+    "Poor": 0,
+    "VeryPoor": 0,
+    "stats": {
+        "totalPolygons": { "label": "Polygons", "values": [] },
+        "boundsLongest": { "label": "Bounds (Longest Edge)", "values": [] },
+        "skinnedMeshCount": { "label": "Skinned Meshes", "values": [] },
+        "meshCount": { "label": "Basic Meshes", "values": [] },
+        "materialSlotsUsed": { "label": "Material Slots", "values": [] },
+        "materialCount": { "label": "Material Count", "values": [] },
+        "physBoneColliderCount": { "label": "PhysBone Colliders", "values": [] },
+        "physBoneCollisionCheckCount": { "label": "PhysBone Collision Checks", "values": [] },
+        "physBoneComponentCount": { "label": "PhysBone Components", "values": [] },
+        "physBoneTransformCount": { "label": "PhysBone Transforms", "values": [] },
+        "contactCount": { "label": "Contacts", "values": [] },
+        "constraintCount": { "label": "Constraint Count", "values": [] },
+        "constraintDepth": { "label": "Constraint Depth", "values": [] },
+        "animatorCount": { "label": "Animators", "values": [] },
+        "boneCount": { "label": "Bones", "values": [] },
+        "lightCount": { "label": "Lights", "values": [] },
+        "particleSystemCount": { "label": "Particle Systems", "values": [] },
+        "totalMaxParticles": { "label": "Max Particles", "values": [] },
+        "meshParticleMaxPolygons": { "label": "Particle Max Polygons", "values": [] },
+        "trailRendererCount": { "label": "Trail Renderers", "values": [] },
+        "lineRendererCount": { "label": "Line Renderers", "values": [] },
+        "clothCount": { "label": "Cloth Count", "values": [] },
+        "totalClothVertices": { "label": "Cloth Vertices", "values": [] },
+        "physicsColliders": { "label": "Unity Colliders", "values": [] },
+        "physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
+        "audioSourceCount": { "label": "AudioSources", "values": [] },
+        "blendShapeCount": { "label": "BlendShapes", "values": [] },
+        "cameraCount": { "label": "Cameras", "values": [] },
+        "totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
+        "fileSize": { "label": "Download Size", "values": [] },
+        "uncompressedSize": { "label": "Uncompressed Size (RAM)", "values": [] }
+    }
+}
+
 function fitChars(I_line, lineCount = 1) {
     const charWidth = {
         " ": 0.018181, "a": 0.037037, "A": 0.041666, "b": 0.04, "B": 0.043478, "c": 0.03125, "C": 0.041666,
@@ -1022,6 +1027,8 @@ async function avatarFileAnalysis(fileid, fileversion) {
     var materialSlotsUsed = Math.round(res.data.avatarStats.materialSlotsUsed / avatarStatWeights.materialSlotsUsed)
     var lightCount = Math.round(res.data.avatarStats.lightCount / avatarStatWeights.lightCount)
     var blendShapeCount = Math.round(res.data.avatarStats.blendShapeCount / avatarStatWeights.blendShapeCount)
+    // var raycastCount = Math.round(res.data.avatarStats.rayCastCount / avatarStatWeights.rayCastCount)
+    var raycastCount = 0
     var statPunish = []
 
     /*if (getInstanceGroupID() == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
@@ -1302,14 +1309,14 @@ async function avatarFileAnalysis(fileid, fileversion) {
         })
         totalavatareval += `\n              AudioSource Count:         ${audioSourceCount} EV ${audioSourceCount >= avatarStatWeights.higherLimitWeight ? '⚠️🔊' : ''}`
     }
-    if (rayCasts > avatarStatWeights.lowerLimitWeight) {
+    if (raycastCount > avatarStatWeights.lowerLimitWeight) {
         statPunish.push({
             "weight": 27,
-            "multi": Math.round(rayCasts),
-            "log": `\v(x${rayCasts}) Raycasts ${res.data.avatarStats.rayCastCount}`,
-            "print": `\n              Raycasts: ${rayCasts} EV ${rayCasts >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.rayCastCount : ''}`
+            "multi": Math.round(raycastCount),
+            "log": `\v(x${raycastCount}) Raycasts ${res.data.avatarStats.rayCastCount}`,
+            "print": `\n              Raycasts: ${raycastCount} EV ${raycastCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.rayCastCount : ''}`
         })
-        totalavatareval += `\n              Raycasts: ${rayCasts} EV ${rayCasts >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.rayCastCount : ''}`
+        totalavatareval += `\n              Raycasts: ${raycastCount} EV ${raycastCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.rayCastCount : ''}`
     }
     if (blendShapeCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${blendShapeCount}) BlendShapes ${res.data.avatarStats.blendShapeCount}`;
@@ -3103,15 +3110,49 @@ async function eventPlayerJoin(logOutputLine) {
             if (filteredhoppers != undefined) {
                 worldHoppers[worldHoppers.findIndex(a => a.id == playerID)]["joinTime"] = Date.now()
             } else {
-                var findMem = vrchatElAlbaMembers.find(m => m.userId == playerID || m.user.id == playerID || m.user.displayName == playerDisplayName)
-                worldHoppers.push({
-                    "name": playerDisplayName,
-                    "id": playerID,
-                    "playtime": 0,
-                    "joinTime": Date.now(),
-                    "groupMember": findMem != undefined ? true : false
-                })
-
+                var findMem = vrchatElAlbaMembers.find(m => m.userId == playerID)
+                var findMemID = vrchatElAlbaMembers.find(m => m.user.id == playerID)
+                var findMemDN = vrchatElAlbaMembers.find(m => m.user.displayName == playerDisplayName)
+                if (findMem == undefined && findMemID == undefined && findMemDN == undefined) {
+                    var gotUserGroups = await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }))
+                    if (gotUserGroups.data.find(g => g.groupId == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') == undefined) {
+                        console.log(`${loglv().log}${selflogL} [ElAlba] 👻 ${playerDisplayName} NOT a member`)
+                        worldHoppers.push({
+                            "name": playerDisplayName,
+                            "id": playerID,
+                            "playtime": 0,
+                            "joinTime": Date.now(),
+                            "groupMember": false
+                        })
+                    } else {
+                        console.log(`${loglv().log}${selflogL} [ElAlba] 💜 ${playerDisplayName} is member`)
+                        worldHoppers.push({
+                            "name": playerDisplayName,
+                            "id": playerID,
+                            "playtime": 0,
+                            "joinTime": Date.now(),
+                            "groupMember": true
+                        })
+                    }
+                } else {
+                    console.log(`${loglv().log}${selflogL} [ElAlba] 💜 ${playerDisplayName} is member`)
+                    worldHoppers.push({
+                        "name": playerDisplayName,
+                        "id": playerID,
+                        "playtime": 0,
+                        "joinTime": Date.now(),
+                        "groupMember": true
+                    })
+                }
+            }
+        } else if (G_groupID != '' &&
+            true // Do for all groups?
+        ) {
+            var gotUserGroups = await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }))
+            if (gotUserGroups.data.find(g => g.groupId == G_groupID) == undefined) {
+                console.log(`${loglv().log}${selflogL} [GroupMember] 👻 ${playerDisplayName} NOT a member`)
+            } else {
+                console.log(`${loglv().log}${selflogL} [GroupMember] 💜 ${playerDisplayName} is member`)
             }
         }
 
@@ -3242,12 +3283,12 @@ function eventAssetDownload(logOutputLine) {
         let avatarauthor = assetbundlelog.split('Unpacking Avatar (')[1].split(' by ')[1].slice(0, -1)
 
         try {
-            var assSa = avatarStatSummary.seenAvatars.filter(a => a.name == avatarauthor)[0]
-            assSa.author = I_author
+            var assSa = avatarStatSummary.seenAvatars.filter(a => a.name == avatarswitchedto)[0]
+            assSa.author = avatarauthor
             console.log(`${loglv().log}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarChange]: ${assSa.wearers.toString()} in avatar (${assSa.name} by ${assSa.author})`)
         } catch (err) {
-            console.log(`${loglv().hey}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarFallback]: No Wearer for (${avatarauthor} by ${avatarswitchedto})`)
-            avatarStatSummary.seenAvatars.push({ "name": avatarauthor, "author": avatarswitchedto, "wearers": [], "lastAccessed": Date.now() })
+            console.log(`${loglv().hey}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarFallback]: No Wearer for (${avatarswitchedto} by ${avatarauthor})`)
+            avatarStatSummary.seenAvatars.push({ "name": avatarswitchedto, "author": avatarauthor, "wearers": [], "lastAccessed": Date.now() })
         }
 
         clearTimeout(loadingAvatarTimer)

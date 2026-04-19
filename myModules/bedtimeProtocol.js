@@ -102,7 +102,7 @@ oscEmitter.on('osc', (address, value) => {
 				if( secsRemaining <= 0 ){
 					logSay = `Auto-Closing VRChat, Goodnight.`
 					console.log(`${loglv().hey}${selflog} ${logSay}`);
-					oscChatBox(`~${logSay}`,5)
+					oscChatBox(`~${logSay}`,10)
 					killvrc(10)
 					clearInterval(timer)
 					timer = null

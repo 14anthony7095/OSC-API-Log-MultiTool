@@ -74,7 +74,7 @@ async function main() {
     */
     // await sleep(10000)
 
-    await foundMemberMutualGroups('grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad', undefined, undefined, true, false)
+    // await foundMemberMutualGroups('grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad', undefined, undefined, true, false)
 
     // Shared groups in YEAR Groups
     /* await foundMemberMutualGroups('grp_4f5d0456-4200-4b2c-8331-78856d1869e4', undefined, undefined, false)
@@ -320,7 +320,7 @@ async function fileCheck(fileid, fileversion) {
     let res = await vrchat.getFile({ 'path': { 'fileId': fileid, 'versionId': fileversion } }); console.log(res)
     let res2 = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } }); console.log(res2)
 }
-// fileCheck('file_683660cf-18de-45b7-a399-a340ce1cf2f1',2)
+// fileCheck('file_c34d0d63-ce1b-4b1c-ae2d-9c52f2ace478',30)
 
 
 
