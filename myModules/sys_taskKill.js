@@ -12,7 +12,7 @@ kill vrchat function with a timer in secs
 const { loglv, vrckiller } = require('./config.js')
 const { oscEmitter } = require('./Interface_osc_v1.js');
 const find = require('find-process');
-const { fetchLogFile, eventGameClose } = require('./Interface_vrc-Log.js');
+const { fetchLogFile, eventGameClose } = require('./Interface_vrc-ApiLog.cjs');
 
 //	--	Global Vars	--
 let selflog = `\x1b[0m[\x1b[31mTaskKiller\x1b[0m]`

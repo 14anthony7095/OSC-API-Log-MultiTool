@@ -1,6 +1,6 @@
 const { loglv } = require('./config.js')
 const { oscEmitter, oscSend } = require('./Interface_osc_v1.js');
-const { logEmitter } = require('./Interface_vrc-Log.js')
+const { logEmitter } = require('./Interface_vrc-ApiLog.cjs')
 // const say = require('say');
 let selflog = `\x1b[0m(\x1b[34mAv3MenuHelper\x1b[0m)`
 console.log(`${loglv().log}${selflog} Loaded`)

@@ -8,9 +8,7 @@
 //	--	Libraries	--
 var { loglv, playerCounter, graphTimeRangeMinutes } = require('./config.js');
 const { oscSend, oscEmitter, OSCDataBurst, getOSCDataBurstState } = require('./Interface_osc_v1.js');
-const { getVisitsCount, apiEmitter } = require('./Interface_vrc-Api.js');
-const { logEmitter, getVrchatRunning } = require('./Interface_vrc-Log.js');
-
+const { getVisitsCount, apiEmitter,logEmitter, getVrchatRunning } = require('./Interface_vrc-ApiLog.cjs');
 
 //	--	Global Vars	--
 let selflog = `\x1b[0m[\x1b[36mCounter\x1b[0m]`

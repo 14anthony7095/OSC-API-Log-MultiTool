@@ -379,7 +379,7 @@ ${loglv().log}${selflog} \x1b[33m${partalmsgpercent}% of message was not shown i
 	if (msgVerbose >= 1 && isTalking == false) { saySpeak() }
 });
 
-const { apiEmitter } = require("./Interface_vrc-Api.js");
+const { apiEmitter,logEmitter } = require("./Interface_vrc-ApiLog.cjs");
 const { getOBSstate } = require('./interface_OBS.cjs');
 apiEmitter.on('fetchedDistThumbnail', (url, name, authorname, worldId) => {
 	if (getOBSstate() == true) {
@@ -389,7 +389,6 @@ apiEmitter.on('fetchedDistThumbnail', (url, name, authorname, worldId) => {
 		vrcCurrentLocation = `🌐 Current world: ${name} By ${authorname} https://vrchat.com/home/world/${worldId}`;
 	}
 })
-const { logEmitter } = require("./Interface_vrc-Log.js")
 logEmitter.on('gameclose', () => {
 	if (getOBSstate() == true) {
 		// Edit Buffer Message for !world command if VRChat is closed

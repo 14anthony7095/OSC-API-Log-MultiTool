@@ -2,8 +2,7 @@ const { OBSWebSocket } = require('obs-websocket-js');
 const obs = new OBSWebSocket();
 const fs = require('fs');
 require('dotenv').config({ 'quiet': true })
-const { logEmitter } = require("./Interface_vrc-Log.js");
-const { apiEmitter } = require("./Interface_vrc-Api.js");
+const { logEmitter,apiEmitter } = require("./Interface_vrc-ApiLog.cjs");
 const { oscEmitter } = require('./Interface_osc_v1.js');
 
 
