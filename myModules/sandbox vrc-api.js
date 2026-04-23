@@ -74,6 +74,9 @@ async function main() {
     */
     // await sleep(10000)
 
+    var gotReqJoinGroups = await vrchat.getUserGroupRequests({'path':{'userId':'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752'}})
+    console.log(gotReqJoinGroups.data)
+
 
     // Shared groups in YEAR Groups
     /* await foundMemberMutualGroups('grp_4f5d0456-4200-4b2c-8331-78856d1869e4', undefined, undefined, false)

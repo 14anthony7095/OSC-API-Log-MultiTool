@@ -165,7 +165,6 @@ class ratelimitHandler {
         if (this.pause_exp > 1) { this.pause_exp = this.pause_exp - this.pause_exp * 0.1 } else if (this.pause_exp < 1) { this.pause_exp = 1 }
     }
     sweepCache() {
-        console.log(`${loglv().hey}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Sweeping API-Cache.`)
         var count = 0
         var totalc = 0
         Object.keys(this.limiterCache).forEach(k => {
@@ -174,7 +173,7 @@ class ratelimitHandler {
             this.limiterCache[k] = this.limiterCache[k].filter(c => c.cache_expire > Date.now())
             count += fromc - this.limiterCache[k].length
         })
-        console.log(`${loglv().hey}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Cleared ${count} items from API-Cache. Remaining ${totalc - count}`)
+        console.log(`${loglv().hey}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Sweeping API-Cache: ${count} of ${totalc} => ${totalc - count}`)
     }
 
     async reqCached(I_type, I_cacheSearch) {
