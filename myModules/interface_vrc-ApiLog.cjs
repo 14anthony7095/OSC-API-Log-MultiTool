@@ -48,21 +48,43 @@ var memberRatio = 0.5
 var G_autoNextWorldHop = false
 var worldHoppers = []
 var vrchatDiscord; fs.readFile('datasets/vrc-X-dis.json', 'utf8', (err, data) => { vrchatDiscord = JSON.parse(data) })
-var vrchatElAlbaMembers; fs.readFile('datasets/groupMembers El Alba.json', 'utf8', (err, data) => { vrchatElAlbaMembers = JSON.parse(data) })
-var vrcDataCache = {}
 var lastFetchGroupLogs;
 var currentUser;
 var statWarnings = false
 var userAutoAcceptWhiteList = []
 var worldQueueTxt = './datasets/worldQueue.txt'
-var exploreMode = false
 var explorePrivacyLevel = 0
-var exploreNextCountDownTimer;
 var authToken = null
 var isApiErrorSkip = false
 var socket_VRC_API
 var cacheWS = {}
 var G_lastlocation = ''
+var lastVideoURL = ``
+var seenVideoURLs = [] // For current instance only
+var worldHopTimeout;
+var worldHopTimeoutHour;
+var tonRoundType = ''
+var tonAvgStartWait = []
+var tonRoundReadyTime = 0
+var G_worldID = ``
+var G_currentLocation = ''
+var G_InstanceClosed = false
+var G_groupID_last = ``
+var G_groupID = ``
+var instanceType = ''
+var lastSetUserStatus = ''
+var cooldownPortalVanish = false
+var vrchatRunning = false
+var loadingAvatarTimer;
+var watcher;
+var lastUpdated = 0
+var lastChecked = 0
+var previousLength = 0
+var currentLength = 0
+var cooldownLogRead = false
+var urlType = 'none'
+var logCooldown = 0.001 // secs
+var worldjointimestamp = 0
 
 // Restore saved into Scope
 fs.readFile('./lastFetchGroupLogs.txt', 'utf8', (err, data) => {
@@ -112,42 +134,101 @@ var vrchat = new VRChat({
     */
 });
 
+
+
 class ratelimitHandler {
     pause_sec = 30
     pause_exp = 1
-    requestQueue = []
-    constructor(pause_exp, pause_sec, requestQueue) {
+    isLimiting = false
+    limiterCache = { "user": [], "world": [], "file": [], "group": [], "userGroups": [] }
+    #cachedTime = 900_000
+    constructor(pause_exp, pause_sec, isLimiting, limiterCache) {
         this.pause_sec
         this.pause_exp
-        this.requestQueue
+        this.isLimiting
+        this.limiterCache
     }
     get waitTimeMS() { return 1000 * (this.pause_sec * Math.pow(2, this.pause_exp)) }
     get waitTimeSec() { return this.pause_sec * Math.pow(2, this.pause_exp) }
     get delayMulti() { return this.pause_exp }
     async backoff() {
         return new Promise((resolve, reject) => {
-            console.log(`[Ratelimit-Handler] Backing off for ${this.waitTimeSec} sec`)
-            if (this.pause_exp <= 6) { this.pause_exp++ } else { console.log(`[Ratelimit-Handler] Peaking at expo 7 (1 hour 4 min)`) }
-            setTimeout(() => { resolve(true) }, this.waitTimeMS);
+            console.log(`${loglv().warn}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Backing off for ${this.waitTimeSec} sec
+    Retry: ${new Date(Date.now() + this.waitTimeMS).toTimeString()}`)
+            setTimeout(() => {
+                if (this.pause_exp < 7) { this.pause_exp++ }
+                resolve(true)
+            }, this.waitTimeMS);
         })
     }
     cooloff() {
         if (this.pause_exp > 1) { this.pause_exp = this.pause_exp - this.pause_exp * 0.1 } else if (this.pause_exp < 1) { this.pause_exp = 1 }
     }
-    async req(I_request) {
+    sweepCache() {
+        console.log(`${loglv().hey}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Sweeping API-Cache.`)
+        var count = 0
+        var totalc = 0
+        Object.keys(this.limiterCache).forEach(k => {
+            var fromc = this.limiterCache[k].length
+            totalc += this.limiterCache[k].length
+            this.limiterCache[k] = this.limiterCache[k].filter(c => c.cache_expire > Date.now())
+            count += fromc - this.limiterCache[k].length
+        })
+        console.log(`${loglv().hey}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Cleared ${count} items from API-Cache. Remaining ${totalc - count}`)
+    }
+
+    async reqCached(I_type, I_cacheSearch) {
         return new Promise((resolve, reject) => {
-            if (limiter.requestQueue.length == 0) { limiter.requestQueue.push(I_request); attemptRequest() } else { limiter.requestQueue.push(I_request) }
+            switch (I_type) {
+                case 'userGroups':
+                    var search = this.limiterCache['userGroups'].find(c => c.userId == I_cacheSearch && c.cache_expire > Date.now())
+                    if (search != undefined) {
+                        resolve(search['data'])
+                    } else {
+                        reject('Not Cached or is Expired')
+                    }
+                    break;
+                default:
+                    var search = this.limiterCache[I_type].find(c => c.data.id == I_cacheSearch && c.cache_expire > Date.now())
+                    if (search != undefined) {
+                        resolve(search)
+                    } else {
+                        reject('Not Cached or is Expired')
+                    }
+                    break;
+            }
+        })
+    }
+    async req(I_request, I_type = '', I_param = '') {
+        return new Promise((resolve, reject) => {
+            checkLimit()
+            function checkLimit() {
+                if (limiter.isLimiting == false) { attemptRequest() } else { setTimeout(() => { checkLimit() }, limiter.delayMulti * 10000) }
+            }
             async function attemptRequest() {
-                var res = await limiter.requestQueue[0]
-                if (res.error?.statusCode == 429 || res.error?.statusCode == 500) {
-                    console.debug(res)
+                var res = await I_request
+                if (res.error?.statusCode == 429 || res.error?.response.status == 429 || res.error?.statusCode == 500 || res.error?.response.status == 500) {
+                    limiter.isLimiting = true
                     await limiter.backoff()
-                    attemptRequest()
+                    if (limiter.pause_exp == 7) {
+                        console.log(I_request)
+                        resolve(res)
+                    } else { attemptRequest() }
                 } else {
-                    resolve(res)
+                    limiter.isLimiting = false
                     limiter.cooloff()
-                    limiter.requestQueue.shift()
-                    if (limiter.requestQueue.length >= 1) { attemptRequest() }
+                    if (I_type != '') {
+                        switch (I_type) {
+                            case 'userGroups':
+                                limiter.limiterCache['userGroups'].push({ 'userId': I_param, 'data': res, 'cache_expire': Date.now() + limiter.#cachedTime })
+                                break;
+                            default:
+                                res['cache_expire'] = Date.now() + limiter.#cachedTime
+                                limiter.limiterCache[I_type].push(res)
+                                break;
+                        }
+                    }
+                    resolve(res)
                 }
             }
         })
@@ -155,7 +236,7 @@ class ratelimitHandler {
 }
 const limiter = new ratelimitHandler();
 
-cmdEmitter.on('cmd', (cmd, args) => {
+cmdEmitter.on('cmd', (cmd, args, raw) => {
     if (cmd == 'help') {
         console.log(`
 -   api requestall
@@ -303,12 +384,14 @@ function socket_VRC_API_Connect() {
                     console.log(`${loglv().log}${selflogWS} [${JSON.parse(line).type}] ${wsContent.message} - ${wsContent.link.slice(6)}`)
 
                     // Auto Block if not long enough
-                    if (wsContent.link.slice(6) == getInstanceGroupID() && Date.now() < (getWorldJoinTimestamp() + 300_000)) {
+                    if (wsContent.link.slice(6) == getInstanceGroupID() && Date.now() < (worldjointimestamp + 300_000)) {
 
                         oscChatBoxV2(`Group performed an undesirable action.\vTaking countermeasures`, 10_000, true, true, false, false)
 
                         // Block Group Owner
-                        var resG = await limiter.req(vrchat.getGroup({ 'path': { 'groupId': wsContent.link.slice(6) } }))
+                        var resG = await limiter.reqCached('group', wsContent.link.slice(6)).catch(async () => {
+                            return await limiter.req(vrchat.getGroup({ 'path': { 'groupId': wsContent.link.slice(6) } }), 'group')
+                        })
                         if (resG.data != undefined) {
                             var resMu1 = await limiter.req(vrchat.moderateUser({ 'body': { 'type': 'block', 'moderated': resG.data.ownerId } }))
                             console.log(`You've blocked Group Owner: ${resMu1.data.targetDisplayName}`)
@@ -363,7 +446,9 @@ function socket_VRC_API_Connect() {
                     notif_user_displayName = cacheWS[wsContent.userId].displayName
                     console.log(`${loglv().log}${selflogWS} [GPS] ${notif_user_displayName} - Offline`);
                 } else {
-                    notif_user_displayName = await limiter.req(vrchat.getUser({ 'path': { 'userId': wsContent.userId } }))
+                    notif_user_displayName = await limiter.reqCached('user', wsContent.userId).catch(async () => {
+                        return await limiter.req(vrchat.getUser({ 'path': { 'userId': wsContent.userId } }), 'user')
+                    })
                     console.log(`${loglv().log}${selflogWS} [GPS] ${(notif_user_displayName.data || "").displayName} - Offline`);
                 }
                 break;
@@ -501,25 +586,9 @@ exports.fetchLogFile = fetchLogFile;
 fetchLogFile()
 
 
-function partWhole(part = null, whole = null, percent = null) {
-    // Missing Part
-    var crossmulti;
-    try {
-        crossmulti = part * 100
-        try { return crossmulti / whole }
-        catch { return crossmulti / percent }
-    }
-    catch {
-        crossmulti = whole * percent
-        return crossmulti / 100
-    }
-}
 
 
-var watcher;
-//var vurl = null
-var lastUpdated = 0
-var lastChecked = 0
+
 function startWatching() {
     console.log(`${loglv().log}${selflogL} Started Watcher`)
     if (tarFilePath.includes('undefined')) {
@@ -547,18 +616,47 @@ function updateWatcher() {
 }
 
 
-var previousLength = 0
-var currentLength = 0
-var cooldownLogRead = false
-var urlType = 'none'
-var logCooldown = 0.001 // secs
-function readLogFile(cooldownSkip) {
+
+async function readLogFile(cooldownSkip) {
     if (cooldownLogRead == false || cooldownSkip == true) {
         lastChecked = Date.now()
         //console.log(`${loglv().debug}${selflog} ${lastChecked} Reading Log`)
         cooldownLogRead = true
 
-        fs.readFile(tarFilePath, 'utf8', (err, data) => {
+        var fd;
+        try {
+            fd = await fsp.open(tarFilePath, 'r')
+            var fsReaddfile = await fd.readFile('utf8')
+            dataNE = fsReaddfile.replace(/^\s*\n/gm, "").trim()
+            currentLength = dataNE.length
+            if (previousLength == 0) { previousLength = currentLength }
+            newData = dataNE.slice(previousLength)
+            var newDataPerLine = newData.split('\r')
+
+            // varibles to check for within the line scan
+            newDataPerLine.forEach((line, index) => {
+                if (line.length != 0) {
+                    outputLogLines(index, newDataPerLine.length - 1, line);
+                }
+
+                // Reached end of new lines
+                if (index == newDataPerLine.length - 1) {
+                    setTimeout(() => {
+                        if (lastChecked < lastUpdated) { readLogFile(true) }
+                        else { cooldownLogRead = false }
+                    }, logCooldown * 1000)
+                }
+            })
+            previousLength = currentLength
+
+        } catch (error) {
+            console.log(`${loglv().warn}${selflogL} `, error)
+
+        } finally {
+            if (fd) { await fd.close() }
+        }
+
+        /* fs.readFile(tarFilePath, 'utf8', (err, data) => {
             if (err) { console.log(err); return }
             dataNE = data.replace(/^\s*\n/gm, "").trim()
             currentLength = dataNE.length
@@ -583,44 +681,27 @@ function readLogFile(cooldownSkip) {
             })
             previousLength = currentLength
 
-        })
+        }) */
+
     }
 }
+
+oscSend('/avatar/parameters/log/instance_closed', false)
 
 function getPlayersInInstance() { return playersInInstance }
 exports.getPlayersInInstance = getPlayersInInstance;
 function getPlayersInstanceObject() { return playersInstanceObject }
 exports.getPlayersInstanceObject = getPlayersInstanceObject;
-
-
-var lastVideoURL = ``
-var seenVideoURLs = [] // For current instance only
-var worldHopTimeout;
-var worldHopTimeoutHour;
-var tonRoundType = ''
-var tonAvgStartWait = []
-var tonRoundReadyTime = 0
-var G_worldID = ``
-var G_currentLocation = ''
-var worldID_Closed = false
-oscSend('/avatar/parameters/log/instance_closed', false)
-var G_groupID_last = ``
-var G_groupID = ``
-var instanceType = ''
-var lastSetUserStatus = ''
-var cooldownPortalVanish = false
-var vrchatRunning = false
-var loadingAvatarTimer;
-
 function getVrchatRunning() { return vrchatRunning }
 exports.getVrchatRunning = getVrchatRunning;
-
 function getInstanceGroupID() { return G_groupID }
 exports.getInstanceGroupID = getInstanceGroupID;
+
 function average(array) {
     if (array.length == 0) { return 0 }
     return Math.floor(array.reduce((a, b) => a + b) / array.length)
 }
+
 
 function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
     if (printAllLogs == true) {
@@ -787,17 +868,6 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
     }
 }
 
-async function getIsUserInGroup(F_userid, F_groupid) {
-    return new Promise(async (resolve, reject) => {
-        let gug = await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': F_userid } }))
-        if (gug.data.find(e => e.groupId == F_groupid) != undefined) {
-            resolve(true)
-        } else {
-            resolve(false)
-        }
-    })
-}
-
 // - Avatar Perf Allowance -
 //  Stat / Value >= Threshold
 const avatarStatWeights = {
@@ -912,14 +982,15 @@ function fitChars(I_line, lineCount = 1) {
 async function avatarFileAnalysis(fileid, fileversion) {
     // Has avatar already been seen while in this instance? - Escape
     if (avatarStatSummary.checkedFileIDs.includes(fileid + "-" + fileversion)) {
-        console.log(`${loglv().log}${selflogA} [AvatarAnalysis] Skipping: ${fileid} - ver ${fileversion}`); return
+        // console.log(`${loglv().log}${selflogA} [AvatarAnalysis] Skipping: ${fileid} - ver ${fileversion}`)
+        return
     }
 
     // Has avatar already been scanned before? - Check Cache folder
     var res = {}
     try {
         var fsrdfile = await fsp.readFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', 'utf8')
-        console.log(`${loglv().log}${selflogA} [AvatarAnalysis] Cached: ${fileid} - ver ${fileversion}`)
+        // console.log(`${loglv().log}${selflogA} [AvatarAnalysis] Cached: ${fileid} - ver ${fileversion}`)
         res.data = JSON.parse(fsrdfile)
         if (avatarStatSummary.seenAuthors.filter(s => s.id == res.data.ownerId).length == 0) {
             avatarStatSummary.seenAuthors.push({ "id": res.data.ownerId, "displayName": res.data.displayName })
@@ -933,11 +1004,13 @@ async function avatarFileAnalysis(fileid, fileversion) {
             try {
                 res.data["ownerDisplayName"] = avatarStatSummary.seenAuthors.filter(s => s.id == getName.data.ownerId)[0].displayName
                 if (res.data["ownerDisplayName"] == undefined) { throw new Error('no displayname') }
-                console.log(`${loglv().log}${selflogA} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
+                // console.log(`${loglv().log}${selflogA} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
             } catch (err) {
-                console.log(`${loglv().log}${selflogA} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
+                // console.log(`${loglv().log}${selflogA} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
 
-                let getOwner = await limiter.req(vrchat.getUser({ 'path': { 'userId': getName.data.ownerId } }))
+                let getOwner = await limiter.reqCached('user', getName.data.ownerId).catch(() => {
+                    return limiter.req(vrchat.getUser({ 'path': { 'userId': getName.data.ownerId } }), 'user')
+                })
                 res.data["ownerDisplayName"] = getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : getOwner.data.displayName
                 if (avatarStatSummary.seenAuthors.filter(s => s.id == res.data.ownerId).length == 0) {
                     avatarStatSummary.seenAuthors.push({ "id": getName.data.ownerId, "displayName": getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : getOwner.data.displayName })
@@ -948,9 +1021,9 @@ async function avatarFileAnalysis(fileid, fileversion) {
             fs.writeFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', JSON.stringify(res.data), 'utf8', (err) => { if (err) { console.log(err) } })
         }
     } catch (error) {
-        console.log(`${loglv().log}${selflogA} [AvatarAnalysis] Fetching: ${fileid} - ver ${fileversion}`)
-
+        // console.log(`${loglv().log}${selflogA} [AvatarAnalysis] Fetching: ${fileid} - ver ${fileversion}`)
         res = await limiter.req(vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } }))
+
         if (res.data == undefined) {
             console.log(`${loglv().warn}${selflogA} [AvatarAnalysis] ErrorFile: ${fileid} - ver ${fileversion}`)
             setTimeout(async () => {
@@ -967,9 +1040,9 @@ async function avatarFileAnalysis(fileid, fileversion) {
             try {
                 res.data["ownerDisplayName"] = avatarStatSummary.seenAuthors.filter(s => s.id == getName.data.ownerId)[0].displayName
                 if (res.data["ownerDisplayName"] == undefined) { throw new Error('no displayname') }
-                console.log(`${loglv().log}${selflogA} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
+                // console.log(`${loglv().log}${selflogA} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
             } catch (err) {
-                console.log(`${loglv().log}${selflogA} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
+                // console.log(`${loglv().log}${selflogA} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
 
                 let getOwner = await limiter.req(vrchat.getUser({ 'path': { 'userId': getName.data.ownerId } }))
                 res.data["ownerDisplayName"] = getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : (getOwner.data || "").displayName
@@ -981,6 +1054,7 @@ async function avatarFileAnalysis(fileid, fileversion) {
 
             fs.writeFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', JSON.stringify(res.data), 'utf8', (err) => { if (err) { console.log(err) } })
         } else {
+            // console.log(res)
             return
         }
     }
@@ -1663,7 +1737,7 @@ async function worldAutoPreloadQueue(worldList = []) {
                     'type': 'hidden',
                     'region': 'use',
                     // 'displayName': 'Preloading Worlds',
-                    'minimumAvatarPerformance': 'Poor',
+                    // 'minimumAvatarPerformance': 'Poor',
                     'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752'
                 }
             }).then(created_instance => {
@@ -1690,6 +1764,7 @@ function queueInstanceDataBurst() {
         OSCDataBurst(9, parseFloat((playerHardLimit > 80 ? 80 : playerHardLimit) < 10 ? (playerHardLimit > 80 ? 80 : playerHardLimit) : (playerHardLimit > 80 ? 80 : playerHardLimit).toString()[0]) / 10)
         OSCDataBurst(10, parseFloat((playerHardLimit > 80 ? 80 : playerHardLimit) < 10 ? 10 : (playerHardLimit > 80 ? 80 : playerHardLimit).toString()[1]) / 10)
         OSCDataBurst(11, parseFloat(playerRatio))
+        OSCDataBurst(12, parseFloat(memberRatio))
     }
     // membersInInstance.length
     // memberRatio
@@ -1698,23 +1773,11 @@ function queueInstanceDataBurst() {
 oscEmitter.on('osc', (addr, value) => {
     if (addr == `/avatar/parameters/api/explore/start` && value == true) { inviteHubQueue() }
     if (addr == `/avatar/parameters/api/explore/next` && value == true) {
-        if (exploreMode == true) {
-            clearTimeout(exploreNextCountDownTimer)
-            exploreNextCountDownTimer = null
-            inviteOnlineWorlds_Loop(worldsToExplore[0]);
-        } else if (exploreMode == false) {
-            inviteLocalQueue()
-        }
+        inviteLocalQueue()
     }
     // if (address == `/avatar/parameters/api/explore/hub` && value == true) { }
     if (addr == `/avatar/parameters/api/explore/stop` && value == true) {
         apiEmitter.emit('switch', 0, 'world')
-        if (exploreMode == true) {
-            console.log(`${loglv().hey}${selflogA} Explore Mode: Disabled - Avatar Trigger`)
-            clearTimeout(exploreNextCountDownTimer)
-            exploreNextCountDownTimer = null
-            exploreMode = false
-        }
     }
     if (addr == `/avatar/parameters/api/explore/prefill` && value == true) { addLabWorldsToLocalQueue() }
     if (addr == `/avatar/parameters/api/explore/privacy` && value == 0) { explorePrivacyLevel = 0 }
@@ -1756,32 +1819,11 @@ oscEmitter.on('avatar', (avtrID) => {
         'avtr_6b25124e-e141-4df4-ad27-22766608e5dc',
     ].includes(avtrID)) {
         queueInstanceDataBurst()
-        oscSend('/avatar/parameters/log/instance_closed', worldID_Closed)
+        oscSend('/avatar/parameters/log/instance_closed', G_InstanceClosed)
         applyGroupLogo(G_groupID)
     }
 });
 
-async function addLabWorldsToQueue() {
-    console.log(`${loglv().log}${selflogA} Compiling world list..`)
-    let { data: fav1 } = await limiter.req(vrchat.getFavoritedWorlds({ query: { n: 100, sort: 'random', offset: 0 } }))
-    let { data: fav2 } = await limiter.req(vrchat.getFavoritedWorlds({ query: { n: 100, sort: 'random', offset: 100 } }))
-    let { data: fav3 } = await limiter.req(vrchat.getFavoritedWorlds({ query: { n: 100, sort: 'random', offset: 200 } }))
-    let { data: fav4 } = await limiter.req(vrchat.getFavoritedWorlds({ query: { n: 100, sort: 'random', offset: 300 } }))
-    let favworldsAll = fav1.concat(fav2, fav3, fav4)
-    let favWorlds1 = favworldsAll.filter(favworldsAll => favworldsAll.favoriteGroup == 'worlds1')
-    console.log(`${loglv().log}${selflogA} ${favWorlds1.length} worlds to explore.`)
-
-    if (100 - (favWorlds1.length) >= 1) {
-        console.log(`${loglv().log}${selflogA} Adding ${100 - (favWorlds1.length)} Community Labs worlds to queue`)
-        let { data: worldData } = await limiter.req(vrchat.searchWorlds({ query: { n: 100 - (favWorlds1.length), sort: 'labsPublicationDate', order: 'descending', offset: 0, tag: 'system_labs' } }))
-        worldData.forEach((w, index, arr) => {
-            setTimeout(() => {
-                console.log(`${loglv().log}${selflogA} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
-                vrchat.addFavorite({ body: { favoriteId: w.id, tags: 'worlds1', type: 'world' } })
-            }, 5_000 * index)
-        })
-    }
-}
 async function addLabWorldsToLocalQueue() {
     console.log(`${loglv().log}${selflogA} Adding 100 Community Labs worlds to queue`)
     console.log(`${loglv().log}${selflogA} Adding 100 New-and-Noteworthy worlds to queue`)
@@ -1878,7 +1920,9 @@ function inviteLocalQueue(I_autoNext = false) {
         console.log(`${loglv().log}${selflogA} ${localQueueList.length} worlds to explore. [${extimelow} to ${extimehig} Hours]`)
         apiEmitter.emit('switch', localQueueList.length, 'world')
 
-        let { data: checkCap } = await limiter.req(vrchat.getWorld({ 'path': { 'worldId': world_id } }))
+        let { data: checkCap } = await limiter.reqCached('world', world_id).catch(async () => {
+            return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': world_id } }), 'world')
+        })
         if (checkCap == undefined) {
             console.log(`${loglv().hey}${selflogA} World failed to fetch. Try again..`);
             oscChatBoxV2(`World fetch failed.\vTry another.`, 5000, true, true, false, false, false)
@@ -1894,54 +1938,31 @@ function inviteLocalQueue(I_autoNext = false) {
             return
         }
 
-        var instanceBody = {}
+        var instanceBody = {
+            'worldId': world_id,
+            'region': 'use',
+            // 'displayName': 'World Hop',
+            'minimumAvatarPerformance': 'Poor',
+            'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
+            'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
+        }
         switch (explorePrivacyLevel) {
             case 0:
-                instanceBody = {
-                    'worldId': world_id,
-                    'type': 'group',
-                    'region': 'use',
-                    // 'displayName': 'World Hop',
-                    'minimumAvatarPerformance': 'Poor',
-                    'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
-                    'groupAccessType': 'public',
-                    'queueEnabled': true,
-                    'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
-                }
+                instanceBody['type'] = 'group'
+                instanceBody['groupAccessType'] = 'public'
+                instanceBody['queueEnabled'] = true
                 break;
             case 1:
-                instanceBody = {
-                    'worldId': world_id,
-                    'type': 'group',
-                    'region': 'use',
-                    // 'displayName': 'World Hop',
-                    'minimumAvatarPerformance': 'Poor',
-                    'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
-                    'groupAccessType': 'plus',
-                    'queueEnabled': true,
-                    'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
-                }
+                instanceBody['type'] = 'group'
+                instanceBody['groupAccessType'] = 'plus'
+                instanceBody['queueEnabled'] = true
                 break;
             case 2:
-                instanceBody = {
-                    'worldId': world_id,
-                    'type': 'private',
-                    'canRequestInvite': true,
-                    'region': 'use',
-                    // 'displayName': 'World Hop',
-                    'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752',
-                    'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
-                }
+                instanceBody['type'] = 'private'
+                instanceBody['canRequestInvite'] = true
                 break;
             default:
-                instanceBody = {
-                    'worldId': world_id,
-                    'type': 'hidden',
-                    'region': 'use',
-                    // 'displayName': 'World Hop',
-                    'ownerId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752',
-                    'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
-                }
+                instanceBody['type'] = 'hidden'
                 break;
         }
 
@@ -2088,6 +2109,8 @@ async function scanGroupAuditLogs() {
 
 
     console.log(`${loglv().hey}${selflogA} Next Audit scan at ${new Date(new Date().getTime() + 600_000).toTimeString()}`)
+    limiter.sweepCache()
+
     setTimeout(() => {
         scanGroupAuditLogs()
         tenMinuteTick >= 6 ? tenMinuteTick = 0 : tenMinuteTick++
@@ -2238,20 +2261,16 @@ function eventGameClose() {
     clearTimeout(worldHopTimeoutHour)
     worldHopTimeoutHour = null
     console.log(`${loglv().hey}${selflogL} VRChat has Closed.`)
-    if (exploreMode == true) {
-        console.log(`${loglv().hey}${selflogA} Explore Mode: Disabled - Quit VRChat`)
-        setUserStatus('')
-        apiEmitter.emit('switch', 0, 'world')
-        exploreMode = false
-    }
+    apiEmitter.emit('switch', 0, 'world')
     requestAvatarStatTable(true, 0.05, true)
-    if (worldID_Closed == true && lastSetUserStatus == 'Instance is closed') {
+    if (lastSetUserStatus == 'Instance is closed' || lastSetUserStatus == `Exploring World Queue`) {
         lastSetUserStatus = ''
         setUserStatus('')
     }
     G_groupID = ''
-    worldID_Closed = false
+    G_InstanceClosed = false
     tonAvgStartWait = []
+    worldHoppers = []
 
     let buildLog = `${loglv().log}${selflogL}`
     if (ttvFetchFrom == 1 && urlType == 'twitch') {
@@ -2265,11 +2284,16 @@ function eventGameClose() {
         seenVideoURLs = []
     }
     console.log(buildLog)
+    process.title = `14anthony7095 OSC Multi-Interface`
     if (vrchatRunning == true) {
         setTimeout(() => {
             vrchatRunning = false
         }, 10_000);
     }
+
+    tarFile = 'nothing'
+    tarFilePath = 'nothing'
+
 }
 exports.eventGameClose = eventGameClose;
 
@@ -2589,7 +2613,9 @@ function scanaudit(logoutput, groupID) {
                 var hasIOSVersion = false
                 var userBadgeYearNum = 0
                 if (l.actorId != null) {
-                    let { data: userData } = await limiter.req(vrchat.getUser({ path: { userId: l.actorId } }))
+                    let { data: userData } = await limiter.reqCached('user', l.actorId).catch(async () => {
+                        return await limiter.req(vrchat.getUser({ path: { userId: l.actorId } }), 'user')
+                    })
                     if (userData.userIcon) {
                         actorHookImage = userData.userIcon
                         console.log(`Icon Pic ${userData.userIcon}`)
@@ -2628,7 +2654,9 @@ function scanaudit(logoutput, groupID) {
                     else { userTrust = 'Visitor' }
                 }
                 if (l.targetId.includes('usr_')) {
-                    let { data: userData } = await limiter.req(vrchat.getUser({ path: { userId: l.targetId } }))
+                    let { data: userData } = await limiter.reqCached('user', l.targetId).catch(async () => {
+                        return await limiter.req(vrchat.getUser({ path: { userId: l.targetId } }), 'user')
+                    })
                     /* if( userData.userIcon ){
                         actorHookImage = userData.userIcon
                         console.log(`Icon Pic ${userData.userIcon}`)
@@ -2657,15 +2685,21 @@ function scanaudit(logoutput, groupID) {
                     else { targetUserTrust = 'Visitor' }
                 }
                 if (l.data.authorId != null) {
-                    let { data: userData } = await limiter.req(vrchat.getUser({ path: { userId: l.actorId } }))
+                    let { data: userData } = await limiter.reqCached('user', l.actorId).catch(async () => {
+                        return await limiter.req(vrchat.getUser({ path: { userId: l.actorId } }))
+                    })
                     postAuthorName = userData.displayName
                 }
                 if (l.data.imageId != null) {
-                    let { data: filedata } = await limiter.req(vrchat.getFile({ path: { fileId: l.data.imageId } }))
+                    let { data: filedata } = await limiter.reqCached('file', l.data.imageId).catch(async () => {
+                        return await limiter.req(vrchat.getFile({ path: { fileId: l.data.imageId } }), 'file')
+                    })
                     postImage = filedata != undefined ? filedata.versions[1].file.url : 'https://cdn.discordapp.com/emojis/1020097172538138706.webp?size=96'
                 }
                 if (l.data.bannerId != null) {
-                    let { data: filedata } = await limiter.req(vrchat.getFile({ path: { fileId: l.data.bannerId.new } }))
+                    let { data: filedata } = await limiter.reqCached('file', l.data.bannerId.new).catch(async () => {
+                        return await limiter.req(vrchat.getFile({ path: { fileId: l.data.bannerId.new } }), 'file')
+                    })
                     postImage = filedata != undefined ? filedata.versions[1].file.url : 'https://cdn.discordapp.com/emojis/1020097172538138706.webp?size=96'
                 }
                 if (l.targetId.includes('wrld_')) {
@@ -2675,7 +2709,9 @@ function scanaudit(logoutput, groupID) {
                         locationID = regex.exec(l.targetId)[2]
                         locationType = regex.exec(l.targetId)[3]
                         locationRegion = regex.exec(l.targetId)[4].toUpperCase()
-                        let { data: worldData } = await limiter.req(vrchat.getWorld({ path: { worldId: locationWorldID } }))
+                        let { data: worldData } = await limiter.reqCached('world', locationWorldID).catch(async () => {
+                            return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': locationWorldID } }), 'world')
+                        })
                         hasWindowsVersion = (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'standalonewindows') != undefined)
                         hasAndroidVersion = (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'android') != undefined)
                         hasIOSVersion = (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'ios') != undefined)
@@ -2690,7 +2726,9 @@ function scanaudit(logoutput, groupID) {
                         locationID = regex.exec(l.data.location)[2]
                         locationType = regex.exec(l.data.location)[3]
                         locationRegion = regex.exec(l.data.location)[4].toUpperCase()
-                        let { data: worldData } = await limiter.req(vrchat.getWorld({ path: { worldId: locationWorldID } }))
+                        let { data: worldData } = await limiter.reqCached('world', locationWorldID).catch(async () => {
+                            return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': locationWorldID } }), 'world')
+                        })
                         hasWindowsVersion = (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'standalonewindows') != undefined)
                         hasAndroidVersion = (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'android') != undefined)
                         hasIOSVersion = (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'ios') != undefined)
@@ -2923,7 +2961,9 @@ async function eventHeadingToWorld(logOutputLine) {
     }
     G_currentLocation = 'wrld_' + logOutputLine.split('wrld_')[1]
     // Get world info for OBS Stream
-    let res = await limiter.req(vrchat.getWorld({ 'path': { 'worldId': G_worldID } }))
+    let res = await limiter.reqCached('world', G_worldID).catch(async () => {
+        return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': G_worldID } }), 'world')
+    })
     apiEmitter.emit('fetchedDistThumbnail', res.data.imageUrl, res.data.name.slice(0, 50), res.data.authorName.slice(0, 50), G_worldID)
 
     // Save avatar stats for the instance
@@ -2932,12 +2972,11 @@ async function eventHeadingToWorld(logOutputLine) {
 
     // El Alba starting world
     if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && G_worldID == 'wrld_f6445b27-037d-4926-b51f-d79ada716b31') { worldHoppers = [] }
+    if (G_groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && G_groupID_last != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && G_groupID != '') { worldHoppers = [] }
 
     console.log(`${loglv().debug}${selflogL} Instance Type ${instanceType}`)
 }
 
-var worldjointimestamp = 0
-function getWorldJoinTimestamp() { return worldjointimestamp }; exports.getWorldJoinTimestamp = getWorldJoinTimestamp;
 
 function eventJoinWorld() {
     worldHopTimeout = setTimeout(() => {
@@ -2976,11 +3015,10 @@ function eventInstanceClosed() {
             lastSetUserStatus = `Exploring World Queue`
             setUserStatus(`Exploring World Queue`)
         }
-        if (exploreMode == false) {
-            inviteLocalQueue(G_autoNextWorldHop)
-        }
+        inviteLocalQueue(G_autoNextWorldHop)
+
     }
-    worldID_Closed = true
+    G_InstanceClosed = true
     oscSend('/avatar/parameters/log/instance_closed', true)
 
 }
@@ -2999,7 +3037,7 @@ function eventReceivedNotification(line) {
                     let remainingTime = line.split('will be reset in ')[1].split(' due')[0]
                     lastSetUserStatus = `Instance Reset in ${remainingTime}`
                     setUserStatus(`Instance Reset in ${remainingTime}`)
-                    worldID_Closed = true
+                    G_InstanceClosed = true
                     oscSend('/avatar/parameters/log/instance_closed', true)
                 }
             }
@@ -3049,9 +3087,16 @@ async function eventPlayerInitialized(logOutputLine) {
 
         playerRatio = playersInInstance.length / playerHardLimit
 
-        if (Date.now() > (worldjointimestamp + 30000)) { queueInstanceDataBurst() }
+        if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
+            memberRatio = membersInInstance.length / playersInInstance.length
+            console.log(`${loglv().log}${selflogL} There are now ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`)
+            process.title = `Instance: ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`
+        } else {
+            console.log(`${loglv().log}${selflogL} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`)
+            process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`
+        }
 
-        console.log(`${loglv().log}${selflogL} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
+        if (Date.now() > (worldjointimestamp + 30000)) { queueInstanceDataBurst() }
 
         switch (playerDisplayName) {
             case process.env["VRC_ACC_NAME_6"]:
@@ -3104,62 +3149,50 @@ async function eventPlayerJoin(logOutputLine) {
             logEmitter.emit('joinedworld', G_worldID)
         }
 
-        // El Alba starting world
-        if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
-            var filteredhoppers = worldHoppers.find(a => a.id == playerID)
-            if (filteredhoppers != undefined) {
-                worldHoppers[worldHoppers.findIndex(a => a.id == playerID)]["joinTime"] = Date.now()
-            } else {
-                var findMem = vrchatElAlbaMembers.find(m => m.userId == playerID)
-                var findMemID = vrchatElAlbaMembers.find(m => m.user.id == playerID)
-                var findMemDN = vrchatElAlbaMembers.find(m => m.user.displayName == playerDisplayName)
-                if (findMem == undefined && findMemID == undefined && findMemDN == undefined) {
-                    var gotUserGroups = await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }))
-                    if (gotUserGroups.data.find(g => g.groupId == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') == undefined) {
-                        console.log(`${loglv().log}${selflogL} [ElAlba] 👻 ${playerDisplayName} NOT a member`)
-                        worldHoppers.push({
-                            "name": playerDisplayName,
-                            "id": playerID,
-                            "playtime": 0,
-                            "joinTime": Date.now(),
-                            "groupMember": false
-                        })
-                    } else {
-                        console.log(`${loglv().log}${selflogL} [ElAlba] 💜 ${playerDisplayName} is member`)
-                        worldHoppers.push({
-                            "name": playerDisplayName,
-                            "id": playerID,
-                            "playtime": 0,
-                            "joinTime": Date.now(),
-                            "groupMember": true
-                        })
-                    }
-                } else {
-                    console.log(`${loglv().log}${selflogL} [ElAlba] 💜 ${playerDisplayName} is member`)
-                    worldHoppers.push({
-                        "name": playerDisplayName,
-                        "id": playerID,
-                        "playtime": 0,
-                        "joinTime": Date.now(),
-                        "groupMember": true
-                    })
-                }
+        // Group Member tagging
+        function markUserAsMember(I_memberStatus, I_groupName = 'GroupMember', I_addToWorldHop = false) {
+            console.log(`${loglv().log}${selflogA} [${I_groupName}] ${I_memberStatus == true ? '💜' : '👻'} ${playerDisplayName} ${I_memberStatus == true ? 'is' : 'NOT a'} member`)
+            try { playersInstanceObject[pioIndex].isGroupMember = I_memberStatus } catch (error) {
+                console.log(`${loglv().hey}${selflogL} playerTracker Object got Member before PlayerName - ${error}`)
+                playersInstanceObject.push({ 'name': playerDisplayName, 'id': playerID, 'isGroupMember': I_memberStatus })
             }
-        } else if (G_groupID != '' &&
-            true // Do for all groups?
-        ) {
-            var gotUserGroups = await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }))
-            if (gotUserGroups.data.find(g => g.groupId == G_groupID) == undefined) {
-                console.log(`${loglv().log}${selflogL} [GroupMember] 👻 ${playerDisplayName} NOT a member`)
-            } else {
-                console.log(`${loglv().log}${selflogL} [GroupMember] 💜 ${playerDisplayName} is member`)
+            if (I_addToWorldHop) {
+                worldHoppers.push({ "name": playerDisplayName, "id": playerID, "playtime": 0, "joinTime": Date.now(), "groupMember": I_memberStatus })
             }
+
+            membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
+            memberRatio = membersInInstance.length / playersInInstance.length
+            playerRatio = playersInInstance.length / playerHardLimit
+            console.log(`${loglv().log}${selflogA} There are now ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`)
+            process.title = `Instance: ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`
         }
 
-        // let findUserInCache = vrcDataCache.users.find(u => u.id == playerID)
-        // if (findUserInCache == undefined) {
-        //     enqueueUserDataFetch(playerID)
-        // }
+        if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+            var gotUserGroups = await limiter.reqCached('userGroups', playerID).catch(async () => {
+                return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
+            })
+            if (gotUserGroups.data.find(g => g.groupId == G_groupID) == undefined) {
+                markUserAsMember(false, 'ElAlba', true)
+            } else { markUserAsMember(true, 'ElAlba', true) }
+
+        } else if (G_groupID == 'grp_c24efb98-3234-4060-94f1-7729523e9689') {
+            var gotUserGroups = await limiter.reqCached('userGroups', playerID).catch(async () => {
+                return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
+            })
+            if (gotUserGroups.data.find(g => g.groupId == G_groupID) == undefined) {
+                markUserAsMember(false, 'CommunityMeetup', true)
+            } else { markUserAsMember(true, 'CommunityMeetup', true) }
+
+        } else if (G_groupID != '') {
+            var gotUserGroups = await limiter.reqCached('userGroups', playerID).catch(async () => {
+                return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
+            })
+            if (gotUserGroups.data.find(g => g.groupId == G_groupID) == undefined) {
+                markUserAsMember(false)
+            } else { markUserAsMember(true) }
+
+        }
+
 
         try {
             playersInstanceObject[pioIndex].id = playerID
@@ -3187,21 +3220,22 @@ function eventPlayerLeft(logOutputLine) {
         playersInInstance = playersInInstance.filter(name => name != playerDisplayName)
         playersInstanceObject = playersInstanceObject.filter(playersInstanceObject => playersInstanceObject.name !== playerDisplayName)
         playerRatio = playersInInstance.length / playerHardLimit
-        /* if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
-            membersInInstance = membersInInstance.filter(name => name != playerDisplayName)
-            memberRatio = membersInInstance.length / playersInInstance.length
-        } */
 
         if (Date.now() > (worldjointimestamp + 30000) && worldHopTimeout != null) { queueInstanceDataBurst() }
 
-        console.log(`${loglv().log}${selflogL} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${playerRatio} ]`)
-        /* if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
-            console.log(`${loglv().log}${selflog} There are now ${membersInInstance.length} / ${playersInInstance.length} group members in the instance. [ ${memberRatio} ]`)
-        } */
+        if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
+            membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
+            memberRatio = membersInInstance.length / playersInInstance.length
+            console.log(`${loglv().log}${selflogL} There are now ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`)
+            process.title = `Instance: ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`
+        } else {
+            console.log(`${loglv().log}${selflogL} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`)
+            process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`
+        }
         // logEmitter.emit('playerLeft', playerDisplayName, playerID, playersInInstance)
 
         // El Alba starting world
-        if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' || G_groupID_last == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+        if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
             var filteredhoppers = worldHoppers.find(a => a.name == playerDisplayName)
             if (filteredhoppers != undefined) {
                 var foundindex = worldHoppers.findIndex(a => a.name == playerDisplayName)
@@ -3220,12 +3254,12 @@ function eventPlayerLeft(logOutputLine) {
             loadingAvatarTimer = null
             worldHopTimeout = null
             cooldownUrl = true
-            if (worldID_Closed == true) {
+            if (G_InstanceClosed == true) {
                 if (lastSetUserStatus != `Exploring World Queue`) {
                     lastSetUserStatus = ``
                     setUserStatus('')
                 }
-                worldID_Closed = false
+                G_InstanceClosed = false
             }
             oscSend('/avatar/parameters/log/instance_closed', false)
             tonAvgStartWait = []
@@ -3382,7 +3416,17 @@ function videoUrlResolver(videourl) {
 
 
 function worldDownloadProgress(dlduration, dlprogress) {
-    var dlETAtotal = Math.floor(partWhole(part = dlduration, percent = dlprogress));
+    var dlETAtotal = 0
+    var crossmulti;
+    try {
+        crossmulti = dlduration * 100
+        try { dlETAtotal = Math.floor(crossmulti / whole) }
+        catch { dlETAtotal = Math.floor(crossmulti / dlprogress) }
+    } catch {
+        crossmulti = whole * dlprogress
+        dlETAtotal = Math.floor(crossmulti / 100)
+    }
+
     var dlETA = dlETAtotal - dlduration;
 
     if (dlETAtotal >= 60) {

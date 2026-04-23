@@ -259,7 +259,7 @@ async function OSCDataBurst(in_addr, in_dataA, isLoop = false) {
 	9	MCounter: lobby digits, position 3
 	10	MCounter: lobby digits, position 4
 	11	MCounter: lobby progress bar
-	12	
+	12	MCounter: lobby groupMember bar
 	13	MCounter: display mode indicator
 	*/
 	if (isLoop == false) { dataBurst.push({ 'addr': in_addr, 'dataA': in_dataA }) }

@@ -8,100 +8,98 @@
 
 // TODO: make config watched for changes and emit to other modules to fetch changes via a function-return
 
-require('dotenv').config({'quiet':true})
+require('dotenv').config({ 'quiet': true })
 
 // ---	OSC Dependant	---
 // Quest 2 related
 exports.QuestIP = "192.168.2.140" // Work
 
-	// Log OSC travel
-	exports.logOscIn = false  // from VRChat
-	exports.logOscOut = false  // to VRChat
+// Log OSC travel
+exports.logOscIn = false  // from VRChat
+exports.logOscOut = false  // to VRChat
 
-	// Log and Download Stickers
-	exports.logStickers = true
-	exports.downloadStickers = false
-	
-	// Use Avatar Ping System?
-	exports.avatarPingSystem = true
-	
-	// Allow VRChat to be force closed?
-	exports.vrckiller = true
-	
-	// ---	ChatBox Dependant	---
-	// Allow Chatbox use?
-	exports.useChatBox = true
+// Log and Download Stickers
+exports.logStickers = true
+exports.downloadStickers = false
 
-		// Keep track of AFK minutes
-		exports.afkclock = false
-	
-		// Allow Twitch Chat in ChatBox
-		// == ttvChatBox
+// Use Avatar Ping System?
+exports.avatarPingSystem = true
 
-		// Videoplayer URL in Chatbox
-		var ChatVideoURL = false
-		var ChatVideoTitle = false
+// Allow VRChat to be force closed?
+exports.vrckiller = true
 
-		// Image and String Download URL in Chatbox
-		exports.ChatImageStringURL = false
+// ---	ChatBox Dependant	---
+// Allow Chatbox use?
+exports.useChatBox = true
 
-		// Average Download Speed
-		exports.ChatDownSpeed = false
+// Keep track of AFK minutes
+exports.afkclock = false
+
+// Allow Twitch Chat in ChatBox
+// == ttvChatBox
+
+// Videoplayer URL in Chatbox
+var ChatVideoURL = false
+var ChatVideoTitle = false
+
+// Image and String Download URL in Chatbox
+exports.ChatImageStringURL = false
+
+// Average Download Speed
+exports.ChatDownSpeed = false
 
 
 // ---	VRChat API Dependant	---
-	// Use Auth-based Api
-	exports.useVrcApi = true
-	exports.vrcUserAgent = process.env["VRC_USER_AGENT"]+'/'+process.env["CONTACT_EMAIL"]
+// Use Auth-based Api
+exports.useVrcApi = true
+exports.vrcUserAgent = process.env["VRC_USER_AGENT"] + '/' + process.env["CONTACT_EMAIL"]
 
-	// Use Player Counter?
-	exports.playerCounter = true
-	exports.graphTimeRangeMinutes = 5
+// Use Player Counter?
+exports.playerCounter = true
+exports.graphTimeRangeMinutes = 5
 
-	// --- WebSocket Dependant	---
-		// Use Invite Detection?
-		exports.inviteDetection = true // Unused?
-	
-	
+// --- WebSocket Dependant	---
+// Use Invite Detection?
+exports.inviteDetection = true // Unused?
+
+
 // ---	Log File Dependant	---
-	// Print VRC LOG to console
-	exports.printAllLogs = false
-	
-	// Twitch Channel from videoplayer
-	// == ttvVideoPlayer
-	
-	// Videoplayer URL in Chatbox
-	exports.ChatVideoURL = ChatVideoURL
-	exports.ChatVideoTitle = ChatVideoTitle
-	
-	
+// Print VRC LOG to console
+exports.printAllLogs = false
+
+// Twitch Channel from videoplayer
+// == ttvVideoPlayer
+
+// Videoplayer URL in Chatbox
+exports.ChatVideoURL = ChatVideoURL
+exports.ChatVideoTitle = ChatVideoTitle
+
+
 // ---	Twitch Related	---
 // Message Queue Mode
 // [0] Disable	[1] Cheers	[2] Latest	[3] Buffer
 let ttvlevel = 3
-	
-	// Watched channels at start up
-	let ttvchans = ['14anthony7095']
 
-	// Monitor twitch chat without Twitch Follower being Active
-	exports.ttvAlwaysRun = true
-	
-	// Fetch Twitch Chat from?
-	// [0] None  [1] Videoplayers  [2] Users
-	exports.ttvFetchFrom = 0
-	// TODO: Don't force enable Twitch Follower unless a message is received from someone's chat while in "Users" mode
-	
-	// Allow Twitch Chat in ChatBox
-	exports.ttvChatBox = false
+// Watched channels at start up
+let ttvchans = ['14anthony7095']
 
-	// Filter SaltyBet chat messages to only bots
-	exports.saltyMode = false
+// Monitor twitch chat without Twitch Follower being Active
+exports.ttvAlwaysRun = true
+
+// Fetch Twitch Chat from?
+// [0] None  [1] Videoplayers  [2] Users
+exports.ttvFetchFrom = 0
+// TODO: Don't force enable Twitch Follower unless a message is received from someone's chat while in "Users" mode
+
+// Allow Twitch Chat in ChatBox
+exports.ttvChatBox = false
+
+// Filter SaltyBet chat messages to only bots
+exports.saltyMode = false
 
 
 
-setInterval(()=>{
-	process.title = `14anthony7095 OSC Multi-Interface - Uptime: ${ new Date(process.uptime() * 1000).toISOString().substring(11, 19) }`
-},1000)
+process.title = `14anthony7095 OSC Multi-Interface`
 
 /*
 	Internal stuff for Logging
@@ -124,8 +122,8 @@ exports.loglv = function (input) {
 }
 
 exports.msgVerbose = ttvlevel
-if( ttvlevel == 0 ){
+if (ttvlevel == 0) {
 	exports.twitchChannels = [`14anthony7095`]
-}else{
+} else {
 	exports.twitchChannels = ttvchans
 }

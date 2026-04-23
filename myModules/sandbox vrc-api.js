@@ -74,7 +74,6 @@ async function main() {
     */
     // await sleep(10000)
 
-    // await foundMemberMutualGroups('grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad', undefined, undefined, true, false)
 
     // Shared groups in YEAR Groups
     /* await foundMemberMutualGroups('grp_4f5d0456-4200-4b2c-8331-78856d1869e4', undefined, undefined, false)
@@ -116,37 +115,98 @@ async function main() {
 class ratelimitHandler {
     pause_sec = 30
     pause_exp = 1
-    constructor(pause_exp, pause_sec) {
+    isLimiting = false
+    limiterCache = { "user": [], "world": [], "file": [], "group": [], "userGroups": [] }
+    #cachedTime = 60_000
+    constructor(pause_exp, pause_sec, isLimiting, limiterCache) {
         this.pause_sec
         this.pause_exp
+        this.isLimiting
+        this.limiterCache
     }
     get waitTimeMS() { return 1000 * (this.pause_sec * Math.pow(2, this.pause_exp)) }
     get waitTimeSec() { return this.pause_sec * Math.pow(2, this.pause_exp) }
     get delayMulti() { return this.pause_exp }
     async backoff() {
         return new Promise((resolve, reject) => {
-            console.log(`[Ratelimit-Handler] Backing off for ${this.waitTimeSec} sec`)
-            if( this.pause_exp <= 6){ this.pause_exp++ }else{ console.log(`[Ratelimit-Handler] Peaking at expo 7 (1 hour 4 min)`) }
-            setTimeout(() => { resolve(true) }, this.waitTimeMS);
+            console.log(`${loglv().warn}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Backing off for ${this.waitTimeSec} sec
+    Retry: ${new Date(Date.now() + this.waitTimeMS).toTimeString()}`)
+            setTimeout(() => {
+                if (this.pause_exp < 7) { this.pause_exp++ }
+                resolve(true)
+            }, this.waitTimeMS);
         })
     }
     cooloff() {
         if (this.pause_exp > 1) { this.pause_exp = this.pause_exp - this.pause_exp * 0.1 } else if (this.pause_exp < 1) { this.pause_exp = 1 }
     }
-    async req(I_request) {
+    sweepCache() {
+        console.log(`${loglv().hey}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Sweeping API-Cache.`)
+        var count = 0
+        var totalc = 0
+        Object.keys(this.limiterCache).forEach(k => {
+            var fromc = this.limiterCache[k].length
+            totalc += this.limiterCache[k].length
+            this.limiterCache[k] = this.limiterCache[k].filter(c => c.cache_expire > Date.now())
+            count += fromc - this.limiterCache[k].length
+        })
+        console.log(`${loglv().hey}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Cleared ${count} items from API-Cache. Remaining ${totalc - count}`)
+    }
+    
+    async reqCached(I_type, I_cacheSearch) {
         return new Promise((resolve, reject) => {
+            switch (I_type) {
+                case 'userGroups':
+                    var search = this.limiterCache['userGroups'].find(c => c.userId == I_cacheSearch && c.cache_expire > Date.now())
+                    if (search != undefined) {
+                        resolve(search['data'])
+                    } else {
+                        reject('Not Cached or is Expired')
+                    }
+                    break;
+                default:
+                    var search = this.limiterCache[I_type].find(c => c.data.id == I_cacheSearch && c.cache_expire > Date.now())
+                    if (search != undefined) {
+                        resolve(search)
+                    } else {
+                        reject('Not Cached or is Expired')
+                    }
+                    break;
+            }
+        })
+    }
+    async req(I_request, I_type = '', I_param = '') {
+        return new Promise((resolve, reject) => {
+            checkLimit()
+            function checkLimit() {
+                if (limiter.isLimiting == false) { attemptRequest() } else { setTimeout(() => { checkLimit() }, limiter.delayMulti * 10000) }
+            }
             async function attemptRequest() {
                 var res = await I_request
-                if (res.error?.statusCode == 429 || res.error?.statusCode == 500) {
-                    console.debug(res)
+                if (res.error?.statusCode == 429 || res.error?.response.status == 429 || res.error?.statusCode == 500 || res.error?.response.status == 500) {
+                    limiter.isLimiting = true
                     await limiter.backoff()
-                    attemptRequest()
+                    if (limiter.pause_exp == 7) {
+                        console.log(I_request)
+                        resolve('ForceSkip')
+                    } else { attemptRequest() }
                 } else {
-                    resolve(res)
+                    limiter.isLimiting = false
                     limiter.cooloff()
+                    if (I_type != '') {
+                        switch (I_type) {
+                            case 'userGroups':
+                                limiter.limiterCache['userGroups'].push({ 'userId': I_param, 'data': res, 'cache_expire': Date.now() + limiter.#cachedTime })
+                                break;
+                            default:
+                                res['cache_expire'] = Date.now() + limiter.#cachedTime
+                                limiter.limiterCache[I_type].push(res)
+                                break;
+                        }
+                    }
+                    resolve(res)
                 }
             }
-            attemptRequest()
         })
     }
 }
@@ -209,6 +269,10 @@ async function foundMemberMutualGroups(groupID, membersOverride, membersIDs, wri
             for (const i in forAmount) {
                 console.log(`[API][${i}/${forAmount.length - 1}][${Math.round(i / (forAmount.length - 1) * 100)}%] Fetching GroupMembers offset ${i * 100}`)
                 var groupMembers = await limiter.req(vrchat.getGroupMembers({ 'path': { 'groupId': groupID }, 'query': { 'n': 100, 'offset': i * 100 } }))
+                if (userGroups == 'ForceSkip') {
+                    fs.writeFile('datasets/groupMembers-mutualGroups.json', JSON.stringify({ 'groups': groups, 'members': chkMembers }), (err) => { if (err) { console.error(err) } })
+                    continue
+                }
                 console.log(`[API] Found ${groupMembers.data.length} members`)
 
                 for (const memberIndex in groupMembers.data) {
@@ -232,6 +296,10 @@ async function foundMemberMutualGroups(groupID, membersOverride, membersIDs, wri
         for (const memberIndex in members) {
             console.log(`[API][${memberIndex}/${members.length - 1}][${Math.round(memberIndex / (members.length - 1) * 100)}%] Fetching Groups for ${members[memberIndex].name}`)
             var userGroups = await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': members[memberIndex].id } }))
+            if (userGroups == 'ForceSkip') {
+                fs.writeFile('datasets/groupMembers-mutualGroups.json', JSON.stringify({ 'groups': groups, 'members': chkMembers }), (err) => { if (err) { console.error(err) } })
+                continue
+            }
             console.log(`[API] Found ${userGroups.data.length} groups`)
 
             let cntCreated = 0
