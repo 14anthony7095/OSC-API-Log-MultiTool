@@ -81,6 +81,9 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'osc' && args[0] == 'serial') {
 		OSCBinaryBurst(args[1], 200, 400)
 	}
+	if (cmd == 'osc' && args[0] == 'scale') {
+		oscSend('/avatar/eyeheight', parseFloat(args[1]))
+	}
 	if (cmd == 'osc' && args[0] == 'chat') {
 		if (args[1] == 'tall') {
 			oscChatBox(`0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0`)
@@ -161,7 +164,7 @@ function oscChatBoxV2(I_say = "~", I_display_time_ms = 5000, I_highPriority = fa
 	if (chatboxQueue.length < 2 + firstLong || isLoop == true) {
 
 		udpPort.send({ address: "/chatbox/input", args: [chatboxQueue[0].message.slice(0, 144), true, chatboxQueue[0].play_audio] }, deviceIP, remotePort);
-		console.log(`${loglv().debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m]${chatboxQueue[0].play_audio == true ? '🔊' : '🔇'} ${chatboxQueue[0].message.slice(0, 144).replace(/\v/g,'\n                                       ')}`)
+		console.log(`${loglv().debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m]${chatboxQueue[0].play_audio == true ? '🔊' : '🔇'} ${chatboxQueue[0].message.slice(0, 144).replace(/\v/g, '\n                                       ')}`)
 
 		// console.log(`${loglv().debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m] Delay`+Math.max(5000, chatboxQueue[0].display_time_ms))		
 
@@ -357,28 +360,51 @@ function oscSend6(addr, v1, v2, v3, v4, v5, v6) {
 }
 exports.oscSend6 = oscSend6;
 
-var menuX = 0
-var menuY = 0
-oscEmitter.on('osc', (address, value) => {
+var oscCache = {
+	'menuX': 0,
+	'menuY': 0,
+	'findUp_Hit': false,
+	'findUp_Distance': 0,
+	'roomScaleRay': false,
+	'eyeheight': 0,
+	'eyeheightmin': 0,
+	'eyeheightmax': 0,
+	'eyeheightscalingallowed': 0,
+	'eyeheight_RateLimit': 0
+}
+udpPort.on("message", function (msg, rinfo) {
+	if (logOscIn == true) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
+	oscEmitter.emit('osc', msg['address'], msg['args'][0]);
+	var address = msg['address']
+	var value = msg['args'][0]
 
-	// /avatar/parameters/14a/oscsrc/testParameter
-	// /avatar/parameters/14a/testParameter
+
+	// 83% of ceiling height
+	// if (oscCache['findUp_Hit'] == true && address == vrcap + 'findUp_Distance') { oscCache['findUp_Distance'] = value }
+	if (address == vrcap + 'findUp_Hit') { oscCache['findUp_Hit'] = value }
+	if (address == vrcap + '14a/button/roomScaleRay') { oscCache['roomScaleRay'] = value }
+	if (address == vrcap + 'findUp_Distance' && oscCache['roomScaleRay'] == true && oscCache['findUp_Hit'] == true) {
+		oscSend('/avatar/eyeheight', parseFloat(value * 0.83))
+	}
+
+
+	// Proxy menu parameters
+	// oscsrc = in menu
+	// remove = sync
 	if (address.includes(`/14a/oscsrc/`)) { oscSend(vrcap + '14a/' + address.split('/14a/oscsrc/')[1], value) }
 
+
 	// Trigger PiShock when rolling a Nat 1 on the D20
-	if (address == vrcap + 'd20/d20_Menu' && value == 1) {
-		PiShockAll(50, 2)
-	}
+	if (address == vrcap + 'd20/d20_Menu' && value == 1) { PiShockAll(50, 2) }
 
-	if (address == vrcap + '14a/osc/menuX') { menuX = value }
-	if (address == vrcap + '14a/osc/menuY') { menuY = value }
+
+	// Move TheWatcher
+	if (address == vrcap + '14a/osc/menuX') { oscCache['menuX'] = value }
+	if (address == vrcap + '14a/osc/menuY') { oscCache['menuY'] = value }
 	if (address == vrcap + '14a/osc/menuX' || address == vrcap + '14a/osc/menuY') {
-		let deg = Math.atan2(menuY, menuX) * (180 / Math.PI) + 180
+		let deg = Math.atan2(oscCache['menuY'], oscCache['menuX']) * (180 / Math.PI) + 180
 		playNote(10, 70, clamp((deg / 360) * 127))
-		// console.log(`aTan ${Math.atan2(menuY, menuX)}`)
-		// console.log(`Angle ${deg}`)
 	}
-
 	if (address.includes('14a/midi')) {
 		var channel = clamp2(address.split('14a/midi/')[1].split('/')[0])
 		var number = clamp(address.split('14a/midi/')[1].split('/')[1])
@@ -394,46 +420,51 @@ oscEmitter.on('osc', (address, value) => {
 		playNote(channel, number, velocity)
 	}
 
-});
-function clamp(input) { return Math.round(Math.max(0, Math.min(127, input))) }
-function clamp2(input) { return Math.round(Math.max(0, Math.min(15, input))) }
 
-var lastCameraPos
-udpPort.on("message", function (msg, rinfo) {
-	// console.log(msg);
-	// console.log(msg['args'][0]);
-	//console.log("Remote info is: ", rinfo);
+	// Save XYZ cordnets using camera mode switching
+	if (address == `/usercamera/Pose`) { oscCache['lastCameraPos'] = value }
+	if (address == `/usercamera/Mode` && value == 2) { fs.appendFile('datasets/cameraPositions.txt', `\r\n${oscCache['lastCameraPos']}`, 'utf-8', (err) => { if (err) { console.log(err) } }) }
 
-	oscEmitter.emit('osc', msg['address'], msg['args'][0]);
 
-	if (msg['address'] == `/usercamera/Pose`) {
-		lastCameraPos = msg['args']
-		// console.log(`${loglv().debug} storing: ${msg['args']}`)
-	}
-	if (msg['address'] == `/usercamera/Mode` && msg['args'][0] == 2) {
-		// console.log(`${loglv().debug} saving to file: ${lastCameraPos}`)
-		fs.appendFile('datasets/cameraPositions.txt', `\r\n${lastCameraPos}`, 'utf-8', (err) => { if (err) { console.log(err) } })
-	}
+	// Tell OBS to toggle my stream mic
+	if (address == vrcap + 'MuteSelf') { oscEmitter.emit('voiceActive', value == true); }
 
-	if (msg['address'] == vrcap + 'MuteSelf') {
-		oscEmitter.emit('voiceActive', msg['args'][0] == true);
-	}
 
-	if (msg['address'] == '/avatar/change') {
-		var avatarId = msg['args'][0]
-		exports.avatarId = msg['args'][0]
-		oscEmitter.emit('avatar', msg['args'][0]);
-		console.log(`${loglv().log}${selflog} Avatar Changed: ${avatarId}`)
-		if (avatarId == `avtr_21cbf284-0c09-423c-9973-5cd41dccd308`) { oscSend(vrcap + `LL/Menu/IsUnlocked`, 1 == 1) }
-		if (avatarId == `avtr_2a9a9021-2b82-4564-bb63-2d96deb6a6d7`) { oscSend(vrcap + `Patreon-NDA`, 1 == 1) }
+	// Avatar change handler
+	if (address == '/avatar/change') {
+		console.log(`${loglv().log}${selflog} Avatar Changed: ${value}`)
+		oscEmitter.emit('avatar', value)
+
+		if (value == `avtr_21cbf284-0c09-423c-9973-5cd41dccd308`) { oscSend(vrcap + `LL/Menu/IsUnlocked`, 1 == 1) } // LL Male Redux
+		if (value == `avtr_2a9a9021-2b82-4564-bb63-2d96deb6a6d7`) { oscSend(vrcap + `Patreon-NDA`, 1 == 1) } // LL Lambie
+
 		oscSend(vrcap + `VF100_SecurityLockSync`, 1 == 1)
 		oscSend(vrcap + "   locked", false)
 		oscSend(vrcap + `14a/osc/14anthony7095`, true)
 	}
-	// if (msg['address'] == vrcap + 'toolGunHolster_Angle') { return }
-	if (logOscIn == true) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
-	// if (msg['address'].includes('/usercamera/')) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
+
+
+	// Avatar Scaling
+	if (address == `/avatar/eyeheight`) { oscCache['eyeheight'] = value }
+	if (address == `/avatar/eyeheightmin`) { oscCache['eyeheightmin'] = value }
+	if (address == `/avatar/eyeheightmax`) { oscCache['eyeheightmax'] = value }
+	if (address == `/avatar/eyeheightscalingallowed`) { oscCache['eyeheightscalingallowed'] = value }
+	if (address == `/avatar/eyeheight`
+		|| address == `/avatar/eyeheightmin`
+		|| address == `/avatar/eyeheightmax`
+		|| address == `/avatar/eyeheightscalingallowed`) {
+		if (oscCache['eyeheight_RateLimit'] < Date.now()) {
+			oscCache['eyeheight_RateLimit'] = Date.now() + 500
+			console.log(`${loglv().log}${selflog} [AvatarScale] [${oscCache['eyeheightscalingallowed']}] (${Math.round(oscCache['eyeheightmin']*100)/100} <> ${Math.round(oscCache['eyeheightmax']*100)/100}): ${Math.round(oscCache['eyeheight']*100)/100}`)
+		}
+	}
+
+
+
 });
+
+function clamp(input) { return Math.round(Math.max(0, Math.min(127, input))) }
+function clamp2(input) { return Math.round(Math.max(0, Math.min(15, input))) }
 
 // function lerp(start,end,factor){ return start + (end - start) * factor; }
 // // var transformExample = { x: 0, y: 0, z: 0, pitch: 0, yaw: 0 }

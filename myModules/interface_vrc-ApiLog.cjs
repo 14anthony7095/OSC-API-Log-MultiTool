@@ -71,6 +71,7 @@ var G_currentLocation = ''
 var G_InstanceClosed = false
 var G_groupID_last = ``
 var G_groupID = ``
+var G_groupMembersVisible = false
 var instanceType = ''
 var lastSetUserStatus = ''
 var cooldownPortalVanish = false
@@ -141,7 +142,7 @@ class ratelimitHandler {
     pause_exp = 1
     isLimiting = false
     limiterCache = { "user": [], "world": [], "file": [], "group": [], "userGroups": [] }
-    #cachedTime = 900_000
+    #cachedTime = 1800_000
     constructor(pause_exp, pause_sec, isLimiting, limiterCache) {
         this.pause_sec
         this.pause_exp
@@ -309,6 +310,9 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
         })
         console.log(string)
     }
+    if (cmd == 'clearhoppers') {
+        worldHoppers = []
+    }
 })
 
 async function main() {
@@ -385,7 +389,9 @@ function socket_VRC_API_Connect() {
                     // Auto Block if not long enough
                     if (wsContent.link.slice(6) == getInstanceGroupID() && Date.now() < (worldjointimestamp + 300_000)) {
 
-                        oscChatBoxV2(`Group performed an undesirable action.\vTaking countermeasures`, 10_000, true, true, false, false)
+                        if (currentAccountInUse['Agroup'] == true) {
+                            oscChatBoxV2(`Group performed an undesirable action.\vTaking countermeasures`, 10_000, true, true, false, false)
+                        }
 
                         // Block Group Owner
                         var resG = await limiter.reqCached('group', wsContent.link.slice(6)).catch(async () => {
@@ -763,7 +769,9 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
             tonRoundReadyTime = Date.now()
             let avgStartDisplay = new Date(average(tonAvgStartWait)).toISOString()
 
-            tonAvgStartWait.length > 1 ? oscChatBoxV2(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}`, 5000, false, true) : oscChatBoxV2(`~Round ready to start`, 5000, false, true)
+            if (currentAccountInUse['Agroup'] == true) {
+                tonAvgStartWait.length > 1 ? oscChatBoxV2(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}`, 5000, false, true) : oscChatBoxV2(`~Round ready to start`, 5000, false, true)
+            }
         }
         if (line.includes(`Everything recieved, looks good`)) {
             console.log(`${loglv().log}${selflogL} [TON] Round Starting.`)
@@ -794,8 +802,8 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
     if (line.includes(`[PortalManager]`)) {
         var PortalLog = line.split(`[PortalManager] `)[1]
         if (PortalLog == 'Received portal destroy event.') {
-            if (cooldownPortalVanish == false) {
-                oscChatBoxV2('~Portal has vanished', 5000, true, true, false, false, false)
+            if (cooldownPortalVanish == false && currentAccountInUse['Agroup'] == true) {
+                // oscChatBoxV2('~Portal has vanished', 5000, true, true, false, false, false)
                 setTimeout(() => { cooldownPortalVanish = true }, 120_000)
             }
         }
@@ -815,7 +823,7 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
     if (line.includes('[Image Download] Attempting to load image from URL')) {
         var imageurl = line.split('[Image Download] Attempting to load image from URL ')[1].trim()
         // console.log(`${loglv().log}${selflog} Downloading Image from ${imageurl}`)
-        if (ChatImageStringURL == true) {
+        if (ChatImageStringURL == true && currentAccountInUse['Agroup'] == true) {
             oscChatBoxV2(`~ImageURL: ${imageurl}`, 5000, true, true, false, false, false)
         }
     }
@@ -827,7 +835,7 @@ function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
         if (/https?\:\/\/vr-m\.net\/[0-9]\/keepalive/.test(stringurl)) { return } // Surpress Moves&Chill heartbeat
         // if( stringurl == `'https://vr-m.net/1/keepalive'` ){ return	} // Surpress Moves&Chill heartbeat
         // console.log(`${loglv().log}${selflog} Downloading String from ${stringurl}`)
-        if (ChatImageStringURL == true) {
+        if (ChatImageStringURL == true && currentAccountInUse['Agroup'] == true) {
             oscChatBoxV2(`~StringURL: ${stringurl}`, 5000, true, true, false, false, false)
         }
     }
@@ -953,7 +961,8 @@ var avatarStatSummary = {
     }
 }
 
-function fitChars(I_line, lineCount = 1) {
+function fitChars(I_line = '', lineCount = 1) {
+    I_line = I_line == undefined ? '' : I_line
     const charWidth = {
         " ": 0.018181, "a": 0.037037, "A": 0.041666, "b": 0.04, "B": 0.043478, "c": 0.03125, "C": 0.041666,
         "d": 0.04, "D": 0.047619, "e": 0.037037, "<": 0.037037, "g": 0.04, "G": 0.047619, "0": 0.037037, "1": 0.037037,
@@ -1017,7 +1026,9 @@ async function avatarFileAnalysis(fileid, fileversion) {
                 if (avatarStatSummary.seenAuthors[0].id == "") { avatarStatSummary.seenAuthors.shift() }
             }
 
-            fs.writeFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', JSON.stringify(res.data), 'utf8', (err) => { if (err) { console.log(err) } })
+            if (JSON.stringify(res.data) != '') {
+                fs.writeFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', JSON.stringify(res.data), 'utf8', (err) => { if (err) { console.log(err) } })
+            }
         }
     } catch (error) {
         // console.log(`${loglv().log}${selflogA} [AvatarAnalysis] Fetching: ${fileid} - ver ${fileversion}`)
@@ -1050,8 +1061,9 @@ async function avatarFileAnalysis(fileid, fileversion) {
                 }
                 if (avatarStatSummary.seenAuthors[0].id == "") { avatarStatSummary.seenAuthors.shift() }
             }
-
-            fs.writeFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', JSON.stringify(res.data), 'utf8', (err) => { if (err) { console.log(err) } })
+            if (JSON.stringify(res.data) != '') {
+                fs.writeFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', JSON.stringify(res.data), 'utf8', (err) => { if (err) { console.log(err) } })
+            }
         } else {
             // console.log(res)
             return
@@ -1437,8 +1449,10 @@ async function avatarFileAnalysis(fileid, fileversion) {
 
     if (statTotalAvatarEV.length > 0) { console.log(statTotalAvatarEV.map(e => { return e.print }).toString().replace(/\n/, '')) }
     if (statPunished.length > 0 && statWarnings == true) {
-        // if (warnbox.length > 0) {
-        oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunished[0].log)}${fitChars(statPunished[1]?.log)}${fitChars(statPunished[2]?.log)}`, 15000, false, true, false, false, true)
+        console.log('currentAccountInUse', currentAccountInUse['Agroup'])
+        if (currentAccountInUse['Agroup'] == true) {
+            oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunished[0].log)}${fitChars(statPunished[1]?.log)}${fitChars(statPunished[2]?.log)}`, 15000, false, true, false, false, true)
+        }
     }
 
     // Summary Chart Data
@@ -1473,9 +1487,13 @@ async function scanAllAvatarStats() {
             var fsrdfile = await fd.readFile('utf8')
             // var fsrdfile = await fsp.readFile('./datasets/avatarStatCache/' + file, 'utf8')
             console.log(`${loglv().log}${selflogA} [AvatarAnalysis] Cached: ${fsrddir[findex]}`)
+            if (fsrdfile == '') {
+                await fsp.unlink('./datasets/avatarStatCache/' + fsrddir[findex])
+            }
             res.data = JSON.parse(fsrdfile)
         } catch (error) {
             console.log(`${loglv().warn}${selflogA} [AvatarAnalysis] `, error)
+            continue
         } finally {
             if (fd) {
                 await fd.close()
@@ -1483,8 +1501,9 @@ async function scanAllAvatarStats() {
             }
         }
 
+
         let filesize = await formatBytes(res.data?.fileSize)
-        let uncompresssize = await formatBytes(res.data.uncompressedSize)
+        let uncompresssize = await formatBytes(res.data?.uncompressedSize)
         let vramTexsize = await formatBytes(res.data.avatarStats.totalTextureUsage)
         console.log(`${loglv().log}${selflogA} [AvatarAnalysis] ${res.data.performanceRating == 'VeryPoor' ? '❌ VeryPoor' : res.data.performanceRating == 'Poor' ? '🔴 Poor' : res.data.performanceRating == 'Medium' ? '🟡 Medium' : res.data.performanceRating == 'Good' ? '🟢 Good' : res.data.performanceRating == 'Excellent' ? '✅ Excellent' : ''} - ${res.data.name}
              📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)}`)
@@ -1942,39 +1961,41 @@ function inviteLocalQueue(I_autoNext = false) {
             'region': 'use',
             // 'displayName': 'World Hop',
             'minimumAvatarPerformance': 'Poor',
-            'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
             'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
         }
         switch (explorePrivacyLevel) {
             case 0:
                 instanceBody['type'] = 'group'
+                instanceBody['ownerId'] = 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce'
                 instanceBody['groupAccessType'] = 'public'
                 instanceBody['queueEnabled'] = true
                 break;
             case 1:
                 instanceBody['type'] = 'group'
+                instanceBody['ownerId'] = 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce'
                 instanceBody['groupAccessType'] = 'plus'
                 instanceBody['queueEnabled'] = true
                 break;
             case 2:
                 instanceBody['type'] = 'private'
+                instanceBody['ownerId'] = currentAccountInUse.id
                 instanceBody['canRequestInvite'] = true
                 break;
             default:
                 instanceBody['type'] = 'hidden'
+                instanceBody['ownerId'] = currentAccountInUse.id
                 break;
         }
 
         console.log(`${loglv().hey}${selflogA} Creating group instance for ${world_id}`)
-        vrchat.createInstance({
-            body: instanceBody
-        }).then(created_instance => {
+        var created_instance = await vrchat.createInstance({ 'body': instanceBody })
+        if (created_instance.data != undefined) {
             startvrc(created_instance.data.location, I_autoNext)
             apiEmitter.emit('switch', localQueueList.length, 'world')
             console.log(`${loglv().log}${selflogA} Auto-Close set for ${created_instance.data.closedAt}.`)
-        }).catch(err => {
-            oscChatBoxV2(`instance create failed.\vTry another.`, 5000, true, true)
-            console.log(`${loglv().warn}${selflogA}` + err)
+        } else {
+            oscChatBoxV2(`instance create failed.\v[${created_instance.error.response.status}] ${created_instance.error.response.statusText}\v${created_instance.error.message}`, 5000, true, true)
+            console.log(`${loglv().warn}${selflogA} `, created_instance.error.cause)
             fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
                 // err ? console.log(err); return : ''
                 if (data.includes(world_id)) {
@@ -1982,15 +2003,14 @@ function inviteLocalQueue(I_autoNext = false) {
                 }
                 if (I_autoNext == true) { setTimeout(() => { inviteLocalQueue(true) }, 5000) }
             })
-        })
-
+        }
     })
 }
 
 var lastSetUserStatus = ''
 function setUserStatus(status) {
     // console.log(`${loglv().hey}${selflog} Status Update Cancelled`);return
-    if (status.slice(0, 32) !== lastSetUserStatus) {
+    if (status.slice(0, 32) !== lastSetUserStatus && currentAccountInUse['Agroup'] == true) {
         vrchat.updateUser({ path: { userId: process.env["VRC_ACC_ID_1"] }, body: { statusDescription: status.slice(0, 32) } })
         console.log(`${loglv().hey}${selflogA} Status Updated: ${status.slice(0, 32)}`)
         lastSetUserStatus = status.slice(0, 32)
@@ -2177,7 +2197,9 @@ function eventPopcornPalace(json) {
         if (movieShowName != movieShowNameLast) {
             movieShowNameLast = movieShowName
             setUserStatus(`Watching ${movieShowName}`)
-            oscChatBoxV2(`~MovieTitle:\v ${movieShowName}`, 5000, true, true, false, false, false)
+            if (currentAccountInUse['Agroup'] == true) {
+                oscChatBoxV2(`~MovieTitle:\v ${movieShowName}`, 5000, true, true, false, false, false)
+            }
         }
     }
 }
@@ -2186,9 +2208,11 @@ function applyGroupLogo(gID) {
     /*
 0111 - El Alba
 0110 - VRDance
-0101 - Ravetopia
+
+0101 - Furry Argentina VR
 0100 - The Lunar Howl
 0011 - Nanachis of VRChat
+
 0010 - Nanachi's hollow inn
 0001 - Community Events
 0000 - CORE Default
@@ -2208,8 +2232,8 @@ function applyGroupLogo(gID) {
             oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 1)
             oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 1)
             break;
-        case `grp_7b4fe32e-8310-4ed5-9757-17116f915786`:
-            // Ravetopia
+        case `grp_a8f9e8f8-6ccb-410e-b96e-8977bd3a094f`:
+            // Furry Argentina VR
             // 0101 - 5
             oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 1)
             oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 0)
@@ -2931,6 +2955,7 @@ async function eventHeadingToWorld(logOutputLine) {
     G_groupID_last = G_groupID
     G_worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
     console.log(`${loglv().debug}${selflogL} World ID ${G_worldID}`)
+    G_groupMembersVisible = false
 
     // 2026.01.27 14:20:50 Debug      -  [Behaviour] Destination set: wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5:65895~hidden(usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752)~region(use)
 
@@ -2944,6 +2969,17 @@ async function eventHeadingToWorld(logOutputLine) {
         } else {
             instanceType = `group`
         }
+
+        // Group Member visibility
+        var gotGroup = await limiter.reqCached('group', G_groupID).catch(async () => {
+            return await limiter.req(vrchat.getGroup({ 'path': { 'groupId': G_groupID } }), 'group')
+        })
+        if (gotGroup.data.membershipStatus == 'member' || gotGroup.data.privacy == 'default') {
+            G_groupMembersVisible = true
+        } else {
+            console.log(`${loglv().hey}${selflogA} Group is Private and/or you're not a member. [ ${gotGroup.data.privacy} - ${gotGroup.data.membershipStatus}] `)
+        }
+
     } else {
         G_groupID = ''
         if (logOutputLine.includes(`~private(`)) {
@@ -3055,8 +3091,7 @@ function eventReceivedNotification(line) {
     // message: "This is a generated invite to A Simple Fishing World">
 }
 
-var currentAccountInUse = { name: process.env["VRC_ACC_NAME_1"], id: process.env["VRC_ACC_ID_1"] }
-function getCurrentAccountInUse() { return currentAccountInUse }; exports.getCurrentAccountInUse = getCurrentAccountInUse;
+var currentAccountInUse = { name: process.env["VRC_ACC_NAME_1"], id: process.env["VRC_ACC_ID_1"], Agroup: true }
 async function eventPlayerInitialized(logOutputLine) {
     var playerDisplayName = logOutputLine.split('[Behaviour] Initialized player ')[1]
 
@@ -3067,7 +3102,8 @@ async function eventPlayerInitialized(logOutputLine) {
         // Terrors of Nowhere alert friend join
         if (G_worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd' &&
             [`invite`, `invitePlus`, `friends`, `friendsPlus`].includes(instanceType) &&
-            Date.now() > (worldjointimestamp + 120_000)) {
+            Date.now() > (worldjointimestamp + 120_000) &&
+            currentAccountInUse['Agroup'] == true) {
             oscChatBoxV2(`~Someone is joining if you want to wait for them: ${playerDisplayName}`, undefined, false, true, false, true, false)
         }
 
@@ -3086,7 +3122,7 @@ async function eventPlayerInitialized(logOutputLine) {
 
         playerRatio = playersInInstance.length / playerHardLimit
 
-        if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
+        if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType) && G_groupMembersVisible == true) {
             memberRatio = membersInInstance.length / playersInInstance.length
             console.log(`${loglv().log}${selflogL} There are now ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`)
             process.title = `Instance: ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`
@@ -3100,31 +3136,35 @@ async function eventPlayerInitialized(logOutputLine) {
         switch (playerDisplayName) {
             case process.env["VRC_ACC_NAME_6"]:
                 if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-                currentAccountInUse = { name: process.env["VRC_ACC_NAME_6"], id: process.env["VRC_ACC_ID_6"] }
+                currentAccountInUse = { name: process.env["VRC_ACC_NAME_6"], id: process.env["VRC_ACC_ID_6"], Agroup: false }
                 break;
             case process.env["VRC_ACC_NAME_4"]:
                 if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-                currentAccountInUse = { name: process.env["VRC_ACC_NAME_4"], id: process.env["VRC_ACC_ID_4"] }
+                currentAccountInUse = { name: process.env["VRC_ACC_NAME_4"], id: process.env["VRC_ACC_ID_4"], Agroup: true }
                 break;
             case process.env["VRC_ACC_NAME_7"]:
                 if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-                currentAccountInUse = { name: process.env["VRC_ACC_NAME_7"], id: process.env["VRC_ACC_ID_7"] }
+                currentAccountInUse = { name: process.env["VRC_ACC_NAME_7"], id: process.env["VRC_ACC_ID_7"], Agroup: false }
                 break;
             case process.env["VRC_ACC_NAME_3"]:
                 if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-                currentAccountInUse = { name: process.env["VRC_ACC_NAME_3"], id: process.env["VRC_ACC_ID_3"] }
+                currentAccountInUse = { name: process.env["VRC_ACC_NAME_3"], id: process.env["VRC_ACC_ID_3"], Agroup: true }
                 break;
             case process.env["VRC_ACC_NAME_5"]:
                 if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-                currentAccountInUse = { name: process.env["VRC_ACC_NAME_5"], id: process.env["VRC_ACC_ID_5"] }
+                currentAccountInUse = { name: process.env["VRC_ACC_NAME_5"], id: process.env["VRC_ACC_ID_5"], Agroup: false }
                 break;
             case process.env["VRC_ACC_NAME_2"]:
                 if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-                currentAccountInUse = { name: process.env["VRC_ACC_NAME_2"], id: process.env["VRC_ACC_ID_2"] }
+                currentAccountInUse = { name: process.env["VRC_ACC_NAME_2"], id: process.env["VRC_ACC_ID_2"], Agroup: true }
                 break;
             case process.env["VRC_ACC_NAME_1"]:
                 if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-                currentAccountInUse = { name: process.env["VRC_ACC_NAME_1"], id: process.env["VRC_ACC_ID_1"] }
+                currentAccountInUse = { name: process.env["VRC_ACC_NAME_1"], id: process.env["VRC_ACC_ID_1"], Agroup: true }
+                break;
+            case process.env["VRC_ACC_NAME_8"]:
+                if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv().hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
+                currentAccountInUse = { name: process.env["VRC_ACC_NAME_8"], id: process.env['VRC_ACC_ID_1'], Agroup: false }
                 break;
             default:
                 break;
@@ -3182,7 +3222,7 @@ async function eventPlayerJoin(logOutputLine) {
                 markUserAsMember(false, 'CommunityMeetup', true)
             } else { markUserAsMember(true, 'CommunityMeetup', true) }
 
-        } else if (G_groupID != '') {
+        } else if (G_groupID != '' && G_groupMembersVisible == true) {
             var gotUserGroups = await limiter.reqCached('userGroups', playerID).catch(async () => {
                 return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
             })
@@ -3222,7 +3262,16 @@ function eventPlayerLeft(logOutputLine) {
 
         if (Date.now() > (worldjointimestamp + 30000) && worldHopTimeout != null) { queueInstanceDataBurst() }
 
-        if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
+        try {
+            avatarStatSummary.seenAvatars
+                .filter(a => a.wearers.includes(playerDisplayName))
+                .map(b => b.wearers.splice(b.wearers.indexOf(playerDisplayName)))
+        } catch (error) {
+            console.debug('no wearer to remove')
+        }
+
+
+        if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType) && G_groupMembersVisible == true) {
             membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
             memberRatio = membersInInstance.length / playersInInstance.length
             console.log(`${loglv().log}${selflogL} There are now ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`)
@@ -3247,7 +3296,7 @@ function eventPlayerLeft(logOutputLine) {
             }
         }
 
-        if (playerDisplayName == getCurrentAccountInUse().name) {
+        if (playerDisplayName == currentAccountInUse.name) {
             clearTimeout(worldHopTimeout)
             clearTimeout(loadingAvatarTimer)
             loadingAvatarTimer = null
@@ -3360,7 +3409,7 @@ function videoUrlResolver(videourl) {
 
     //	--- Print Video URL ---
     console.log(`${loglv().log}${selflogL} Video URL: ${videourl}`)
-    if (ChatVideoURL == true) { oscChatBoxV2(`~VideoURL:\v${fitChars(videourl, 3)}`, 5000, true, true) }
+    if (ChatVideoURL == true && currentAccountInUse['Agroup'] == true) { oscChatBoxV2(`~VideoURL:\v${fitChars(videourl, 3)}`, 5000, true, true) }
 
     //	---	Twitch Channel URL Resolver	---
     if (videourl.includes('twitch.tv/') && !videourl.includes('twitch.tv/videos')) {
@@ -3403,12 +3452,12 @@ function videoUrlResolver(videourl) {
             .then((data) => {
                 setTimeout(() => {
                     console.log(`${loglv().log}${selflogL} Video Title: ${data.videoDetails.title}`)
-                    if (ChatVideoTitle == true) { oscChatBoxV2(`~VideoTitle:\v${fitChars(data.videoDetails.title, 3)}`, 2000, true, true) }
+                    if (ChatVideoTitle == true && currentAccountInUse['Agroup'] == true) { oscChatBoxV2(`~VideoTitle:\v${fitChars(data.videoDetails.title, 3)}`, 2000, true, true) }
                 }, 2000)
             })
             .catch((err) => {
                 console.log(`${loglv().warn}${selflogL} Youtube-dl: ${err}`)
-                if (ChatVideoURL == true) { oscChatBoxV2(`~${err}`, 2000, true, true, false, false, false) }
+                if (ChatVideoURL == true && currentAccountInUse['Agroup'] == true) { oscChatBoxV2(`~${err}`, 2000, true, true, false, false, false) }
             })
     }
 }

@@ -20,14 +20,6 @@ console.log(`${loglv().log}${selflog} Loaded`)
 var vrchat = new VRChat({ application: { name: "Api-Osc-Interface_DEV", version: "1.2-DEV", contact: process.env["CONTACT_EMAIL"] }, authentication: { credentials: { username: process.env["VRC_ACC_LOGIN_1"], password: process.env["VRC_ACC_PASSWORD_1"], totpSecret: process.env["VRC_ACC_TOTPSECRET_1"] } }, keyv: new KeyvFile({ filename: "./datasets/vrcA.json" }) });
 var isApiErrorSkip = false
 
-var vrcpropcount = {
-    'prop_id': {
-        "Name": 'sample',
-        "Count": 999
-    }
-}
-fs.readFile('./datasets/propcounts.json', 'utf8', (err, data) => { vrcpropcount = JSON.parse(data) })
-
 
 
 var worldlist = [
@@ -59,8 +51,8 @@ function maindev() {
 
 
 main()
+const myVrcID = 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752';
 async function main() {
-    console.log('MAIN')
     try {
         const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
         console.log(`${loglv().log}${selflog} Logged in as: ${currentUser.displayName}`);
@@ -74,14 +66,17 @@ async function main() {
     */
     // await sleep(10000)
 
-    var gotReqJoinGroups = await vrchat.getUserGroupRequests({'path':{'userId':'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752'}})
-    console.log(gotReqJoinGroups.data)
+    // Get pending group join requests
+    // Get pending group join requests
+    // var gotReqJoinGroups = await vrchat.getUserGroupRequests({ 'path': { 'userId': myVrcID } }); console.log(gotReqJoinGroups.data)
+
 
 
     // Shared groups in YEAR Groups
+    // Shared groups in YEAR Groups
     /* await foundMemberMutualGroups('grp_4f5d0456-4200-4b2c-8331-78856d1869e4', undefined, undefined, false)
     await sleep(10000)
-    await foundMemberMutualGroups('grp_ba9a83ef-972a-495a-b2ba-3ad28dc1c233', undefined, undefined, false)
+    await foundMemberMutualGroups('', undefined, undefined, false)
     await sleep(10000)
     await foundMemberMutualGroups('grp_378c0550-07a1-4cab-aa45-65ad4a817117', undefined, undefined, false)
     await sleep(10000)
@@ -99,20 +94,44 @@ async function main() {
     await sleep(10000)
     await foundMemberMutualGroups('grp_243d9742-ce05-4fc3-b399-cd436528c432', undefined, undefined, true) */
 
+    await foundMemberMutualGroups('grp_226e52dc-2948-4ad4-8bf4-16b2fd2de93a', undefined, undefined,true, true)
+
+
     // var gi = await vrchat.getWorld({ 'path': { 'worldId': 'wrld_0c3caeaa-7224-4800-aa64-bc473ccb18a2' } }); console.log(gi.data)
 
+
     // Search for anti-avatar-flight worlds
-    /* var sw1 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_collision' } })
-   var sw2 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_stations' } })
-   console.log('admin_disable_avatar_collision', sw1.data.map((e) => { return e.name }))
-   console.log('admin_disable_avatar_stations', sw2.data.map((e) => { return e.name }))  */
+    // Search for anti-avatar-flight worlds
+
+
+    // auditViewGroups('group-members-viewall')
 
     // Get Feedback Reports
-    // var gModr = await vrchat.getModerationReports({ 'query': { 'reportingUserId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752', 'n': 100, 'offset': 0 } })
+    // Get Feedback Reports
+    // var gModr = await vrchat.getModerationReports({ 'query': { 'reportingUserId': myVrcID, 'n': 100, 'offset': 0 } })
     // console.log(JSON.stringify(gModr.data))
 
+}
 
+async function searchForAntiFlightWorlds() {
+    var sw1 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_collision' } })
+    var sw2 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_stations' } })
+    console.log('admin_disable_avatar_collision', sw1.data.map((e) => { return e.name }))
+    console.log('admin_disable_avatar_stations', sw2.data.map((e) => { return e.name }))
+}
 
+async function auditViewGroups(permissionSearch = 'group-audit-view') {
+    var userAllGroupPermissions = await vrchat.getUserAllGroupPermissions({ 'path': { 'userId': myVrcID } })
+    var groupWithAuditViewPermission = Object.keys(Object.fromEntries(Object.entries(userAllGroupPermissions.data).filter(([key, value]) => value.includes(permissionSearch))))
+    console.log(`Groups with ${permissionSearch} permission`)
+    for (const group in groupWithAuditViewPermission) {
+        // console.log(`Fetching`,groupWithAuditViewPermission[group])
+        var gotGroup = await limiter.reqCached('group', groupWithAuditViewPermission[group]).catch(async () => {
+            return await limiter.req(vrchat.getGroup({ 'path': { 'groupId': groupWithAuditViewPermission[group] } }), 'group')
+        })
+        console.log(`${gotGroup.data.id} - ${gotGroup.data.name}`)
+    }
+    // console.groupEnd()
 }
 
 class ratelimitHandler {
@@ -120,7 +139,7 @@ class ratelimitHandler {
     pause_exp = 1
     isLimiting = false
     limiterCache = { "user": [], "world": [], "file": [], "group": [], "userGroups": [] }
-    #cachedTime = 60_000
+    #cachedTime = 30 * 60_000
     constructor(pause_exp, pause_sec, isLimiting, limiterCache) {
         this.pause_sec
         this.pause_exp
@@ -155,12 +174,20 @@ class ratelimitHandler {
         })
         console.log(`${loglv().hey}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Cleared ${count} items from API-Cache. Remaining ${totalc - count}`)
     }
-    
+
     async reqCached(I_type, I_cacheSearch) {
         return new Promise((resolve, reject) => {
             switch (I_type) {
                 case 'userGroups':
                     var search = this.limiterCache['userGroups'].find(c => c.userId == I_cacheSearch && c.cache_expire > Date.now())
+                    if (search != undefined) {
+                        resolve(search['data'])
+                    } else {
+                        reject('Not Cached or is Expired')
+                    }
+                    break;
+                case 'mutualFriends':
+                    var search = this.limiterCache['mutualFriends'].find(c => c.userId == I_cacheSearch && c.cache_expire > Date.now())
                     if (search != undefined) {
                         resolve(search['data'])
                     } else {
@@ -201,6 +228,9 @@ class ratelimitHandler {
                             case 'userGroups':
                                 limiter.limiterCache['userGroups'].push({ 'userId': I_param, 'data': res, 'cache_expire': Date.now() + limiter.#cachedTime })
                                 break;
+                            case 'mutualFriends':
+                                limiter.limiterCache['mutualFriends'].push({ 'userId': I_param, 'data': res, 'cache_expire': Date.now() + limiter.#cachedTime })
+                                break;
                             default:
                                 res['cache_expire'] = Date.now() + limiter.#cachedTime
                                 limiter.limiterCache[I_type].push(res)
@@ -240,12 +270,16 @@ async function foundMemberMutualGroups(groupID, membersOverride, membersIDs, wri
                 for (const id in membersIDs) {
                     console.log(`[API][${id}/${membersIDs.length - 1}][${Math.round(id / (membersIDs.length - 1) * 100)}%] Fetching user ${membersIDs[id]}`)
                     if (!chkMembers.includes(membersIDs[id])) {
-                        var gotUser = await limiter.req(vrchat.getUser({ 'path': { 'userId': membersIDs[id] } }))
+                        var gotUser = await limiter.reqCached('user', membersIDs[id]).catch(async () => {
+                            return await limiter.req(vrchat.getUser({ 'path': { 'userId': membersIDs[id] } }))
+                        })
                         console.log(`[API] Got user ${gotUser.data.displayName}`)
 
                         if (!chkMembers.includes(gotUser.data.displayName)) {
                             if (checkMutualFriends == true) {
-                                var gotMutuals = await limiter.req(vrchat.getMutualFriends({ 'path': { 'userId': membersIDs[id] } }))
+                                var gotMutuals = await limiter.reqCached('mutualFriends', membersIDs[id]).catch(async () => {
+                                    return await limiter.req(vrchat.getMutualFriends({ 'path': { 'userId': membersIDs[id] } }))
+                                })
 
                                 members.push({
                                     'id': gotUser.data.id,
@@ -281,10 +315,22 @@ async function foundMemberMutualGroups(groupID, membersOverride, membersIDs, wri
                 for (const memberIndex in groupMembers.data) {
                     // console.log(`[API] Member: ${groupMembers.data[memberIndex].user.displayName}`)
                     if (!chkMembers.includes(groupMembers.data[memberIndex].user.displayName)) {
-                        members.push({
-                            'id': groupMembers.data[memberIndex].userId,
-                            'name': groupMembers.data[memberIndex].user.displayName
-                        })
+                        if (checkMutualFriends == true) {
+                            var gotMutuals = await limiter.reqCached('mutualFriends', groupMembers.data[memberIndex].user.id).catch(async () => {
+                                return await limiter.req(vrchat.getMutualFriends({ 'path': { 'userId': groupMembers.data[memberIndex].user.id } }))
+                            })
+
+                            members.push({
+                                'id': groupMembers.data[memberIndex].user.id,
+                                'name': groupMembers.data[memberIndex].user.displayName,
+                                'mutualfriends': gotMutuals.data.map(m => m.displayName)
+                            })
+                        } else {
+                            members.push({
+                                'id': groupMembers.data[memberIndex].user.id,
+                                'name': groupMembers.data[memberIndex].user.displayName
+                            })
+                        }
                     }
                 }
                 await sleep(sleeptime * limiter.delayMulti)
