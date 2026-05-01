@@ -22,20 +22,6 @@ var isApiErrorSkip = false
 
 
 
-var worldlist = [
-    'wrld_c47775b6-dd53-4f8d-b130-8332d58c3910',
-    'wrld_1c0d1975-d3a9-4c12-8187-6f0df3e2b41f',
-    'wrld_fa3dcecb-f855-405f-96c0-6ed08f1de05d',
-    'wrld_fea70c68-2e61-493d-9501-ac158b21d698',
-    'wrld_5e6e41ed-be82-4c84-b849-e6201422baff',
-    'wrld_a2ce1007-139e-4508-8250-eab157c8c2f3',
-    'wrld_a2899a4a-2341-4dab-ab30-0f37ad2f73a0',
-    'wrld_6fd1d57b-c299-4900-84e1-c7ac9da0fa6d',
-    'wrld_971ff150-4d17-4057-91a0-e383dc683470',
-    'wrld_0dc0bbb1-51fb-4096-bc70-8d96eebdb101',
-    'wrld_542334f4-de69-4252-867f-4922a61b10d0'
-]
-
 // maindev()
 function maindev() {
     var dict = ['01 - Akiho Nagase V2', 'Haishima test', 'Ana Birb', 'Jay Seth （CC）']
@@ -94,15 +80,18 @@ async function main() {
     await sleep(10000)
     await foundMemberMutualGroups('grp_243d9742-ce05-4fc3-b399-cd436528c432', undefined, undefined, true) */
 
-    await foundMemberMutualGroups('grp_226e52dc-2948-4ad4-8bf4-16b2fd2de93a', undefined, undefined,true, true)
+    // await foundMemberMutualGroups('grp_226e52dc-2948-4ad4-8bf4-16b2fd2de93a', undefined, undefined, true, true)
+
+    
+    // Change AutoBan Orange Status group to an 18+ AgeGate tool
+    // Change AutoBan Orange Status group to an 18+ AgeGate tool
+    // var ug = await limiter.req(vrchat.updateGroup({ 'path': { 'groupId': 'grp_cacf2dd8-8958-4412-be78-dedd798e6df4' }, 'body': { "name": "14a's Group for using AgeGate", "shortCode": "14A18P", "description": "", "joinState": "request", "allowGroupJoinPrompt": false, "language": [], "rules": "21+" } })); console.log(ug.data)
 
 
     // var gi = await vrchat.getWorld({ 'path': { 'worldId': 'wrld_0c3caeaa-7224-4800-aa64-bc473ccb18a2' } }); console.log(gi.data)
 
 
-    // Search for anti-avatar-flight worlds
-    // Search for anti-avatar-flight worlds
-
+    // searchForAntiFlightWorlds()
 
     // auditViewGroups('group-members-viewall')
 
@@ -151,7 +140,7 @@ class ratelimitHandler {
     get delayMulti() { return this.pause_exp }
     async backoff() {
         return new Promise((resolve, reject) => {
-            console.log(`${loglv().warn}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Backing off for ${this.waitTimeSec} sec
+            console.log(`${loglv().warn}${selflog}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Backing off for ${this.waitTimeSec} sec
     Retry: ${new Date(Date.now() + this.waitTimeMS).toTimeString()}`)
             setTimeout(() => {
                 if (this.pause_exp < 7) { this.pause_exp++ }
@@ -163,7 +152,7 @@ class ratelimitHandler {
         if (this.pause_exp > 1) { this.pause_exp = this.pause_exp - this.pause_exp * 0.1 } else if (this.pause_exp < 1) { this.pause_exp = 1 }
     }
     sweepCache() {
-        console.log(`${loglv().hey}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Sweeping API-Cache.`)
+        console.log(`${loglv().hey}${selflog}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Sweeping API-Cache.`)
         var count = 0
         var totalc = 0
         Object.keys(this.limiterCache).forEach(k => {
@@ -172,7 +161,7 @@ class ratelimitHandler {
             this.limiterCache[k] = this.limiterCache[k].filter(c => c.cache_expire > Date.now())
             count += fromc - this.limiterCache[k].length
         })
-        console.log(`${loglv().hey}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Cleared ${count} items from API-Cache. Remaining ${totalc - count}`)
+        console.log(`${loglv().hey}${selflog}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Cleared ${count} items from API-Cache. Remaining ${totalc - count}`)
     }
 
     async reqCached(I_type, I_cacheSearch) {
@@ -451,55 +440,6 @@ async function getAvatarThumbnail() {
     console.log(filtered)
 }
 
-async function discordWorldList(worldIdArr = ['']) {
-    // Setup
-    var stringbuilder = ''
-    var cache = []
-    function formatBytes(bytes, decimals = 1) {
-        return new Promise((resolve, reject) => {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            resolve(parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i])
-        })
-    }
-
-    // Fetch world data
-    for (const id in worldIdArr) {
-        console.log(`Checking ${worldlist[id]}`)
-        let res = await vrchat.getWorld({ 'path': { 'worldId': worldlist[id] } })
-        let getFile = res.data.unityPackages.filter(e => e.platform == 'standalonewindows').find(e => e.scanStatus == 'passed')
-        let fileId = getFile.assetUrl.slice(36, 77)
-        let fileVersion = getFile.assetUrl.slice(78).split('/')[0]
-        let res2 = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileId, 'versionId': fileVersion } })
-        cache.push({
-            'name': res.data.name,
-            'id': res.data.id,
-            'capacity': parseInt(res.data.capacity),
-            'size': parseInt(res2.data.fileSize),
-            'favRatio': Math.round((res.data.favorites / res.data.visits) * 100)
-        })
-    }
-
-    // Sort worlds
-    cache = cache.sort((a, b) => {
-        const sortfavRatio = b.favRatio - a.favRatio; if (sortfavRatio !== 0) { return sortfavRatio }
-        const sortcapacity = b.capacity - a.capacity; if (sortcapacity !== 0) { return sortcapacity }
-        return a.size - b.size
-    })
-
-    // Format string
-    for (const item in cache) {
-        let fileSize = await formatBytes(cache[item].size)
-        stringbuilder.length == 0 ?
-            stringbuilder += `- ❤️ ${cache[item].favRatio}%  ⚖️ ${cache[item].capacity}  📊 ${fileSize} - [${cache[item].name}](<https://vrchat.com/home/world/${cache[item].id}>)`
-            : stringbuilder += `\n- ❤️ ${cache[item].favRatio}%  ⚖️ ${cache[item].capacity}  📊 ${fileSize} - [${cache[item].name}](<https://vrchat.com/home/world/${cache[item].id}>)`
-    }
-    fs.writeFile('./output.txt', stringbuilder, 'utf8', (err) => { if (err) { console.log(err) } })
-    console.log(stringbuilder)
-}
 
 async function getMutualFriends(vrcuserid) {
     return new Promise(async (resolve, reject) => {

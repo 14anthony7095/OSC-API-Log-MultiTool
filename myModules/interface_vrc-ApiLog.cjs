@@ -38,6 +38,7 @@ let selflogA = `\x1b[0m[\x1b[33mVRC_API\x1b[0m]`
 let selflogWS = `\x1b[0m[\x1b[33mVRC_WebSocket\x1b[0m]`
 var path = 'C:/Users/14anthony7095/AppData/LocalLow/VRChat/VRChat/'
 var tarFile = 'nothing'
+var tarFileSize = 0
 var tarFilePath = 'nothing'
 var playersInInstance = []
 var membersInInstance = []
@@ -48,6 +49,7 @@ var memberRatio = 0.5
 var G_autoNextWorldHop = false
 var worldHoppers = []
 var vrchatDiscord; fs.readFile('datasets/vrc-X-dis.json', 'utf8', (err, data) => { vrchatDiscord = JSON.parse(data) })
+var worstAvatarStats; fs.readFile('datasets/worstAvatarStats.json', 'utf8', (err, data) => { worstAvatarStats = JSON.parse(data) })
 var lastFetchGroupLogs;
 var currentUser;
 var statWarnings = false
@@ -78,7 +80,6 @@ var cooldownPortalVanish = false
 var vrchatRunning = false
 var loadingAvatarTimer;
 var watcher;
-var lastUpdated = 0
 var lastChecked = 0
 var previousLength = 0
 var currentLength = 0
@@ -175,6 +176,7 @@ class ratelimitHandler {
             count += fromc - this.limiterCache[k].length
         })
         console.log(`${loglv().hey}${selflogA}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Sweeping API-Cache: ${count} of ${totalc} => ${totalc - count}`)
+        // console.debug(process.memoryUsage().rss)
     }
 
     async reqCached(I_type, I_cacheSearch) {
@@ -583,6 +585,7 @@ function fetchLogFile() {
             })
         tarFile = files[files.length - 1]
         tarFilePath = path + '' + files[files.length - 1]
+        tarFileSize = fs.statSync(tarFilePath).size
         console.log(`${loglv().log}${selflogL} Found newest log file: ${files[files.length - 1]}`)
         startWatching()
     })
@@ -593,7 +596,7 @@ fetchLogFile()
 
 
 
-
+const readline = require('readline')
 function startWatching() {
     console.log(`${loglv().log}${selflogL} Started Watcher`)
     if (tarFilePath.includes('undefined')) {
@@ -603,9 +606,16 @@ function startWatching() {
         watcher = fs.watch(tarFilePath, 'utf8', (eventType, filename) => {
             //console.log( `${loglv().debug}${selflog}`, eventType, filename)
             if (eventType == 'change' && filename == tarFile) {
-                lastUpdated = Date.now()
-                //console.log(`${loglv().debug}${selflog} ${lastUpdated} Log updated`)
-                readLogFile()
+                // readLogFile()
+
+                const newSize = fs.statSync(tarFilePath).size
+                if (newSize > tarFileSize) {
+                    const stream = fs.createReadStream(tarFilePath, { 'start': tarFileSize, 'end': newSize })
+                    const rl = readline.createInterface({ 'input': stream })
+                    rl.on('line', (line) => { processLogLine(line) })
+                    tarFileSize = newSize
+                }
+
             }
             if (eventType == 'rename' && filename.includes('output_log_')) {
                 console.log(`${loglv().warn}${selflogL} A newer log file might of just been created`)
@@ -620,76 +630,6 @@ function updateWatcher() {
     fetchLogFile()
 }
 
-
-
-async function readLogFile(cooldownSkip) {
-    if (cooldownLogRead == false || cooldownSkip == true) {
-        lastChecked = Date.now()
-        //console.log(`${loglv().debug}${selflog} ${lastChecked} Reading Log`)
-        cooldownLogRead = true
-
-        var fd;
-        try {
-            fd = await fsp.open(tarFilePath, 'r')
-            var fsReaddfile = await fd.readFile('utf8')
-            dataNE = fsReaddfile.replace(/^\s*\n/gm, "").trim()
-            currentLength = dataNE.length
-            if (previousLength == 0) { previousLength = currentLength }
-            newData = dataNE.slice(previousLength)
-            var newDataPerLine = newData.split('\r')
-
-            // varibles to check for within the line scan
-            newDataPerLine.forEach((line, index) => {
-                if (line.length != 0) {
-                    outputLogLines(index, newDataPerLine.length - 1, line);
-                }
-
-                // Reached end of new lines
-                if (index == newDataPerLine.length - 1) {
-                    setTimeout(() => {
-                        if (lastChecked < lastUpdated) { readLogFile(true) }
-                        else { cooldownLogRead = false }
-                    }, logCooldown * 1000)
-                }
-            })
-            previousLength = currentLength
-
-        } catch (error) {
-            console.log(`${loglv().warn}${selflogL} `, error)
-
-        } finally {
-            if (fd) { await fd.close() }
-        }
-
-        /* fs.readFile(tarFilePath, 'utf8', (err, data) => {
-            if (err) { console.log(err); return }
-            dataNE = data.replace(/^\s*\n/gm, "").trim()
-            currentLength = dataNE.length
-            if (previousLength == 0) { previousLength = currentLength }
-            newData = dataNE.slice(previousLength)
-            var newDataPerLine = newData.split('\r')
-            //newDataPerLine.shift()
-
-            // varibles to check for within the line scan
-            newDataPerLine.forEach((line, index) => {
-                if (line.length != 0) {
-                    outputLogLines(index, newDataPerLine.length - 1, line);
-                }
-
-                // Reached end of new lines
-                if (index == newDataPerLine.length - 1) {
-                    setTimeout(() => {
-                        if (lastChecked < lastUpdated) { readLogFile(true) }
-                        else { cooldownLogRead = false }
-                    }, logCooldown * 1000)
-                }
-            })
-            previousLength = currentLength
-
-        }) */
-
-    }
-}
 
 oscSend('/avatar/parameters/log/instance_closed', false)
 
@@ -708,10 +648,8 @@ function average(array) {
 }
 
 
-function outputLogLines(currentLineIndexFromBuffer, totalLinesInBuffer, line) {
-    if (printAllLogs == true) {
-        console.log(`${loglv().debug}${selflogL} [${currentLineIndexFromBuffer}/${totalLinesInBuffer}] ${line}`)
-    }
+function processLogLine(line) {
+
     if (vrchatRunning == false) { vrchatRunning = true }
 
     logEmitter.emit('log', line)
@@ -907,7 +845,7 @@ const avatarStatWeights = {
     "totalMaxParticles": 2500,
     "trailRendererCount": 8,
     "materialSlotsUsed": 32,
-    "rayCastCount": 15,
+    "raycastCount": 15,
     "lightCount": 1,
     "blendShapeCount": 99999
 }
@@ -953,6 +891,7 @@ var avatarStatSummary = {
         "physicsColliders": { "label": "Unity Colliders", "values": [] },
         "physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
         "audioSourceCount": { "label": "AudioSources", "values": [] },
+        "raycastCount": { "label": "Raycasts", "values": [] },
         "blendShapeCount": { "label": "BlendShapes", "values": [] },
         "cameraCount": { "label": "Cameras", "values": [] },
         "totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
@@ -1053,8 +992,9 @@ async function avatarFileAnalysis(fileid, fileversion) {
                 // console.log(`${loglv().log}${selflogA} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
             } catch (err) {
                 // console.log(`${loglv().log}${selflogA} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
-
-                let getOwner = await limiter.req(vrchat.getUser({ 'path': { 'userId': getName.data.ownerId } }))
+                let getOwner = await limiter.reqCached('user', getName.data.ownerId).catch(async () => {
+                    return await limiter.req(vrchat.getUser({ 'path': { 'userId': getName.data.ownerId } }), 'user')
+                })
                 res.data["ownerDisplayName"] = getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : (getOwner.data || "").displayName
                 if (avatarStatSummary.seenAuthors.filter(s => s.id == res.data.ownerId).length == 0) {
                     avatarStatSummary.seenAuthors.push({ "id": getName.data.ownerId, "displayName": getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : (getOwner.data || "").displayName })
@@ -1078,6 +1018,7 @@ async function avatarFileAnalysis(fileid, fileversion) {
     let vramTexsize = await formatBytes(res.data.avatarStats.totalTextureUsage)
     console.log(`${loglv().log}${selflogA} [AvatarAnalysis] ${res.data.performanceRating == 'VeryPoor' ? '❌ VeryPoor' : res.data.performanceRating == 'Poor' ? '🔴 Poor' : res.data.performanceRating == 'Medium' ? '🟡 Medium' : res.data.performanceRating == 'Good' ? '🟢 Good' : res.data.performanceRating == 'Excellent' ? '✅ Excellent' : ''} - ${res.data.name}
              📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount}`)
+
 
     // - Performance Marks-
     let totalavatareval = ``
@@ -1112,8 +1053,7 @@ async function avatarFileAnalysis(fileid, fileversion) {
     var materialSlotsUsed = Math.round(res.data.avatarStats.materialSlotsUsed / avatarStatWeights.materialSlotsUsed)
     var lightCount = Math.round(res.data.avatarStats.lightCount / avatarStatWeights.lightCount)
     var blendShapeCount = Math.round(res.data.avatarStats.blendShapeCount / avatarStatWeights.blendShapeCount)
-    // var raycastCount = Math.round(res.data.avatarStats.rayCastCount / avatarStatWeights.rayCastCount)
-    var raycastCount = 0
+    var raycastCount = Math.round(res.data.avatarStats.raycastCount / avatarStatWeights.raycastCount)
     var statPunish = []
 
     /*if (getInstanceGroupID() == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
@@ -1398,10 +1338,10 @@ async function avatarFileAnalysis(fileid, fileversion) {
         statPunish.push({
             "weight": 27,
             "multi": Math.round(raycastCount),
-            "log": `\v(x${raycastCount}) Raycasts ${res.data.avatarStats.rayCastCount}`,
-            "print": `\n              Raycasts: ${raycastCount} EV ${raycastCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.rayCastCount : ''}`
+            "log": `\v(x${raycastCount}) Raycasts ${res.data.avatarStats.raycastCount}`,
+            "print": `\n              Raycasts:                  ${raycastCount} EV ${raycastCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.raycastCount : ''}`
         })
-        totalavatareval += `\n              Raycasts: ${raycastCount} EV ${raycastCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.rayCastCount : ''}`
+        totalavatareval += `\n              Raycasts:                  ${raycastCount} EV ${raycastCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.raycastCount : ''}`
     }
     if (blendShapeCount > avatarStatWeights.lowerLimitWeight) {
         // warnbox += `\v(x${blendShapeCount}) BlendShapes ${res.data.avatarStats.blendShapeCount}`;
@@ -1426,6 +1366,7 @@ async function avatarFileAnalysis(fileid, fileversion) {
         totalavatareval += `\n              Camera Count:              ${cameraCount} EV ${cameraCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.cameraCount : ''}`
     }
     if (uncompressedSize > avatarStatWeights.lowerLimitWeight) {
+
         // warnbox += `\v(x${uncompressedSize}) RAM ${uncompresssize}`;
         statPunish.push({
             "weight": 30,
@@ -1436,6 +1377,232 @@ async function avatarFileAnalysis(fileid, fileversion) {
         })
         totalavatareval += `\n              Uncompressed Size:         ${uncompressedSize} EV ${uncompressedSize >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
     }
+
+    if (worstAvatarStats['totalTextureUsage'].value < res.data.avatarStats.totalTextureUsage) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${await formatBytes(res.data.avatarStats.totalTextureUsage, 2)} [totalTextureUsage]`)
+        worstAvatarStats['totalTextureUsage'] = {
+            'value': res.data.avatarStats.totalTextureUsage,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['totalPolygons'].value < res.data.avatarStats.totalPolygons) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.totalPolygons} [totalPolygons]`)
+        worstAvatarStats['totalPolygons'] = {
+            'value': res.data.avatarStats.totalPolygons,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['boundsLongest'].value < Math.max(...res.data.avatarStats.bounds)) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${Math.max(...res.data.avatarStats.bounds)} [boundsLongest]`)
+        worstAvatarStats['boundsLongest'] = {
+            'value': Math.max(...res.data.avatarStats.bounds),
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['skinnedMeshCount'].value < res.data.avatarStats.skinnedMeshCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.skinnedMeshCount} [skinnedMeshCount]`)
+        worstAvatarStats['skinnedMeshCount'] = {
+            'value': res.data.avatarStats.skinnedMeshCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['meshCount'].value < res.data.avatarStats.meshCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.meshCount} [meshCount]`)
+        worstAvatarStats['meshCount'] = {
+            'value': res.data.avatarStats.meshCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['materialSlotsUsed'].value < res.data.avatarStats.materialSlotsUsed) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.materialSlotsUsed} [materialSlotsUsed]`)
+        worstAvatarStats['materialSlotsUsed'] = {
+            'value': res.data.avatarStats.materialSlotsUsed,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['materialCount'].value < res.data.avatarStats.materialCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.materialCount} [materialCount]`)
+        worstAvatarStats['materialCount'] = {
+            'value': res.data.avatarStats.materialCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['physBoneComponentCount'].value < res.data.avatarStats.physBoneComponentCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneComponentCount} [physBoneComponentCount]`)
+        worstAvatarStats['physBoneComponentCount'] = {
+            'value': res.data.avatarStats.physBoneComponentCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['physBoneTransformCount'].value < res.data.avatarStats.physBoneTransformCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneTransformCount} [physBoneTransformCount]`)
+        worstAvatarStats['physBoneTransformCount'] = {
+            'value': res.data.avatarStats.physBoneTransformCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['physBoneColliderCount'].value < res.data.avatarStats.physBoneColliderCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneColliderCount} [physBoneColliderCount]`)
+        worstAvatarStats['physBoneColliderCount'] = {
+            'value': res.data.avatarStats.physBoneColliderCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['physBoneCollisionCheckCount'].value < res.data.avatarStats.physBoneCollisionCheckCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneCollisionCheckCount} [physBoneCollisionCheckCount]`)
+        worstAvatarStats['physBoneCollisionCheckCount'] = {
+            'value': res.data.avatarStats.physBoneCollisionCheckCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['contactCount'].value < res.data.avatarStats.contactCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.contactCount} [contactCount]`)
+        worstAvatarStats['contactCount'] = {
+            'value': res.data.avatarStats.contactCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['constraintCount'].value < res.data.avatarStats.constraintCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.constraintCount} [constraintCount]`)
+        worstAvatarStats['constraintCount'] = {
+            'value': res.data.avatarStats.constraintCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['constraintDepth'].value < res.data.avatarStats.constraintDepth) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.constraintDepth} [constraintDepth]`)
+        worstAvatarStats['constraintDepth'] = {
+            'value': res.data.avatarStats.constraintDepth,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['animatorCount'].value < res.data.avatarStats.animatorCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.animatorCount} [animatorCount]`)
+        worstAvatarStats['animatorCount'] = {
+            'value': res.data.avatarStats.animatorCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['boneCount'].value < res.data.avatarStats.boneCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.boneCount} [boneCount]`)
+        worstAvatarStats['boneCount'] = {
+            'value': res.data.avatarStats.boneCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['lightCount'].value < res.data.avatarStats.lightCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.lightCount} [lightCount]`)
+        worstAvatarStats['lightCount'] = {
+            'value': res.data.avatarStats.lightCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['particleSystemCount'].value < res.data.avatarStats.particleSystemCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.particleSystemCount} [particleSystemCount]`)
+        worstAvatarStats['particleSystemCount'] = {
+            'value': res.data.avatarStats.particleSystemCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['totalMaxParticles'].value < res.data.avatarStats.totalMaxParticles) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.totalMaxParticles} [totalMaxParticles]`)
+        worstAvatarStats['totalMaxParticles'] = {
+            'value': res.data.avatarStats.totalMaxParticles,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['meshParticleMaxPolygons'].value < res.data.avatarStats.meshParticleMaxPolygons) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.meshParticleMaxPolygons} [meshParticleMaxPolygons]`)
+        worstAvatarStats['meshParticleMaxPolygons'] = {
+            'value': res.data.avatarStats.meshParticleMaxPolygons,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['trailRendererCount'].value < res.data.avatarStats.trailRendererCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.trailRendererCount} [trailRendererCount]`)
+        worstAvatarStats['trailRendererCount'] = {
+            'value': res.data.avatarStats.trailRendererCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['lineRendererCount'].value < res.data.avatarStats.lineRendererCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.lineRendererCount} [lineRendererCount]`)
+        worstAvatarStats['lineRendererCount'] = {
+            'value': res.data.avatarStats.lineRendererCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['clothCount'].value < res.data.avatarStats.clothCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.clothCount} [clothCount]`)
+        worstAvatarStats['clothCount'] = {
+            'value': res.data.avatarStats.clothCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['totalClothVertices'].value < res.data.avatarStats.totalClothVertices) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.totalClothVertices} [totalClothVertices]`)
+        worstAvatarStats['totalClothVertices'] = {
+            'value': res.data.avatarStats.totalClothVertices,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['physicsColliders'].value < res.data.avatarStats.physicsColliders) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.physicsColliders} [physicsColliders]`)
+        worstAvatarStats['physicsColliders'] = {
+            'value': res.data.avatarStats.physicsColliders,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['physicsRigidbodies'].value < res.data.avatarStats.physicsRigidbodies) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.physicsRigidbodies} [physicsRigidbodies]`)
+        worstAvatarStats['physicsRigidbodies'] = {
+            'value': res.data.avatarStats.physicsRigidbodies,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['audioSourceCount'].value < res.data.avatarStats.audioSourceCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.audioSourceCount} [audioSourceCount]`)
+        worstAvatarStats['audioSourceCount'] = {
+            'value': res.data.avatarStats.audioSourceCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['raycastCount'].value < res.data.avatarStats.raycastCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.raycastCount} [raycastCount]`)
+        worstAvatarStats['raycastCount'] = {
+            'value': res.data.avatarStats.raycastCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['blendShapeCount'].value < res.data.avatarStats.blendShapeCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.blendShapeCount} [blendShapeCount]`)
+        worstAvatarStats['blendShapeCount'] = {
+            'value': res.data.avatarStats.blendShapeCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['cameraCount'].value < res.data.avatarStats.cameraCount) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.cameraCount} [cameraCount]`)
+        worstAvatarStats['cameraCount'] = {
+            'value': res.data.avatarStats.cameraCount,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['uncompressedSize'].value < res.data.uncompressedSize) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${await formatBytes(res.data.uncompressedSize, 2)} [uncompressedSize]`)
+        worstAvatarStats['uncompressedSize'] = {
+            'value': res.data.uncompressedSize,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+    if (worstAvatarStats['fileSize'].value < res.data.fileSize) {
+        console.log(`${loglv().hey}${selflogA} New worst detected: ${await formatBytes(res.data.fileSize, 2)} [uncompressedSize]`)
+        worstAvatarStats['fileSize'] = {
+            'value': res.data.fileSize,
+            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        }
+    }
+
 
     var statPunished = statPunish.sort((a, b) => {
         const sortmulti = b.multi - a.multi; if (sortmulti !== 0) { return sortmulti }
@@ -1466,7 +1633,7 @@ async function avatarFileAnalysis(fileid, fileversion) {
         } else if (key == 'boundsLongest') {
             avatarStatSummary.stats['boundsLongest'].values.push(Math.round(Math.max(...res.data.avatarStats.bounds) * 100) / 100)
         } else {
-            avatarStatSummary.stats[key].values.push(res.data.avatarStats[key])
+            avatarStatSummary.stats[key].values.push(res.data.avatarStats[key] || 0)
         }
     })
 
@@ -1507,6 +1674,234 @@ async function scanAllAvatarStats() {
         let vramTexsize = await formatBytes(res.data.avatarStats.totalTextureUsage)
         console.log(`${loglv().log}${selflogA} [AvatarAnalysis] ${res.data.performanceRating == 'VeryPoor' ? '❌ VeryPoor' : res.data.performanceRating == 'Poor' ? '🔴 Poor' : res.data.performanceRating == 'Medium' ? '🟡 Medium' : res.data.performanceRating == 'Good' ? '🟢 Good' : res.data.performanceRating == 'Excellent' ? '✅ Excellent' : ''} - ${res.data.name}
              📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)}`)
+
+
+        if (worstAvatarStats['totalTextureUsage'].value < res.data.avatarStats.totalTextureUsage) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${formatBytes(res.data.avatarStats.totalTextureUsage, 2)} [totalTextureUsage]`)
+            worstAvatarStats['totalTextureUsage'] = {
+                'value': res.data.avatarStats.totalTextureUsage,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['totalPolygons'].value < res.data.avatarStats.totalPolygons) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.totalPolygons} [totalPolygons]`)
+            worstAvatarStats['totalPolygons'] = {
+                'value': res.data.avatarStats.totalPolygons,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['boundsLongest'].value < Math.max(...res.data.avatarStats.bounds)) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${Math.max(...res.data.avatarStats.bounds)} [boundsLongest]`)
+            worstAvatarStats['boundsLongest'] = {
+                'value': Math.max(...res.data.avatarStats.bounds),
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['skinnedMeshCount'].value < res.data.avatarStats.skinnedMeshCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.skinnedMeshCount} [skinnedMeshCount]`)
+            worstAvatarStats['skinnedMeshCount'] = {
+                'value': res.data.avatarStats.skinnedMeshCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['meshCount'].value < res.data.avatarStats.meshCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.meshCount} [meshCount]`)
+            worstAvatarStats['meshCount'] = {
+                'value': res.data.avatarStats.meshCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['materialSlotsUsed'].value < res.data.avatarStats.materialSlotsUsed) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.materialSlotsUsed} [materialSlotsUsed]`)
+            worstAvatarStats['materialSlotsUsed'] = {
+                'value': res.data.avatarStats.materialSlotsUsed,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['materialCount'].value < res.data.avatarStats.materialCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.materialCount} [materialCount]`)
+            worstAvatarStats['materialCount'] = {
+                'value': res.data.avatarStats.materialCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['physBoneComponentCount'].value < res.data.avatarStats.physBoneComponentCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneComponentCount} [physBoneComponentCount]`)
+            worstAvatarStats['physBoneComponentCount'] = {
+                'value': res.data.avatarStats.physBoneComponentCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['physBoneTransformCount'].value < res.data.avatarStats.physBoneTransformCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneTransformCount} [physBoneTransformCount]`)
+            worstAvatarStats['physBoneTransformCount'] = {
+                'value': res.data.avatarStats.physBoneTransformCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['physBoneColliderCount'].value < res.data.avatarStats.physBoneColliderCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneColliderCount} [physBoneColliderCount]`)
+            worstAvatarStats['physBoneColliderCount'] = {
+                'value': res.data.avatarStats.physBoneColliderCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['physBoneCollisionCheckCount'].value < res.data.avatarStats.physBoneCollisionCheckCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneCollisionCheckCount} [physBoneCollisionCheckCount]`)
+            worstAvatarStats['physBoneCollisionCheckCount'] = {
+                'value': res.data.avatarStats.physBoneCollisionCheckCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['contactCount'].value < res.data.avatarStats.contactCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.contactCount} [contactCount]`)
+            worstAvatarStats['contactCount'] = {
+                'value': res.data.avatarStats.contactCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['constraintCount'].value < res.data.avatarStats.constraintCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.constraintCount} [constraintCount]`)
+            worstAvatarStats['constraintCount'] = {
+                'value': res.data.avatarStats.constraintCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['constraintDepth'].value < res.data.avatarStats.constraintDepth) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.constraintDepth} [constraintDepth]`)
+            worstAvatarStats['constraintDepth'] = {
+                'value': res.data.avatarStats.constraintDepth,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['animatorCount'].value < res.data.avatarStats.animatorCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.animatorCount} [animatorCount]`)
+            worstAvatarStats['animatorCount'] = {
+                'value': res.data.avatarStats.animatorCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['boneCount'].value < res.data.avatarStats.boneCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.boneCount} [boneCount]`)
+            worstAvatarStats['boneCount'] = {
+                'value': res.data.avatarStats.boneCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['lightCount'].value < res.data.avatarStats.lightCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.lightCount} [lightCount]`)
+            worstAvatarStats['lightCount'] = {
+                'value': res.data.avatarStats.lightCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['particleSystemCount'].value < res.data.avatarStats.particleSystemCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.particleSystemCount} [particleSystemCount]`)
+            worstAvatarStats['particleSystemCount'] = {
+                'value': res.data.avatarStats.particleSystemCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['totalMaxParticles'].value < res.data.avatarStats.totalMaxParticles) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.totalMaxParticles} [totalMaxParticles]`)
+            worstAvatarStats['totalMaxParticles'] = {
+                'value': res.data.avatarStats.totalMaxParticles,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['meshParticleMaxPolygons'].value < res.data.avatarStats.meshParticleMaxPolygons) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.meshParticleMaxPolygons} [meshParticleMaxPolygons]`)
+            worstAvatarStats['meshParticleMaxPolygons'] = {
+                'value': res.data.avatarStats.meshParticleMaxPolygons,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['trailRendererCount'].value < res.data.avatarStats.trailRendererCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.trailRendererCount} [trailRendererCount]`)
+            worstAvatarStats['trailRendererCount'] = {
+                'value': res.data.avatarStats.trailRendererCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['lineRendererCount'].value < res.data.avatarStats.lineRendererCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.lineRendererCount} [lineRendererCount]`)
+            worstAvatarStats['lineRendererCount'] = {
+                'value': res.data.avatarStats.lineRendererCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['clothCount'].value < res.data.avatarStats.clothCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.clothCount} [clothCount]`)
+            worstAvatarStats['clothCount'] = {
+                'value': res.data.avatarStats.clothCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['totalClothVertices'].value < res.data.avatarStats.totalClothVertices) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.totalClothVertices} [totalClothVertices]`)
+            worstAvatarStats['totalClothVertices'] = {
+                'value': res.data.avatarStats.totalClothVertices,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['physicsColliders'].value < res.data.avatarStats.physicsColliders) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.physicsColliders} [physicsColliders]`)
+            worstAvatarStats['physicsColliders'] = {
+                'value': res.data.avatarStats.physicsColliders,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['physicsRigidbodies'].value < res.data.avatarStats.physicsRigidbodies) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.physicsRigidbodies} [physicsRigidbodies]`)
+            worstAvatarStats['physicsRigidbodies'] = {
+                'value': res.data.avatarStats.physicsRigidbodies,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['audioSourceCount'].value < res.data.avatarStats.audioSourceCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.audioSourceCount} [audioSourceCount]`)
+            worstAvatarStats['audioSourceCount'] = {
+                'value': res.data.avatarStats.audioSourceCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['raycastCount'].value < res.data.avatarStats.raycastCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.raycastCount} [raycastCount]`)
+            worstAvatarStats['raycastCount'] = {
+                'value': res.data.avatarStats.raycastCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['blendShapeCount'].value < res.data.avatarStats.blendShapeCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.blendShapeCount} [blendShapeCount]`)
+            worstAvatarStats['blendShapeCount'] = {
+                'value': res.data.avatarStats.blendShapeCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['cameraCount'].value < res.data.avatarStats.cameraCount) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${res.data.avatarStats.cameraCount} [cameraCount]`)
+            worstAvatarStats['cameraCount'] = {
+                'value': res.data.avatarStats.cameraCount,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['uncompressedSize'].value < res.data.uncompressedSize) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${formatBytes(res.data.uncompressedSize, 2)} [uncompressedSize]`)
+            worstAvatarStats['uncompressedSize'] = {
+                'value': res.data.uncompressedSize,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+        if (worstAvatarStats['fileSize'].value < res.data.fileSize) {
+            console.log(`${loglv().hey}${selflogA} New worst detected: ${formatBytes(res.data.fileSize, 2)} [uncompressedSize]`)
+            worstAvatarStats['fileSize'] = {
+                'value': res.data.fileSize,
+                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+            }
+        }
+
+
         // Summary Chart Data
         avatarStatSummary.totalAvatars++
         avatarStatSummary[res.data.performanceRating]++
@@ -1570,6 +1965,7 @@ async function scanAllAvatarStats() {
                         "physicsColliders": { "label": "Unity Colliders", "values": [] },
                         "physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
                         "audioSourceCount": { "label": "AudioSources", "values": [] },
+                        "raycastCount": { "label": "Raycasts", "values": [] },
                         "blendShapeCount": { "label": "BlendShapes", "values": [] },
                         "cameraCount": { "label": "Cameras", "values": [] },
                         "totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
@@ -1662,6 +2058,7 @@ async function scanListAvatarStats(I_list = []) {
                         "physicsColliders": { "label": "Unity Colliders", "values": [] },
                         "physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
                         "audioSourceCount": { "label": "AudioSources", "values": [] },
+                        "raycastCount": { "label": "Raycasts", "values": [] },
                         "blendShapeCount": { "label": "BlendShapes", "values": [] },
                         "cameraCount": { "label": "Cameras", "values": [] },
                         "totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
@@ -2315,8 +2712,6 @@ function eventGameClose() {
     }
 
     tarFile = 'nothing'
-    tarFilePath = 'nothing'
-
 }
 exports.eventGameClose = eventGameClose;
 
@@ -2409,7 +2804,7 @@ async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, 
                 var vTrAvgT = sort.slice(Math.floor(sort.length * trAvgPercent), Math.floor(sort.length * -trAvgPercent))
                 var vTrAvg = mathSumValues(vTrAvgT) / vTrAvgT.length
 
-                if (key == 'boundsLongest') {
+                /* if (key == 'boundsLongest') {
                     avatarStatSummaryTable.push([
                         avatarStatSummary.stats[key].label,
                         (Math.ceil(vMin * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
@@ -2420,22 +2815,22 @@ async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, 
                         (Math.ceil(vTrAvg * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
                         ''
                     ])
-                } else {
-                    avatarStatSummaryTable.push([
-                        avatarStatSummary.stats[key].label,
-                        Math.ceil(vMin).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                        Math.ceil(vQ1).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                        Math.ceil(vMed).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                        Math.ceil(vQ3).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                        Math.ceil(vMax).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                        Math.ceil(vTrAvg).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-                        ''
-                    ])
-                }
+                } else { */
+                avatarStatSummaryTable.push([
+                    avatarStatSummary.stats[key].label,
+                    Math.ceil(vMin).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                    Math.ceil(vQ1).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                    Math.ceil(vMed).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                    Math.ceil(vQ3).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                    Math.ceil(vMax).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                    Math.ceil(vTrAvg).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+                    ''
+                ])
+                // }
             }
         })
         setTimeout(() => {
-            var tableOptions = { 'drawHorizontalLine': (lineIndex, rowCount) => { return lineIndex === 0 || lineIndex === 1 || lineIndex === 29 || lineIndex === rowCount } }
+            var tableOptions = { 'drawHorizontalLine': (lineIndex, rowCount) => { return lineIndex === 0 || lineIndex === 1 || lineIndex === 30 || lineIndex === rowCount } }
             if (avatarStatSummary.totalAvatars >= 4) {
                 console.log('=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent ✅: ${avatarStatSummary.Excellent}\n         Good 🟢: ${avatarStatSummary.Good}\n       Medium 🟡: ${avatarStatSummary.Medium}\n         Poor 🔴: ${avatarStatSummary.Poor}\n     VeryPoor ❌: ${avatarStatSummary.VeryPoor}`)
                 if (writeToFile == true) {
@@ -2444,6 +2839,8 @@ async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, 
                     })
                 }
             }
+            fs.writeFile('./datasets/worstAvatarStats.json', JSON.stringify(worstAvatarStats), (err) => { if (err) { console.error(err) } })
+
             if (resetData == true) {
                 avatarStatSummary = {
                     "totalAvatars": 0,
@@ -2486,6 +2883,7 @@ async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, 
                         "physicsColliders": { "label": "Unity Colliders", "values": [] },
                         "physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
                         "audioSourceCount": { "label": "AudioSources", "values": [] },
+                        "raycastCount": { "label": "Raycasts", "values": [] },
                         "blendShapeCount": { "label": "BlendShapes", "values": [] },
                         "cameraCount": { "label": "Cameras", "values": [] },
                         "totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
@@ -3369,7 +3767,7 @@ function eventAssetDownload(logOutputLine) {
             assSa.author = avatarauthor
             console.log(`${loglv().log}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarChange]: ${assSa.wearers.toString()} in avatar (${assSa.name} by ${assSa.author})`)
         } catch (err) {
-            console.log(`${loglv().hey}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarFallback]: No Wearer for (${avatarswitchedto} by ${avatarauthor})`)
+            console.log(`${loglv().log}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarFallback]: No Wearer for (${avatarswitchedto} by ${avatarauthor})`)
             avatarStatSummary.seenAvatars.push({ "name": avatarswitchedto, "author": avatarauthor, "wearers": [], "lastAccessed": Date.now() })
         }
 

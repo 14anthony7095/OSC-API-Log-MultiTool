@@ -1,0 +1,130 @@
+{
+    "totalTextureUsage": {
+        "value": 3152544287,
+        "source": "eN7ity's avatar Samara"
+    },
+    "totalPolygons": {
+        "value": 14791598,
+        "source": "Un delivery's avatar emiya komano"
+    },
+    "boundsLongest": {
+        "value": 1.08427425E+36,
+        "source": "SYSTEMREBOOTS's avatar （∗＾＆（）∗＆（）＆（）∗＆）"
+    },
+    "skinnedMeshCount": {
+        "value": 770,
+        "source": "OwnAHole's avatar German Officer"
+    },
+    "meshCount": {
+        "value": 6957,
+        "source": "candcejohnson's avatar laughing coffin public"
+    },
+    "materialSlotsUsed": {
+        "value": 10743,
+        "source": "Un delivery's avatar emiya komano"
+    },
+    "materialCount": {
+        "value": 837,
+        "source": "Repentless666's avatar Spawn of Satan"
+    },
+    "physBoneComponentCount": {
+        "value": 445,
+        "source": "Neixus's avatar 不可以涩涩"
+    },
+    "physBoneTransformCount": {
+        "value": 5382,
+        "source": "泽野弘零's avatar 小白玉-猫"
+    },
+    "physBoneColliderCount": {
+        "value": 211,
+        "source": "sᴇɴʏᴀ's avatar Nokk？"
+    },
+    "physBoneCollisionCheckCount": {
+        "value": 21967,
+        "source": "ᵕ˘ᴋᴀɪxxᴠɪɪ˘ᵕ's avatar ᴊᴇᴀɴɴᴀ"
+    },
+    "contactCount": {
+        "value": 249,
+        "source": "Razz ChaosHowl's avatar Combat System V2 Test"
+    },
+    "constraintCount": {
+        "value": 2662,
+        "source": "Jonnytest's avatar karmaf"
+    },
+    "constraintDepth": {
+        "value": 2662,
+        "source": "Jonnytest's avatar karmaf"
+    },
+    "animatorCount": {
+        "value": 1541,
+        "source": "THUGGIN IN IRAQ's avatar rindo"
+    },
+    "boneCount": {
+        "value": 8489,
+        "source": "༒ȶʀɨƈӄֆȶɛʀ༒'s avatar WIPP"
+    },
+    "lightCount": {
+        "value": 60000042,
+        "source": "ǃRaidenǃ's avatar hajime"
+    },
+    "particleSystemCount": {
+        "value": 1213,
+        "source": "hanenoko's avatar hanenoko 白黒"
+    },
+    "totalMaxParticles": {
+        "value": 345744868169,
+        "source": "Call Me Sleepy's avatar Personal"
+    },
+    "meshParticleMaxPolygons": {
+        "value": 35303500698,
+        "source": "KimeraJin's avatar AdylitKiggy"
+    },
+    "trailRendererCount": {
+        "value": 394,
+        "source": "Neko1X's avatar XChara-Event"
+    },
+    "lineRendererCount": {
+        "value": 20,
+        "source": "webbtail245's avatar Leon Scott Kennedy （Resident Evil 4）"
+    },
+    "clothCount": {
+        "value": 11,
+        "source": "ω I Ł Ł I's avatar Maya Animations"
+    },
+    "totalClothVertices": {
+        "value": 18052,
+        "source": "-Rekka-'s avatar maomao˸3"
+    },
+    "physicsColliders": {
+        "value": 212,
+        "source": "bro-mingo's avatar Ninth Wound"
+    },
+    "physicsRigidbodies": {
+        "value": 205,
+        "source": "PotatoStrangler's avatar The Funniest Valentine"
+    },
+    "audioSourceCount": {
+        "value": 14002,
+        "source": "classіst's avatar Pawn"
+    },
+    "raycastCount": {
+        "value": 32,
+        "source": "14anthony7095's avatar raycast tests"
+    },
+    "blendShapeCount": {
+        "value": 9156,
+        "source": "kokomi_ovo's avatar nyashka⁄⁄"
+    },
+    "cameraCount": {
+        "value": 150,
+        "source": "アズキ。's avatar しなの_アズキカスタムv62"
+    },
+    "uncompressedSize": {
+        "value": 524252003,
+        "source": "EquusDaemonium's avatar Yeen"
+    },
+    "fileSize": {
+        "value": 208682857,
+        "source": "Kingnaldo's avatar Super Manuka Public"
+    }
+}
