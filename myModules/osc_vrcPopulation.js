@@ -8,13 +8,14 @@
 //	--	Libraries	--
 var { loglv, playerCounter, graphTimeRangeMinutes } = require('./config.js');
 const { oscSend, oscEmitter, OSCDataBurst, getOSCDataBurstState } = require('./Interface_osc_v1.js');
-const { getVisitsCount, apiEmitter,logEmitter, getVrchatRunning } = require('./Interface_vrc-ApiLog.cjs');
+const { getVisitsCount, apiEmitter, logEmitter, getVrchatRunning } = require('./Interface_vrc-ApiLog.cjs');
 
 //	--	Global Vars	--
 let selflog = `\x1b[0m[\x1b[36mCounter\x1b[0m]`
 var isActive = false
 var isWorlding = false
 var counterTimer
+var lastUserCountTimeStamp = 0
 var worldTimer
 
 
@@ -25,20 +26,33 @@ function start() {
 	isActive = true
 	console.log(`${loglv().log}${selflog} Starting..`)
 
-	getVisitsCount().then(count => {
-		// console.log(`setting 13 to 0`)
-		OSCDataBurst(13, parseFloat(0))
-		workload(count)
-
-	}).catch((err) => { workload(0, 'Lost Connection') })
+	getVisitsCount()
+		.then(count => {
+			if( Date.now() > lastUserCountTimeStamp + 10_000 ){
+				OSCDataBurst(13, parseFloat(0))
+				workload(count)
+				lastUserCountTimeStamp = Date.now()
+			}
+		})
+		.catch((err) => {
+			lastUserCountTimeStamp = Date.now()
+			workload(0, 'Lost Connection')
+		})
 
 	counterTimer = setInterval(() => {
-		getVisitsCount().then(count => {
-			// console.log(`setting 13 to 0`)
-			OSCDataBurst(13, parseFloat(0))
-			workload(count)
-		}).catch((err) => { workload(0, 'Lost Connection') })
-	}, 10000)
+		getVisitsCount()
+			.then(count => {
+				if( Date.now() > lastUserCountTimeStamp + 10_000 ){
+					OSCDataBurst(13, parseFloat(0))
+					workload(count)
+					lastUserCountTimeStamp = Date.now()
+				}
+			})
+			.catch((err) => {
+				lastUserCountTimeStamp = Date.now()
+				workload(0, 'Lost Connection')
+			})
+	}, 5000)
 }
 start()
 

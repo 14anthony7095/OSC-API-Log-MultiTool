@@ -54,63 +54,40 @@ async function main() {
 
     // Get pending group join requests
     // Get pending group join requests
-    // var gotReqJoinGroups = await vrchat.getUserGroupRequests({ 'path': { 'userId': myVrcID } }); console.log(gotReqJoinGroups.data)
+    // var gotReqJoinGroups = await limiter.req(vrchat.getUserGroupRequests({ 'path': { 'userId': myVrcID } }));    console.log(gotReqJoinGroups.data)
 
 
+    // await foundMemberMutualGroups('grp_b7f14d28-d1cb-4441-8c1a-3632675293ec', undefined, undefined, true, false)
 
-    // Shared groups in YEAR Groups
-    // Shared groups in YEAR Groups
-    /* await foundMemberMutualGroups('grp_4f5d0456-4200-4b2c-8331-78856d1869e4', undefined, undefined, false)
-    await sleep(10000)
-    await foundMemberMutualGroups('', undefined, undefined, false)
-    await sleep(10000)
-    await foundMemberMutualGroups('grp_378c0550-07a1-4cab-aa45-65ad4a817117', undefined, undefined, false)
-    await sleep(10000)
-    await foundMemberMutualGroups('grp_a201a74e-3492-4caf-a4cd-6675cc9f7ef8', undefined, undefined, false)
-    await sleep(10000)
-    await foundMemberMutualGroups('grp_a7b635cc-40fa-4951-ac77-da13b15e6bb4', undefined, undefined, false)
-    await sleep(10000)
-    await foundMemberMutualGroups('grp_93fe1df8-b9f2-4df6-81e9-4e16536f4675', undefined, undefined, false)
-    await sleep(10000)
-    await foundMemberMutualGroups('grp_5eb28410-68df-4609-b0c5-bc98cf754264', undefined, undefined, false)
-    await sleep(10000)
-    await foundMemberMutualGroups('grp_18aa4b68-9118-4716-9a39-42413e54db8c', undefined, undefined, false)
-    await sleep(10000)
-    await foundMemberMutualGroups('grp_768a2c3d-b22c-48d2-aae1-650483c347ea', undefined, undefined, false)
-    await sleep(10000)
-    await foundMemberMutualGroups('grp_243d9742-ce05-4fc3-b399-cd436528c432', undefined, undefined, true) */
 
-    // await foundMemberMutualGroups('grp_226e52dc-2948-4ad4-8bf4-16b2fd2de93a', undefined, undefined, true, true)
-
-    
     // Change AutoBan Orange Status group to an 18+ AgeGate tool
     // Change AutoBan Orange Status group to an 18+ AgeGate tool
-    // var ug = await limiter.req(vrchat.updateGroup({ 'path': { 'groupId': 'grp_cacf2dd8-8958-4412-be78-dedd798e6df4' }, 'body': { "name": "14a's Group for using AgeGate", "shortCode": "14A18P", "description": "", "joinState": "request", "allowGroupJoinPrompt": false, "language": [], "rules": "21+" } })); console.log(ug.data)
+    // var ug = await limiter.req(vrchat.updateGroup({ 'path': { 'groupId': 'grp_cacf2dd8-8958-4412-be78-dedd798e6df4' }, 'body': { "name": "14a's Group for using AgeGate", "shortCode": "14A18P", "description": "", "joinState": "request", "allowGroupJoinPrompt": false, "language": [], "rules": "21+" } })) ; console.log(ug)
 
 
     // var gi = await vrchat.getWorld({ 'path': { 'worldId': 'wrld_0c3caeaa-7224-4800-aa64-bc473ccb18a2' } }); console.log(gi.data)
 
+    // scanGroupAuditLogs()
 
     // searchForAntiFlightWorlds()
 
-    // auditViewGroups('group-members-viewall')
+    // auditViewGroups()
 
     // Get Feedback Reports
     // Get Feedback Reports
-    // var gModr = await vrchat.getModerationReports({ 'query': { 'reportingUserId': myVrcID, 'n': 100, 'offset': 0 } })
-    // console.log(JSON.stringify(gModr.data))
+    // var gModr = await limiter.req(vrchat.getModerationReports({ 'query': { 'reportingUserId': myVrcID, 'n': 100, 'offset': 0 } }));    console.log(gModr.data)
 
 }
 
 async function searchForAntiFlightWorlds() {
-    var sw1 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_collision' } })
-    var sw2 = await vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_stations' } })
+    var sw1 = await limiter.req(vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_collision' } }))
+    var sw2 = await limiter.req(vrchat.searchWorlds({ 'query': { 'n': 100, 'tag': 'admin_disable_avatar_stations' } }))
     console.log('admin_disable_avatar_collision', sw1.data.map((e) => { return e.name }))
     console.log('admin_disable_avatar_stations', sw2.data.map((e) => { return e.name }))
 }
 
 async function auditViewGroups(permissionSearch = 'group-audit-view') {
-    var userAllGroupPermissions = await vrchat.getUserAllGroupPermissions({ 'path': { 'userId': myVrcID } })
+    var userAllGroupPermissions = await limiter.req(vrchat.getUserAllGroupPermissions({ 'path': { 'userId': myVrcID } }))
     var groupWithAuditViewPermission = Object.keys(Object.fromEntries(Object.entries(userAllGroupPermissions.data).filter(([key, value]) => value.includes(permissionSearch))))
     console.log(`Groups with ${permissionSearch} permission`)
     for (const group in groupWithAuditViewPermission) {
@@ -122,6 +99,8 @@ async function auditViewGroups(permissionSearch = 'group-audit-view') {
     }
     // console.groupEnd()
 }
+
+
 
 class ratelimitHandler {
     pause_sec = 30
@@ -226,6 +205,7 @@ class ratelimitHandler {
                                 break;
                         }
                     }
+                    console.log(res.data)
                     resolve(res)
                 }
             }
@@ -423,43 +403,11 @@ logEmitter.on('fileanalysis', async (fileid, fileversion) => {
 
 
 async function fileCheck(fileid, fileversion) {
-    let res = await vrchat.getFile({ 'path': { 'fileId': fileid, 'versionId': fileversion } }); console.log(res)
-    let res2 = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } }); console.log(res2)
+    let res = await limiter.req(vrchat.getFile({ 'path': { 'fileId': fileid, 'versionId': fileversion } })); console.log(res)
+    let res2 = await limiter.req(vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } })); console.log(res2)
 }
 // fileCheck('file_c34d0d63-ce1b-4b1c-ae2d-9c52f2ace478',30)
 
-
-
-// getAvatarThumbnail()
-async function getAvatarThumbnail() {
-    let filter = ['itsBiffy']
-    let res = await getMutualFriends('usr_db6b86b5-19ba-4a3d-ab92-e698c8baef1f')
-    // console.log(res)
-    // file_165709d6-51ab-4b11-b81a-2dddfb2a16a9
-    var filtered = res.filter(e => filter.includes(e.displayName))
-    console.log(filtered)
-}
-
-
-async function getMutualFriends(vrcuserid) {
-    return new Promise(async (resolve, reject) => {
-        let { data: auth } = await vrchat.verifyAuthToken()
-        auth.ok == true ? console.log(auth.token) : console.log(`Couldn't return authcookie for whatever reason..`)
-        const vrcapihttp = `https://api.vrchat.cloud/api/1/`
-        // const vrcuserid = `usr_469ba82d-a0eb-4938-b199-e773af70c8f9`
-        const vrcapiEndpoint = `users/${vrcuserid}/mutuals/friends`
-
-        var getReq = {
-            method: 'GET',
-            headers: { 'User-Agent': '14anthony7095/Curl', 'Cookie': 'auth=' + auth.token }
-        }
-
-        var request = await fetch(vrcapihttp + '' + vrcapiEndpoint, getReq)
-        var data = await request.json()
-        // console.log(data)
-        resolve(data)
-    })
-}
 
 
 async function equipPortal() {

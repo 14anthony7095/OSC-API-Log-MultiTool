@@ -703,9 +703,9 @@ function processLogLine(line) {
             console.log(`${loglv().log}${selflogL} [TON] Impostor is ${tonSusPlayer}`)
         }
         if (line.includes(`Verified Round End`)) {
-            console.log(`${loglv().log}${selflogL} [TON] Intermission.. Ready to start next round.`)
             tonRoundReadyTime = Date.now()
             let avgStartDisplay = new Date(average(tonAvgStartWait)).toISOString()
+            console.log(`${loglv().log}${selflogL} [TON] Intermission.. Ready to start next round. ${tonAvgStartWait.length > 1 ? 'Avg. wait time: ' + avgStartDisplay.substring(11, 19) : ''}`)
 
             if (currentAccountInUse['Agroup'] == true) {
                 tonAvgStartWait.length > 1 ? oscChatBoxV2(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}`, 5000, false, true) : oscChatBoxV2(`~Round ready to start`, 5000, false, true)
@@ -2991,6 +2991,11 @@ function scanaudit(logoutput, groupID) {
                 // console.log(`${loglv().log}${selflog} Audit Log was Empty for ${groupID}`)
             }, 2_000)
         }
+        for (const item in logoutput.results) {
+            // fs.appendFile('./output.txt', JSON.stringify(logoutput.results[item]), (err) => { if (err) { console.error(err) } })
+            
+        }
+
         logoutput.results.forEach(async (l, index, arr) => {
             setTimeout(async () => {
                 // var fetchedData = {
