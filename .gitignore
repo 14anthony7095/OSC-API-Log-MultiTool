@@ -156,5 +156,5 @@ datasets/vrc-X-dis.json
 datasets/vrchat-X-discord.db
 datasets/groupMembers El Alba.json
 datasets/groupMembers-mutualGroups.json
-output_memberMutualGroups.csv
+datasets/output_memberMutualGroups.csv
 datasets/autoAcceptWhitelist.txt

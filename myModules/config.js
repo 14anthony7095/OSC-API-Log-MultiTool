@@ -104,22 +104,49 @@ process.title = `14anthony7095 OSC Multi-Interface`
 /*
 	Internal stuff for Logging
 */
-exports.loglv = function (input) {
-	let terminalTime = new Date(process.uptime() * 1000).toISOString().substring(11, 19)
-	if (input == true) { return `\x1b[32m` }
-	else if (input == false) { return `\x1b[31m` }
-	else {
-		return {
-			debug: `\x1b[0m${terminalTime} \x1b[4mDebug\x1b[0m `,
-			log: `\x1b[0m${terminalTime} Log\x1b[0m `,
-			hey: `\x1b[0m${terminalTime} \x1b[33mHEY\x1b[0m `,
-			warn: `\x1b[0m${terminalTime} \x1b[41m\x1b[5m\x1b[37mWarn\x1b[0m `,
-			true: `\x1b[32m`,
-			false: `\x1b[31m`,
-			reset: `\x1b[0m`
-		}
-	}
+class loglv2 {
+	#terminalTime = 0
+	get time() { return new Date(process.uptime() * 1000).toISOString().substring(11, 19) }
+	/* 
+		Reset = "\x1b[0m"
+		Bright = "\x1b[1m"
+		Dim = "\x1b[2m"
+		Underscore = "\x1b[4m"
+		Blink = "\x1b[5m"
+		Reverse = "\x1b[7m"
+		Hidden = "\x1b[8m"
+
+		FgBlack = "\x1b[30m"
+		FgRed = "\x1b[31m"
+		FgGreen = "\x1b[32m"
+		FgYellow = "\x1b[33m"
+		FgBlue = "\x1b[34m"
+		FgMagenta = "\x1b[35m"
+		FgCyan = "\x1b[36m"
+		FgWhite = "\x1b[37m"
+
+		BgBlack = "\x1b[40m"
+		BgRed = "\x1b[41m"
+		BgGreen = "\x1b[42m"
+		BgYellow = "\x1b[43m"
+		BgBlue = "\x1b[44m"
+		BgMagenta = "\x1b[45m"
+		BgCyan = "\x1b[46m"
+		BgWhite = "\x1b[47m"
+	 */
+	get debug() { return `\x1b[0m${this.time} \x1b[4mDebug\x1b[0m ` }
+	get info() 	{ return `\x1b[0m${this.time} \x1b[36mInfo\x1b[0m  ` }
+	get hey() 	{ return `\x1b[0m${this.time} \x1b[33mHEY\x1b[0m   ` }
+	get warn() 	{ return `\x1b[0m${this.time} \x1b[31mWarn\x1b[0m  ` }
+	get error() { return `\x1b[0m${this.time} \x1b[31m\x1b[5mERROR\x1b[0m ` }
+
+	get true() { return `\x1b[32m` }
+	get false() { return `\x1b[31m` }
+	get reset() { return `\x1b[0m` }
+	bool(bool) { return bool == true ? `\x1b[32m` : `\x1b[31m` }
 }
+exports.loglv = new loglv2()
+
 
 exports.msgVerbose = ttvlevel
 if (ttvlevel == 0) {

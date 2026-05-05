@@ -1,7 +1,7 @@
 // Start up
 var { loglv } = require('./config.js')
 let selflog = `\x1b[0m[\x1b[34mOSC\x1b[0m]`
-console.log(`${loglv().log}${selflog} Loaded`)
+console.log(`${loglv.info}${selflog} Loaded`)
 
 // Event emission
 const { EventEmitter } = require('events')
@@ -15,7 +15,7 @@ var osc = require('osc');
 var udpPort = new osc.UDPPort({ localAddress: '127.0.0.1', localPort: 9001 })
 udpPort.open()
 udpPort.on("ready", function () {
-    console.log(`${loglv().log}${selflog} Ready..`)
+    console.log(`${loglv.info}${selflog} Ready..`)
     oscEmitter.emit('ready', true)
 
     /*

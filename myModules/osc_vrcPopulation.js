@@ -19,12 +19,12 @@ var lastUserCountTimeStamp = 0
 var worldTimer
 
 
-console.log(`${loglv().log}${selflog} Loaded -> ${loglv(playerCounter)}${playerCounter}${loglv().reset}`)
+console.log(`${loglv.info}${selflog} Loaded -> ${loglv.bool(playerCounter)}${playerCounter}${loglv.reset}`)
 
 
 function start() {
 	isActive = true
-	console.log(`${loglv().log}${selflog} Starting..`)
+	console.log(`${loglv.info}${selflog} Starting..`)
 
 	getVisitsCount()
 		.then(count => {
@@ -60,7 +60,7 @@ start()
 function stop() {
 	if (isActive == true) {
 		isActive = false
-		console.log(`${loglv().log}${selflog} Stopping.`)
+		console.log(`${loglv.info}${selflog} Stopping.`)
 	}
 	clearInterval(counterTimer)
 	counterTimer = null

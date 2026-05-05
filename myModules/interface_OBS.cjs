@@ -1,12 +1,13 @@
 const { OBSWebSocket } = require('obs-websocket-js');
 const obs = new OBSWebSocket();
+const { loglv } = require("./config.js");
 const fs = require('fs');
 require('dotenv').config({ 'quiet': true })
 const { logEmitter,apiEmitter } = require("./Interface_vrc-ApiLog.cjs");
 const { oscEmitter } = require('./Interface_osc_v1.js');
 
-
-async function sleep(time) { return new Promise((resolve) => { console.log(`Sleeping for ${time} ms`); setTimeout(() => { resolve(1) }, time); }) }
+var selflog = `\x1b[0m[\x1b[36mOBStudio\x1b[0m]`
+async function sleep(time) { return new Promise((resolve) => { console.log(`${loglv.info}${selflog} Sleeping for ${time} ms`); setTimeout(() => { resolve(1) }, time); }) }
 var connected = false
 async function main() {
     try {
@@ -16,21 +17,21 @@ async function main() {
         } = await obs.connect('ws://192.168.1.210:4455', process.env["OBS_WEBSOCKET_PASSWORD"], {
             rpcVersion: 1
         });
-        console.log(`Connected to server ${obsWebSocketVersion} (using RPC ${negotiatedRpcVersion})`)
+        console.log(`${loglv.info}${selflog} Connected to server ${obsWebSocketVersion} (using RPC ${negotiatedRpcVersion})`)
         connected = true
 
         obs.callBatch([{ requestType: 'SetInputMute', requestData: { inputName: 'VR Mic', inputMuted: true } }])
 
         obs.once('ExitStarted', () => {
             connected = false
-            console.log('OBS started shutdown');
+            console.log(`${loglv.info}${selflog} OBS started shutdown`);
             obs.disconnect()
             setTimeout(() => { main() }, 300000)
         });
 
     } catch (error) {
         connected = false
-        console.error('OBS is not currently running');
+        console.error(`${loglv.info}${selflog} OBS is not currently running`);
         setTimeout(() => { main() }, 300000)
     }
 }

@@ -1,2 +1,0 @@
-node twitch.js
-cmd

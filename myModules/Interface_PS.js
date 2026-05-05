@@ -6,7 +6,7 @@ var deviceCodes= ['0']
 deviceCodes.push( process.env["PISHOCK_DEVICE1"], process.env["PISHOCK_DEVICE2"], process.env["PISHOCK_DEVICE3"])
 
 function PiShock(intensity=1,duration=1,deviceNum=1) {
-    console.log(`${loglv().log}\x1b[0m[\x1b[33mPiShock\x1b[0m] Device ${deviceNum}: Shocking ${intensity}% for ${duration}secs` )
+    console.log(`${loglv.info}\x1b[0m[\x1b[33mPiShock\x1b[0m] Device ${deviceNum}: Shocking ${intensity}% for ${duration}secs` )
     fetch('https://do.pishock.com/api/apioperate/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
