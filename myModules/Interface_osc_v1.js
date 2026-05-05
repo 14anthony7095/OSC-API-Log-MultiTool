@@ -462,7 +462,6 @@ udpPort.on("ready", function () {
 	// require('./interface_midi.js')
 	require('./Interface_twitch.js') // OSC
 	// require('./osc_HeartRate.js') // OSC
-	// require('./osc_32display.js') // OSC
 	require('./sys_taskKill.js') // OSC , LOG
 	require('./osc_vrcPopulation.js') // OSC , API (directly)
 	require('./interface_OBS.cjs')

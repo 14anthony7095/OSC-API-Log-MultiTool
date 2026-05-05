@@ -2614,11 +2614,7 @@ function eventGameClose() {
     }
     console.log(buildLog)
     process.title = `14anthony7095 OSC Multi-Interface`
-    if (vrchatRunning == true) {
-        setTimeout(() => {
-            vrchatRunning = false
-        }, 10_000);
-    }
+    if (vrchatRunning == true) { vrchatRunning = false }
 
     tarFile = 'nothing'
 }
@@ -3360,6 +3356,7 @@ function eventJoinWorld() {
     })
 
     logEmitter.once('avatarQueueFinish', () => {
+        if (vrchatRunning == false) { return }
         var playersInstancePlatforms = playersInstanceObject.reduce((acc, ply) => { acc[ply.platform || loglv.false + 'Joining' + loglv.reset] = (acc[ply.platform] || 0) + 1; return acc }, {})
         var playersInstanceTrustRanks = playersInstanceObject.reduce((acc, ply) => { acc[ply.trust || loglv.false + 'Joining' + loglv.reset] = (acc[ply.trust] || 0) + 1; return acc }, {})
         var playersInstanceStatus = playersInstanceObject.reduce((acc, ply) => { acc[ply.status || loglv.false + 'Joining' + loglv.reset] = (acc[ply.status] || 0) + 1; return acc }, {})

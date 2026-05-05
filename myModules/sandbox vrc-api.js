@@ -61,14 +61,7 @@ async function main() {
 
     // outputPropsData()
 
-
-
-
-    // Change AutoBan Orange Status group to an 18+ AgeGate tool
-    // Change AutoBan Orange Status group to an 18+ AgeGate tool
-    // var ug = await limiter.req(vrchat.updateGroup({ 'path': { 'groupId': 'grp_cacf2dd8-8958-4412-be78-dedd798e6df4' }, 'body': { "name": "14a's Group for using AgeGate", "shortCode": "14A18P", "description": "", "joinState": "request", "allowGroupJoinPrompt": false, "language": [], "rules": "21+" } })); console.log(ug)
-
-    await foundMemberMutualGroups('grp_43fe21c7-0b51-4ff4-80ed-23b73aa0c13e', undefined, undefined, true, false)
+    // await foundMemberMutualGroups('grp_43fe21c7-0b51-4ff4-80ed-23b73aa0c13e', undefined, undefined, true, false)
 
     // var gi = await vrchat.getWorld({ 'path': { 'worldId': 'wrld_0c3caeaa-7224-4800-aa64-bc473ccb18a2' } }); console.log(gi.data)
 
