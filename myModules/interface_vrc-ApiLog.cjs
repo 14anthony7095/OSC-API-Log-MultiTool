@@ -1281,7 +1281,7 @@ async function avatarFileAnalysis(fileid, fileversion) {
 					'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
 				}
 			}
-		} else if (key == 'boundsLongest') {
+		} else if (key == 'bounds') {
 			if (worstAvatarStats['boundsLongest'].value < Math.max(...res.data.avatarStats.bounds)) {
 				console.log(`${loglv.hey}${selflogA} New worst detected: ${Math.max(...res.data.avatarStats.bounds)} [boundsLongest]`)
 				worstAvatarStats['boundsLongest'] = {
@@ -1290,7 +1290,7 @@ async function avatarFileAnalysis(fileid, fileversion) {
 				}
 			}
 		} else {
-			if (worstAvatarStats[key].value < res.data.avatarStats[key]) {
+			if (worstAvatarStats[key]?.value < res.data.avatarStats[key]) {
 				console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats[key]} [${key}]`)
 				worstAvatarStats[key] = {
 					'value': res.data.avatarStats[key],
@@ -2203,6 +2203,8 @@ function eventGameClose() {
 	worldHopTimeout = null
 	clearTimeout(worldHopTimeoutHour)
 	worldHopTimeoutHour = null
+	clearTimeout(userTrustTableTimer)
+	userTrustTableTimer = null
 	console.log(`${loglv.hey}${selflogL} VRChat has Closed.`)
 	apiEmitter.emit('switch', 0, 'world')
 	requestAvatarStatTable(true, 0.05, true)
@@ -2273,12 +2275,30 @@ async function eventPropSpawned(propID) {
 }
 
 function requestUserTrustTable() {
-	var playersInstancePlatforms = playersInstanceObject.reduce((acc, ply) => { acc[ply.platform || loglv.false + 'Joining' + loglv.reset] = (acc[ply.platform] || 0) + 1; return acc }, {})
-	var playersInstanceTrustRanks = playersInstanceObject.reduce((acc, ply) => { acc[ply.trust || loglv.false + 'Joining' + loglv.reset] = (acc[ply.trust] || 0) + 1; return acc }, {})
-	var playersInstanceStatus = playersInstanceObject.reduce((acc, ply) => { acc[ply.status || loglv.false + 'Joining' + loglv.reset] = (acc[ply.status] || 0) + 1; return acc }, {})
-	var a = table(Object.entries(playersInstanceTrustRanks).sort((a, b) => b[1] - a[1]))
-	var b = table(Object.entries(playersInstancePlatforms).sort((a, b) => b[1] - a[1]))
-	var c = table(Object.entries(playersInstanceStatus).sort((a, b) => b[1] - a[1]))
+
+	var playersInstancePlatforms = playersInstanceObject.reduce((acc, ply) => {
+		acc[ply.platform || loglv.false + 'Joining' + loglv.reset] = (acc[ply.platform] || 0) + 1;
+		return acc
+	}, {})
+	playersInstancePlatforms = Object.fromEntries(Object.entries(playersInstancePlatforms).map(e => [e[0], [e[1], Math.round(e[1] / playersInstanceObject.length * 100) + '%']]))
+
+	var playersInstanceTrustRanks = playersInstanceObject.reduce((acc, ply) => {
+		acc[ply.trust || loglv.false + 'Joining' + loglv.reset] = (acc[ply.trust] || 0) + 1;
+		return acc
+	}, {})
+	playersInstanceTrustRanks = Object.fromEntries(Object.entries(playersInstanceTrustRanks).map(e => [e[0], [e[1], Math.round(e[1] / playersInstanceObject.length * 100) + '%']]))
+
+	var playersInstanceStatus = playersInstanceObject.reduce((acc, ply) => {
+		acc[ply.status || loglv.false + 'Joining' + loglv.reset] = (acc[ply.status] || 0) + 1;
+		return acc
+	}, {})
+	playersInstanceStatus = Object.fromEntries(Object.entries(playersInstanceStatus).map(e => [e[0], [e[1], Math.round(e[1] / playersInstanceObject.length * 100) + '%']]))
+	
+	// console.debug(loglv.debug, Object.entries(playersInstanceTrustRanks))
+
+	var a = table(Object.entries(playersInstanceTrustRanks).sort((a, b) => b[1][0] - a[1][0]).map(([k,v])=>[k,...v]))
+	var b = table(Object.entries(playersInstancePlatforms).sort((a, b) => b[1][0] - a[1][0]).map(([k,v])=>[k,...v]))
+	var c = table(Object.entries(playersInstanceStatus).sort((a, b) => b[1][0] - a[1][0]).map(([k,v])=>[k,...v]))
 	var stringDebugTables = table([['Trust Ranks', 'Platform', 'Status'], [a, b, c]])
 	console.log(`${loglv.debug}\n${stringDebugTables}`)
 }
@@ -2894,14 +2914,14 @@ async function eventHeadingToWorld(logOutputLine) {
 
 	G_groupID_last = G_groupID
 	G_worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
-	console.log(`${loglv.debug}${selflogL} World ID ${G_worldID}`)
+	console.log(`${loglv.info}${selflogL} World ID ${G_worldID}`)
 	G_groupMembersVisible = false
 
 	// 2026.01.27 14:20:50 Debug      -  [Behaviour] Destination set: wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5:65895~hidden(usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752)~region(use)
 
 	if (logOutputLine.includes(`~group(grp_`)) {
 		G_groupID = /grp_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
-		console.log(`${loglv.debug}${selflogL} Group ID ${G_groupID}`)
+		console.log(`${loglv.info}${selflogL} Group ID ${G_groupID}`)
 		if (logOutputLine.includes(`~groupAccessType(plus)`)) {
 			instanceType = `groupPlus`
 		} else if (logOutputLine.includes(`~groupAccessType(public)`)) {
@@ -2949,7 +2969,7 @@ async function eventHeadingToWorld(logOutputLine) {
 	if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && G_worldID == 'wrld_f6445b27-037d-4926-b51f-d79ada716b31') { worldHoppers = [] }
 	if (G_groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && G_groupID_last != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && G_groupID != '') { worldHoppers = [] }
 
-	console.log(`${loglv.debug}${selflogL} Instance Type ${instanceType}`)
+	console.log(`${loglv.info}${selflogL} Instance Type ${instanceType}`)
 }
 
 
