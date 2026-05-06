@@ -111,21 +111,21 @@ function oscChatTyping(active) {
 }
 exports.oscChatTyping = oscChatTyping;
 
-function oscChatBoxV3({
-	message='',
-	line1='',
-	line2='',
-	line3='',
-	line4='',
-	line5='',
-	minDisplayTime=1000,
-	playAudio=true,
-	queueMessage=false,
-	forceFrontOfQueue=false,
-	currentQueue=[]
-}){
+/* function oscChatBoxV3({
+	message = '',
+	line1 = '',
+	line2 = '',
+	line3 = '',
+	line4 = '',
+	line5 = '',
+	minDisplayTime = 1000,
+	playAudio = true,
+	queueMessage = false,
+	forceFrontOfQueue = false,
+	currentQueue = []
+}) {
 
-}
+} */
 
 var chatboxQueue = []
 function oscChatBoxV2(I_say = "~", I_display_time_ms = 5000, I_highPriority = false, I_auto_clear = false, isLoop = false, I_playAudio = false, I_splitV = false) {

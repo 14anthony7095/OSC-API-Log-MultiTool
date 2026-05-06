@@ -7,17 +7,17 @@ exports.cmdEmitter = cmdEmitter;
 const cmdInputFile = "C:/Users/14anthony7095/Documents/14aOSC_Multi-Interface/input.txt"
 let selflog = `\x1b[0m[INPUT\x1b[0m]`
 
-cmdEmitter.on('cmd',(cmd,args)=>{
-    console.log(`${loglv.info}${selflog} Command recieved ${cmd} ${args}`)
+cmdEmitter.on('cmd', (cmd, args) => {
+	console.log(`${loglv.info}${selflog} Command recieved ${cmd} ${args}`)
 })
 
-fs.watchFile(cmdInputFile,(current,previous)=>{
-    fs.readFile(cmdInputFile,'utf8',(err,data)=>{
-        if(data != ''){
-            data.split('\n').forEach(c=> {
-                cmdEmitter.emit('cmd' , c.split(' ')[0].trim() , c.slice(c.split(' ')[0].trim().length+1).split(' ') , c )
-            })
-            fs.writeFile(cmdInputFile,'',{encoding:'utf8'},()=>{})
-        }
-    })
+fs.watchFile(cmdInputFile, (current, previous) => {
+	fs.readFile(cmdInputFile, 'utf8', (err, data) => {
+		if (data != '') {
+			data.split('\n').forEach(c => {
+				cmdEmitter.emit('cmd', c.split(' ')[0].trim(), c.slice(c.split(' ')[0].trim().length + 1).split(' '), c)
+			})
+			fs.writeFile(cmdInputFile, '', { encoding: 'utf8' }, () => { })
+		}
+	})
 })

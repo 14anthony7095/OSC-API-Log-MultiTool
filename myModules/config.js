@@ -135,9 +135,9 @@ class loglv2 {
 		BgWhite = "\x1b[47m"
 	 */
 	get debug() { return `\x1b[0m${this.time} \x1b[4mDebug\x1b[0m ` }
-	get info() 	{ return `\x1b[0m${this.time} \x1b[36mInfo\x1b[0m  ` }
-	get hey() 	{ return `\x1b[0m${this.time} \x1b[33mHEY\x1b[0m   ` }
-	get warn() 	{ return `\x1b[0m${this.time} \x1b[31mWarn\x1b[0m  ` }
+	get info() { return `\x1b[0m${this.time} \x1b[36mInfo\x1b[0m  ` }
+	get hey() { return `\x1b[0m${this.time} \x1b[33mHEY\x1b[0m   ` }
+	get warn() { return `\x1b[0m${this.time} \x1b[31mWarn\x1b[0m  ` }
 	get error() { return `\x1b[0m${this.time} \x1b[31m\x1b[5mERROR\x1b[0m ` }
 
 	get true() { return `\x1b[32m` }

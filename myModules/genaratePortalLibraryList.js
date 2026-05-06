@@ -1,73 +1,73 @@
 /*
 -------------------------------------
 
-    VRChat API Requests
+	VRChat API Requests
 
 -------------------------------------
 */
 // Libraries
 const { VRChat } = require("vrchat");
 const fs = require('fs');
-require('dotenv').config({'quiet':true})
+require('dotenv').config({ 'quiet': true })
 
 let selflog = `\x1b[0m[\x1b[33mVRC_API\x1b[0m]`
 console.log(`${selflog} Loaded`)
 
 const vrchat = new VRChat({
-    application: {
-        name: "Api-Osc-Interface_DEV",
-        version: "1.2-DEV",
-        contact: process.env["CONTACT_EMAIL"]
-    },
-    authentication: {
-        credentials: {
-            username: process.env["VRC_ACC_LOGIN_1"],
-            password: process.env["VRC_ACC_PASSWORD_1"],
-            totpSecret: process.env["VRC_ACC_TOTPSECRET_1"]
-        }
-    }
+	application: {
+		name: "Api-Osc-Interface_DEV",
+		version: "1.2-DEV",
+		contact: process.env["CONTACT_EMAIL"]
+	},
+	authentication: {
+		credentials: {
+			username: process.env["VRC_ACC_LOGIN_1"],
+			password: process.env["VRC_ACC_PASSWORD_1"],
+			totpSecret: process.env["VRC_ACC_TOTPSECRET_1"]
+		}
+	}
 });
 
 
 async function main() {
-    const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
-    console.log(`${selflog} Logged in as: ${currentUser.displayName}`);
+	const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
+	console.log(`${selflog} Logged in as: ${currentUser.displayName}`);
 
-    // manualCall()
+	// manualCall()
 
-    // vrchat.getOwnAvatar({'body':{},'query':{''},path:{'userId'}})
-    // var targetGroupLogID_NHI = 'grp_3473d54b-8e10-4752-9548-d77a092051a4' // Nanachi's Hollow Inn
-    // const { data: logOutput_NHI } = await vrchat.getGroupAuditLogs({ path: { groupId: targetGroupLogID_NHI }, query: { n: 100, offset: 0 } })
-    // console.log(logOutput_NHI)
+	// vrchat.getOwnAvatar({'body':{},'query':{''},path:{'userId'}})
+	// var targetGroupLogID_NHI = 'grp_3473d54b-8e10-4752-9548-d77a092051a4' // Nanachi's Hollow Inn
+	// const { data: logOutput_NHI } = await vrchat.getGroupAuditLogs({ path: { groupId: targetGroupLogID_NHI }, query: { n: 100, offset: 0 } })
+	// console.log(logOutput_NHI)
 
-    // vrchat.uploadPrint({'body':{''}})
+	// vrchat.uploadPrint({'body':{''}})
 
-    // let { data: gfg } = await vrchat.getFavoriteGroups({ 'query':{ 'n':100, 'offset':0, 'ownerId':'usr_bea83aa3-dc28-4a08-8a55-5a5dabb66bc3' } })
-    // console.log(gfg)
+	// let { data: gfg } = await vrchat.getFavoriteGroups({ 'query':{ 'n':100, 'offset':0, 'ownerId':'usr_bea83aa3-dc28-4a08-8a55-5a5dabb66bc3' } })
+	// console.log(gfg)
 
-    // let getnots = await vrchat.getNotifications(); console.log(getnots)
-    // let notifRes = await vrchat.getNotification({ 'path':{ 'notificationId':'not_cf3adb23-de16-4c3a-a57c-ab7a9aa32aeb' } }); console.log(notifRes)
+	// let getnots = await vrchat.getNotifications(); console.log(getnots)
+	// let notifRes = await vrchat.getNotification({ 'path':{ 'notificationId':'not_cf3adb23-de16-4c3a-a57c-ab7a9aa32aeb' } }); console.log(notifRes)
 
-    genaratePortalLibrary()
+	genaratePortalLibrary()
 
 }
 
 function updateProgress(current, total) {
-    var progressBarTextGraphic = `[`
-    let percent = Math.round(current / total * 100)
-    let invPercent = 100 - percent
-    for (let index = 0; index < percent; index++) { progressBarTextGraphic += `█` }
-    for (let index = 0; index < invPercent; index++) { progressBarTextGraphic += `░` }
-    progressBarTextGraphic += `]`
-    console.log(progressBarTextGraphic+' '+percent+'%')
+	var progressBarTextGraphic = `[`
+	let percent = Math.round(current / total * 100)
+	let invPercent = 100 - percent
+	for (let index = 0; index < percent; index++) { progressBarTextGraphic += `█` }
+	for (let index = 0; index < invPercent; index++) { progressBarTextGraphic += `░` }
+	progressBarTextGraphic += `]`
+	console.log(progressBarTextGraphic + ' ' + percent + '%')
 }
 
 console.log(`[0%] Downloading first thumbnail`)
 require('https').get('https://i.imgur.com/vphs047.png', (res) => {
-    res.pipe(fs.createWriteStream('./worldThumbnails/dl/00000.png'))
-    setTimeout(() => {
-        main()
-    }, 2_000)
+	res.pipe(fs.createWriteStream('./worldThumbnails/dl/00000.png'))
+	setTimeout(() => {
+		main()
+	}, 2_000)
 })
 
 
@@ -84,117 +84,117 @@ var worldHopFinds04Array = []
 var personalCollectionArray = []
 var friendsOnlyWorldsArray = []
 function genaratePortalLibrary() {
-    console.log(`[0%] Starting Genaration`)
-    let thumbnailCount = 0
-    let totalCount = 0
-    fs.readFile('./worldThumbnails/worldDatabase.json', 'utf8', async (err, data) => {
-        console.log(`[0%] Loaded world database file`)
-        let worldJson = JSON.parse(data)
-        Object.keys(worldJson).forEach(key => { totalCount = totalCount + worldJson[key].length })
-        let indexcount = 1
-        await scan(worldJson.myworlds, indexcount);indexcount++
-        await scan(worldJson.games_activity, indexcount);indexcount++
-        await scan(worldJson.private_worlds, indexcount);indexcount++
-        await scan(worldJson.worldhop_01, indexcount);indexcount++
-        await scan(worldJson.worldhop_02, indexcount);indexcount++
-        await scan(worldJson.worldhop_03, indexcount);indexcount++
-        await scan(worldJson.worldhop_04, indexcount);indexcount++
-        await scan(worldJson.personal_collection, indexcount);indexcount++
+	console.log(`[0%] Starting Genaration`)
+	let thumbnailCount = 0
+	let totalCount = 0
+	fs.readFile('./worldThumbnails/worldDatabase.json', 'utf8', async (err, data) => {
+		console.log(`[0%] Loaded world database file`)
+		let worldJson = JSON.parse(data)
+		Object.keys(worldJson).forEach(key => { totalCount = totalCount + worldJson[key].length })
+		let indexcount = 1
+		await scan(worldJson.myworlds, indexcount); indexcount++
+		await scan(worldJson.games_activity, indexcount); indexcount++
+		await scan(worldJson.private_worlds, indexcount); indexcount++
+		await scan(worldJson.worldhop_01, indexcount); indexcount++
+		await scan(worldJson.worldhop_02, indexcount); indexcount++
+		await scan(worldJson.worldhop_03, indexcount); indexcount++
+		await scan(worldJson.worldhop_04, indexcount); indexcount++
+		await scan(worldJson.personal_collection, indexcount); indexcount++
 
-        let writeString = {
-            "ShowPrivateWorld": true, "ReverseCategorys": false, "Roles": [
-                { "RoleName": "Me", "DisplayNames": ["14anthony7069", "14anthony7095", "14anthony7096", "14anthony7097"] }
-            ],
-            "Categorys": [
-                { "Category": "My Worlds", "Worlds": myWorldsArray },
-                { "Category": "Games & Activity", "Worlds": gameWorldsArray },
-                { "Category": "Private Worlds", "Worlds": privateWorldsArray },
-                { "Category": "World Hop (1)", "Worlds": worldHopFinds01Array },
-                { "Category": "World Hop (2)", "Worlds": worldHopFinds02Array },
-                { "Category": "World Hop (3)", "Worlds": worldHopFinds03Array },
-                { "Category": "World Hop (4)", "Worlds": worldHopFinds04Array },
-                { "Category": "Personal Collection", "Worlds": personalCollectionArray, "PermittedRoles": ["Me"] }
-            ]
-        }
-        fs.writeFile('./worldThumbnails/output/worlds.json', JSON.stringify(writeString), (err) => {
-            console.log(`[100%] Writing to worlds.json`)
-            if (err) { console.log(err); return }
-        })
+		let writeString = {
+			"ShowPrivateWorld": true, "ReverseCategorys": false, "Roles": [
+				{ "RoleName": "Me", "DisplayNames": ["14anthony7069", "14anthony7095", "14anthony7096", "14anthony7097"] }
+			],
+			"Categorys": [
+				{ "Category": "My Worlds", "Worlds": myWorldsArray },
+				{ "Category": "Games & Activity", "Worlds": gameWorldsArray },
+				{ "Category": "Private Worlds", "Worlds": privateWorldsArray },
+				{ "Category": "World Hop (1)", "Worlds": worldHopFinds01Array },
+				{ "Category": "World Hop (2)", "Worlds": worldHopFinds02Array },
+				{ "Category": "World Hop (3)", "Worlds": worldHopFinds03Array },
+				{ "Category": "World Hop (4)", "Worlds": worldHopFinds04Array },
+				{ "Category": "Personal Collection", "Worlds": personalCollectionArray, "PermittedRoles": ["Me"] }
+			]
+		}
+		fs.writeFile('./worldThumbnails/output/worlds.json', JSON.stringify(writeString), (err) => {
+			console.log(`[100%] Writing to worlds.json`)
+			if (err) { console.log(err); return }
+		})
 
-        thumbnailCount++
-        updateProgress(thumbnailCount, totalCount)
-        console.log(`Downloading final thumbnail`)
-        require('https').get('https://i.imgur.com/vphs047.png', (res) => {
-            let tnctxt = `${thumbnailCount}`.padStart(5, '0')
-            res.pipe(fs.createWriteStream('./worldThumbnails/dl/' + tnctxt + '.png'))
-            setTimeout(() => {
-                process.exit()
-            }, 10_000)
-        })
+		thumbnailCount++
+		updateProgress(thumbnailCount, totalCount)
+		console.log(`Downloading final thumbnail`)
+		require('https').get('https://i.imgur.com/vphs047.png', (res) => {
+			let tnctxt = `${thumbnailCount}`.padStart(5, '0')
+			res.pipe(fs.createWriteStream('./worldThumbnails/dl/' + tnctxt + '.png'))
+			setTimeout(() => {
+				process.exit()
+			}, 10_000)
+		})
 
-    })
+	})
 
-    function scan(worldIDarr, worldList) {
-        updateProgress(thumbnailCount, totalCount)
-        console.log(`Scanning list ${worldList}`)
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve(true)
-            }, 2000 + (worldIDarr.length * 2000))
+	function scan(worldIDarr, worldList) {
+		updateProgress(thumbnailCount, totalCount)
+		console.log(`Scanning list ${worldList}`)
+		return new Promise((resolve, reject) => {
+			setTimeout(() => {
+				resolve(true)
+			}, 2000 + (worldIDarr.length * 2000))
 
-            worldIDarr.forEach((wID, index, arr) => {
-                setTimeout(async () => {
-                    updateProgress(thumbnailCount, totalCount)
-                    console.log(`Looking up world details for ${wID}`)
-                    let { data: worldData } = await vrchat.getWorld({ 'path': { 'worldId': wID } })
+			worldIDarr.forEach((wID, index, arr) => {
+				setTimeout(async () => {
+					updateProgress(thumbnailCount, totalCount)
+					console.log(`Looking up world details for ${wID}`)
+					let { data: worldData } = await vrchat.getWorld({ 'path': { 'worldId': wID } })
 
-                    if (worldData == undefined) { console.log(`[WARNING] world 404 Error - ${wID}`) }
+					if (worldData == undefined) { console.log(`[WARNING] world 404 Error - ${wID}`) }
 
-                    try {
-                        thumbnailCount++
+					try {
+						thumbnailCount++
 
-                        let dataPush = { "ID": worldData.id, "Name": worldData.name, "RecommendedCapacity": worldData.recommendedCapacity, "Capacity": worldData.capacity, "Description": worldData.description, "Platform": { "PC": (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'standalonewindows') != undefined), "Android": (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'android') != undefined), "iOS": (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'ios') != undefined) }, "ReleaseStatus": worldData.releaseStatus }
+						let dataPush = { "ID": worldData.id, "Name": worldData.name, "RecommendedCapacity": worldData.recommendedCapacity, "Capacity": worldData.capacity, "Description": worldData.description, "Platform": { "PC": (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'standalonewindows') != undefined), "Android": (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'android') != undefined), "iOS": (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'ios') != undefined) }, "ReleaseStatus": worldData.releaseStatus }
 
-                        switch (worldList) {
-                            case 1: myWorldsArray.push(dataPush); break;
-                            case 2: gameWorldsArray.push(dataPush); break;
-                            case 3: privateWorldsArray.push(dataPush); break;
-                            case 4: worldHopFinds01Array.push(dataPush); break;
-                            case 5: worldHopFinds02Array.push(dataPush); break;
-                            case 6: worldHopFinds03Array.push(dataPush); break;
-                            case 7: worldHopFinds04Array.push(dataPush); break;
-                            case 8: personalCollectionArray.push(dataPush); break;
-                            default: break;
-                        }
+						switch (worldList) {
+							case 1: myWorldsArray.push(dataPush); break;
+							case 2: gameWorldsArray.push(dataPush); break;
+							case 3: privateWorldsArray.push(dataPush); break;
+							case 4: worldHopFinds01Array.push(dataPush); break;
+							case 5: worldHopFinds02Array.push(dataPush); break;
+							case 6: worldHopFinds03Array.push(dataPush); break;
+							case 7: worldHopFinds04Array.push(dataPush); break;
+							case 8: personalCollectionArray.push(dataPush); break;
+							default: break;
+						}
 
-                        updateProgress(thumbnailCount, totalCount)
-                        console.log(`Downloading thumbnail for ${worldData.name}`)
-                        require('https').get(worldData.thumbnailImageUrl, { 'headers': { 'User-Agent': "NodeJS/14anthony7095" } }, (res) => {
-                            // console.log(res)
-                            require('https').get(res.headers.location, (res2) => {
-                                let tnctxt = `${thumbnailCount}`.padStart(5, '0')
-                                updateProgress(thumbnailCount, totalCount)
-                                console.log(`Saved as ${tnctxt}.png`)
-                                res2.pipe(fs.createWriteStream('./worldThumbnails/dl/' + tnctxt + '.png'))
-                            })
-                        })
+						updateProgress(thumbnailCount, totalCount)
+						console.log(`Downloading thumbnail for ${worldData.name}`)
+						require('https').get(worldData.thumbnailImageUrl, { 'headers': { 'User-Agent': "NodeJS/14anthony7095" } }, (res) => {
+							// console.log(res)
+							require('https').get(res.headers.location, (res2) => {
+								let tnctxt = `${thumbnailCount}`.padStart(5, '0')
+								updateProgress(thumbnailCount, totalCount)
+								console.log(`Saved as ${tnctxt}.png`)
+								res2.pipe(fs.createWriteStream('./worldThumbnails/dl/' + tnctxt + '.png'))
+							})
+						})
 
-                    } catch (error) {
-                        console.log(error)
-                        totalCount--
-                        updateProgress(thumbnailCount, totalCount)
-                        console.log(`Downloading placeholder thumbnail for ${wID}`)
-                        require('https').get('https://i.imgur.com/vphs047.png', (res) => {
-                            let tnctxt = `${thumbnailCount}`.padStart(5, '0')
-                            res.pipe(fs.createWriteStream('./worldThumbnails/dl/' + tnctxt + '.png'))
-                        })
-                    }
+					} catch (error) {
+						console.log(error)
+						totalCount--
+						updateProgress(thumbnailCount, totalCount)
+						console.log(`Downloading placeholder thumbnail for ${wID}`)
+						require('https').get('https://i.imgur.com/vphs047.png', (res) => {
+							let tnctxt = `${thumbnailCount}`.padStart(5, '0')
+							res.pipe(fs.createWriteStream('./worldThumbnails/dl/' + tnctxt + '.png'))
+						})
+					}
 
-                }, index * 2000)
+				}, index * 2000)
 
-            })
-        })
+			})
+		})
 
-    }
+	}
 }
 

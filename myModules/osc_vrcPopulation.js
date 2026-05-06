@@ -28,7 +28,7 @@ function start() {
 
 	getVisitsCount()
 		.then(count => {
-			if( Date.now() > lastUserCountTimeStamp + 10_000 ){
+			if (Date.now() > lastUserCountTimeStamp + 10_000) {
 				OSCDataBurst(13, parseFloat(0))
 				workload(count)
 				lastUserCountTimeStamp = Date.now()
@@ -42,7 +42,7 @@ function start() {
 	counterTimer = setInterval(() => {
 		getVisitsCount()
 			.then(count => {
-				if( Date.now() > lastUserCountTimeStamp + 10_000 ){
+				if (Date.now() > lastUserCountTimeStamp + 10_000) {
 					OSCDataBurst(13, parseFloat(0))
 					workload(count)
 					lastUserCountTimeStamp = Date.now()

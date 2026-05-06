@@ -378,7 +378,7 @@ ${loglv.info}${selflog} \x1b[33m${partalmsgpercent}% of message was not shown in
 	if (msgVerbose >= 1 && isTalking == false) { saySpeak() }
 });
 
-const { apiEmitter,logEmitter } = require("./Interface_vrc-ApiLog.cjs");
+const { apiEmitter, logEmitter } = require("./Interface_vrc-ApiLog.cjs");
 const { getOBSstate } = require('./interface_OBS.cjs');
 apiEmitter.on('fetchedDistThumbnail', (url, name, authorname, worldId) => {
 	if (getOBSstate() == true) {
