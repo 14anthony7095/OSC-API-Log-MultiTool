@@ -37,7 +37,7 @@ let selflogL = `\x1b[0m[\x1b[32mVRC_Log\x1b[0m]`
 let selflogA = `\x1b[0m[\x1b[33mVRC_API\x1b[0m]`
 let selflogWS = `\x1b[0m[\x1b[33mVRC_WebSocket\x1b[0m]`
 var path = 'C:/Users/14anthony7095/AppData/LocalLow/VRChat/VRChat/'
-var verboseAvatarStatLogging = false
+var verboseAvatarStatLogging = true
 var tarFile = 'nothing'
 var tarFileSize = 0
 var tarFilePath = 'nothing'
@@ -291,7 +291,7 @@ function socket_VRC_API_Connect() {
                     console.log(`${loglv.info}${selflogWS} [${JSON.parse(line).type}] ${wsContent.message} - ${wsContent.link.slice(6)}`)
 
                     // Auto Block if not long enough
-                    if (wsContent.link.slice(6) == getInstanceGroupID() && Date.now() < (worldjointimestamp + 300_000)) {
+                    if (wsContent.link.slice(6) == G_groupID && Date.now() < (worldjointimestamp + 300_000)) {
 
                         if (currentAccountInUse['Agroup'] == true) {
                             oscChatBoxV2(`Group performed an undesirable action.\vTaking countermeasures`, 10_000, true, true, false, false)
@@ -535,14 +535,8 @@ function updateWatcher() {
 
 oscSend('/avatar/parameters/log/instance_closed', false)
 
-function getPlayersInInstance() { return playersInInstance }
-exports.getPlayersInInstance = getPlayersInInstance;
-function getPlayersInstanceObject() { return playersInstanceObject }
-exports.getPlayersInstanceObject = getPlayersInstanceObject;
 function getVrchatRunning() { return vrchatRunning }
 exports.getVrchatRunning = getVrchatRunning;
-function getInstanceGroupID() { return G_groupID }
-exports.getInstanceGroupID = getInstanceGroupID;
 
 function average(array) {
     if (array.length == 0) { return 0 }
@@ -963,7 +957,7 @@ async function avatarFileAnalysis(fileid, fileversion) {
     var raycastCount = Math.round(res.data.avatarStats.raycastCount / avatarStatWeights.raycastCount)
     var statPunish = []
 
-    /*if (getInstanceGroupID() == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+    /*if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
         if (res.data.avatarStats.totalTextureUsage > 83886080) {
             if (totalTextureUsage > avatarStatWeights.lowerLimitWeight) {
                 warnbox += `\v(x${Math.round(totalTextureUsage)}) Texture Mem ${vramTexsize}`;
@@ -1251,270 +1245,75 @@ async function avatarFileAnalysis(fileid, fileversion) {
         totalavatareval += `\n              Raycasts:                  ${raycastCount} EV ${raycastCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.raycastCount : ''}`
     }
     if (blendShapeCount > avatarStatWeights.lowerLimitWeight) {
-        // warnbox += `\v(x${blendShapeCount}) BlendShapes ${res.data.avatarStats.blendShapeCount}`;
         statPunish.push({
             "weight": 28,
             "multi": Math.round(blendShapeCount),
             "log": `skip`,
-            // "log": `\v(x${blendShapeCount}) BlendShapes ${res.data.avatarStats.blendShapeCount}`,
             "print": `\n              BlendShapes:               ${blendShapeCount} EV ${blendShapeCount >= avatarStatWeights.higherLimitWeight ? '⚠️🧲' : ''}`
         })
         totalavatareval += `\n              BlendShapes:               ${blendShapeCount} EV ${blendShapeCount >= avatarStatWeights.higherLimitWeight ? '⚠️🧲' : ''}`
     }
     if (cameraCount > avatarStatWeights.lowerLimitWeight) {
-        // warnbox += `\v(x${cameraCount}) Cameras ${res.data.avatarStats.cameraCount}`;
         statPunish.push({
             "weight": 29,
             "multi": Math.round(cameraCount),
             "log": `skip`,
-            // "log": `\v(x${cameraCount}) Cameras ${res.data.avatarStats.cameraCount}`,
             "print": `\n              Camera Count:              ${cameraCount} EV ${cameraCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.cameraCount : ''}`
         })
         totalavatareval += `\n              Camera Count:              ${cameraCount} EV ${cameraCount >= avatarStatWeights.higherLimitWeight ? '⚠️' + res.data.avatarStats.cameraCount : ''}`
     }
     if (uncompressedSize > avatarStatWeights.lowerLimitWeight) {
-
-        // warnbox += `\v(x${uncompressedSize}) RAM ${uncompresssize}`;
         statPunish.push({
             "weight": 30,
             "multi": Math.round(uncompressedSize),
             "log": `skip`,
-            // "log": `\v(x${uncompressedSize}) RAM ${uncompresssize}`,
             "print": `\n              Uncompressed Size:         ${uncompressedSize} EV ${uncompressedSize >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
         })
         totalavatareval += `\n              Uncompressed Size:         ${uncompressedSize} EV ${uncompressedSize >= avatarStatWeights.higherLimitWeight ? '⚠️🐏' : ''}`
     }
 
-    if (worstAvatarStats['totalTextureUsage'].value < res.data.avatarStats.totalTextureUsage) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${await formatBytes(res.data.avatarStats.totalTextureUsage, 2)} [totalTextureUsage]`)
-        worstAvatarStats['totalTextureUsage'] = {
-            'value': res.data.avatarStats.totalTextureUsage,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+    Object.keys(res.data.avatarStats).forEach((key, index, arr) => {
+        if (key == 'uncompressedSize' || key == 'totalTextureUsage' || key == 'fileSize') {
+            if (worstAvatarStats[key].value < res.data[key]) {
+                console.log(`${loglv.hey}${selflogA} New worst detected: ${formatBytes(res.data[key], 2)} [${key}]`)
+                worstAvatarStats[key] = {
+                    'value': res.data[key],
+                    'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+                }
+            }
+        } else if (key == 'boundsLongest') {
+            if (worstAvatarStats['boundsLongest'].value < Math.max(...res.data.avatarStats.bounds)) {
+                console.log(`${loglv.hey}${selflogA} New worst detected: ${Math.max(...res.data.avatarStats.bounds)} [boundsLongest]`)
+                worstAvatarStats['boundsLongest'] = {
+                    'value': Math.max(...res.data.avatarStats.bounds),
+                    'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+                }
+            }
+        } else {
+            if (worstAvatarStats[key].value < res.data.avatarStats[key]) {
+                console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats[key]} [${key}]`)
+                worstAvatarStats[key] = {
+                    'value': res.data.avatarStats[key],
+                    'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+                }
+            }
         }
-    }
-    if (worstAvatarStats['totalPolygons'].value < res.data.avatarStats.totalPolygons) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.totalPolygons} [totalPolygons]`)
-        worstAvatarStats['totalPolygons'] = {
-            'value': res.data.avatarStats.totalPolygons,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['boundsLongest'].value < Math.max(...res.data.avatarStats.bounds)) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${Math.max(...res.data.avatarStats.bounds)} [boundsLongest]`)
-        worstAvatarStats['boundsLongest'] = {
-            'value': Math.max(...res.data.avatarStats.bounds),
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['skinnedMeshCount'].value < res.data.avatarStats.skinnedMeshCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.skinnedMeshCount} [skinnedMeshCount]`)
-        worstAvatarStats['skinnedMeshCount'] = {
-            'value': res.data.avatarStats.skinnedMeshCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['meshCount'].value < res.data.avatarStats.meshCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.meshCount} [meshCount]`)
-        worstAvatarStats['meshCount'] = {
-            'value': res.data.avatarStats.meshCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['materialSlotsUsed'].value < res.data.avatarStats.materialSlotsUsed) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.materialSlotsUsed} [materialSlotsUsed]`)
-        worstAvatarStats['materialSlotsUsed'] = {
-            'value': res.data.avatarStats.materialSlotsUsed,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['materialCount'].value < res.data.avatarStats.materialCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.materialCount} [materialCount]`)
-        worstAvatarStats['materialCount'] = {
-            'value': res.data.avatarStats.materialCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['physBoneComponentCount'].value < res.data.avatarStats.physBoneComponentCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneComponentCount} [physBoneComponentCount]`)
-        worstAvatarStats['physBoneComponentCount'] = {
-            'value': res.data.avatarStats.physBoneComponentCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['physBoneTransformCount'].value < res.data.avatarStats.physBoneTransformCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneTransformCount} [physBoneTransformCount]`)
-        worstAvatarStats['physBoneTransformCount'] = {
-            'value': res.data.avatarStats.physBoneTransformCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['physBoneColliderCount'].value < res.data.avatarStats.physBoneColliderCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneColliderCount} [physBoneColliderCount]`)
-        worstAvatarStats['physBoneColliderCount'] = {
-            'value': res.data.avatarStats.physBoneColliderCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['physBoneCollisionCheckCount'].value < res.data.avatarStats.physBoneCollisionCheckCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneCollisionCheckCount} [physBoneCollisionCheckCount]`)
-        worstAvatarStats['physBoneCollisionCheckCount'] = {
-            'value': res.data.avatarStats.physBoneCollisionCheckCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['contactCount'].value < res.data.avatarStats.contactCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.contactCount} [contactCount]`)
-        worstAvatarStats['contactCount'] = {
-            'value': res.data.avatarStats.contactCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['constraintCount'].value < res.data.avatarStats.constraintCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.constraintCount} [constraintCount]`)
-        worstAvatarStats['constraintCount'] = {
-            'value': res.data.avatarStats.constraintCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['constraintDepth'].value < res.data.avatarStats.constraintDepth) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.constraintDepth} [constraintDepth]`)
-        worstAvatarStats['constraintDepth'] = {
-            'value': res.data.avatarStats.constraintDepth,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['animatorCount'].value < res.data.avatarStats.animatorCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.animatorCount} [animatorCount]`)
-        worstAvatarStats['animatorCount'] = {
-            'value': res.data.avatarStats.animatorCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['boneCount'].value < res.data.avatarStats.boneCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.boneCount} [boneCount]`)
-        worstAvatarStats['boneCount'] = {
-            'value': res.data.avatarStats.boneCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['lightCount'].value < res.data.avatarStats.lightCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.lightCount} [lightCount]`)
-        worstAvatarStats['lightCount'] = {
-            'value': res.data.avatarStats.lightCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['particleSystemCount'].value < res.data.avatarStats.particleSystemCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.particleSystemCount} [particleSystemCount]`)
-        worstAvatarStats['particleSystemCount'] = {
-            'value': res.data.avatarStats.particleSystemCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['totalMaxParticles'].value < res.data.avatarStats.totalMaxParticles) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.totalMaxParticles} [totalMaxParticles]`)
-        worstAvatarStats['totalMaxParticles'] = {
-            'value': res.data.avatarStats.totalMaxParticles,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['meshParticleMaxPolygons'].value < res.data.avatarStats.meshParticleMaxPolygons) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.meshParticleMaxPolygons} [meshParticleMaxPolygons]`)
-        worstAvatarStats['meshParticleMaxPolygons'] = {
-            'value': res.data.avatarStats.meshParticleMaxPolygons,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['trailRendererCount'].value < res.data.avatarStats.trailRendererCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.trailRendererCount} [trailRendererCount]`)
-        worstAvatarStats['trailRendererCount'] = {
-            'value': res.data.avatarStats.trailRendererCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['lineRendererCount'].value < res.data.avatarStats.lineRendererCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.lineRendererCount} [lineRendererCount]`)
-        worstAvatarStats['lineRendererCount'] = {
-            'value': res.data.avatarStats.lineRendererCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['clothCount'].value < res.data.avatarStats.clothCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.clothCount} [clothCount]`)
-        worstAvatarStats['clothCount'] = {
-            'value': res.data.avatarStats.clothCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['totalClothVertices'].value < res.data.avatarStats.totalClothVertices) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.totalClothVertices} [totalClothVertices]`)
-        worstAvatarStats['totalClothVertices'] = {
-            'value': res.data.avatarStats.totalClothVertices,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['physicsColliders'].value < res.data.avatarStats.physicsColliders) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.physicsColliders} [physicsColliders]`)
-        worstAvatarStats['physicsColliders'] = {
-            'value': res.data.avatarStats.physicsColliders,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['physicsRigidbodies'].value < res.data.avatarStats.physicsRigidbodies) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.physicsRigidbodies} [physicsRigidbodies]`)
-        worstAvatarStats['physicsRigidbodies'] = {
-            'value': res.data.avatarStats.physicsRigidbodies,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['audioSourceCount'].value < res.data.avatarStats.audioSourceCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.audioSourceCount} [audioSourceCount]`)
-        worstAvatarStats['audioSourceCount'] = {
-            'value': res.data.avatarStats.audioSourceCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['raycastCount'].value < res.data.avatarStats.raycastCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.raycastCount} [raycastCount]`)
-        worstAvatarStats['raycastCount'] = {
-            'value': res.data.avatarStats.raycastCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['blendShapeCount'].value < res.data.avatarStats.blendShapeCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.blendShapeCount} [blendShapeCount]`)
-        worstAvatarStats['blendShapeCount'] = {
-            'value': res.data.avatarStats.blendShapeCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['cameraCount'].value < res.data.avatarStats.cameraCount) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.cameraCount} [cameraCount]`)
-        worstAvatarStats['cameraCount'] = {
-            'value': res.data.avatarStats.cameraCount,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['uncompressedSize'].value < res.data.uncompressedSize) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${await formatBytes(res.data.uncompressedSize, 2)} [uncompressedSize]`)
-        worstAvatarStats['uncompressedSize'] = {
-            'value': res.data.uncompressedSize,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
-    if (worstAvatarStats['fileSize'].value < res.data.fileSize) {
-        console.log(`${loglv.hey}${selflogA} New worst detected: ${await formatBytes(res.data.fileSize, 2)} [uncompressedSize]`)
-        worstAvatarStats['fileSize'] = {
-            'value': res.data.fileSize,
-            'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-        }
-    }
+    })
 
 
+    // Chatbox Stats
     var statPunished = statPunish.sort((a, b) => {
         const sortmulti = b.multi - a.multi; if (sortmulti !== 0) { return sortmulti }
         const sortweight = a.weight - b.weight; if (sortweight !== 0) { return sortweight }
     }).filter(r => r.multi >= 2 && r.log != 'skip')
+
+    // Chatbox Stats - El Alba
+    var statPunishedEA = statPunish.sort((a, b) => {
+        const sortmulti = b.multi - a.multi; if (sortmulti !== 0) { return sortmulti }
+        const sortweight = a.weight - b.weight; if (sortweight !== 0) { return sortweight }
+    }).filter(r => r.multi >= 2 && r.weight == 0) // filter only Texture Memory - weight 0
+
+    // Console Stats
     var statTotalAvatarEV = statPunish.sort((a, b) => {
         const sortmulti = b.multi - a.multi; if (sortmulti !== 0) { return sortmulti }
         const sortweight = a.weight - b.weight; if (sortweight !== 0) { return sortweight }
@@ -1527,7 +1326,11 @@ async function avatarFileAnalysis(fileid, fileversion) {
     if (statPunished.length > 0 && statWarnings == true) {
         console.log('currentAccountInUse', currentAccountInUse['Agroup'])
         if (currentAccountInUse['Agroup'] == true) {
-            oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunished[0].log)}${fitChars(statPunished[1]?.log)}${fitChars(statPunished[2]?.log)}`, 15000, false, true, false, false, true)
+            if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+                oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunishedEA[0].log)}${fitChars(statPunishedEA[1]?.log)}${fitChars(statPunishedEA[2]?.log)}`, 15000, false, true, false, false, true)
+            } else {
+                oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunished[0].log)}${fitChars(statPunished[1]?.log)}${fitChars(statPunished[2]?.log)}`, 15000, false, true, false, false, true)
+		}
         }
     }
 
@@ -1585,230 +1388,33 @@ async function scanAllAvatarStats() {
              📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)}`)
 
 
-        if (worstAvatarStats['totalTextureUsage'].value < res.data.avatarStats.totalTextureUsage) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${formatBytes(res.data.avatarStats.totalTextureUsage, 2)} [totalTextureUsage]`)
-            worstAvatarStats['totalTextureUsage'] = {
-                'value': res.data.avatarStats.totalTextureUsage,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+        Object.keys(res.data.avatarStats).forEach((key, index, arr) => {
+            if (key == 'uncompressedSize' || key == 'totalTextureUsage' || key == 'fileSize') {
+                if (worstAvatarStats[key].value < res.data[key]) {
+                    console.log(`${loglv.hey}${selflogA} New worst detected: ${formatBytes(res.data[key], 2)} [${key}]`)
+                    worstAvatarStats[key] = {
+                        'value': res.data[key],
+                        'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+                    }
+                }
+            } else if (key == 'boundsLongest') {
+                if (worstAvatarStats['boundsLongest'].value < Math.max(...res.data.avatarStats.bounds)) {
+                    console.log(`${loglv.hey}${selflogA} New worst detected: ${Math.max(...res.data.avatarStats.bounds)} [boundsLongest]`)
+                    worstAvatarStats['boundsLongest'] = {
+                        'value': Math.max(...res.data.avatarStats.bounds),
+                        'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+                    }
+                }
+            } else {
+                if (worstAvatarStats[key].value < res.data.avatarStats[key]) {
+                    console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats[key]} [${key}]`)
+                    worstAvatarStats[key] = {
+                        'value': res.data.avatarStats[key],
+                        'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+                    }
+                }
             }
-        }
-        if (worstAvatarStats['totalPolygons'].value < res.data.avatarStats.totalPolygons) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.totalPolygons} [totalPolygons]`)
-            worstAvatarStats['totalPolygons'] = {
-                'value': res.data.avatarStats.totalPolygons,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['boundsLongest'].value < Math.max(...res.data.avatarStats.bounds)) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${Math.max(...res.data.avatarStats.bounds)} [boundsLongest]`)
-            worstAvatarStats['boundsLongest'] = {
-                'value': Math.max(...res.data.avatarStats.bounds),
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['skinnedMeshCount'].value < res.data.avatarStats.skinnedMeshCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.skinnedMeshCount} [skinnedMeshCount]`)
-            worstAvatarStats['skinnedMeshCount'] = {
-                'value': res.data.avatarStats.skinnedMeshCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['meshCount'].value < res.data.avatarStats.meshCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.meshCount} [meshCount]`)
-            worstAvatarStats['meshCount'] = {
-                'value': res.data.avatarStats.meshCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['materialSlotsUsed'].value < res.data.avatarStats.materialSlotsUsed) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.materialSlotsUsed} [materialSlotsUsed]`)
-            worstAvatarStats['materialSlotsUsed'] = {
-                'value': res.data.avatarStats.materialSlotsUsed,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['materialCount'].value < res.data.avatarStats.materialCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.materialCount} [materialCount]`)
-            worstAvatarStats['materialCount'] = {
-                'value': res.data.avatarStats.materialCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['physBoneComponentCount'].value < res.data.avatarStats.physBoneComponentCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneComponentCount} [physBoneComponentCount]`)
-            worstAvatarStats['physBoneComponentCount'] = {
-                'value': res.data.avatarStats.physBoneComponentCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['physBoneTransformCount'].value < res.data.avatarStats.physBoneTransformCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneTransformCount} [physBoneTransformCount]`)
-            worstAvatarStats['physBoneTransformCount'] = {
-                'value': res.data.avatarStats.physBoneTransformCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['physBoneColliderCount'].value < res.data.avatarStats.physBoneColliderCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneColliderCount} [physBoneColliderCount]`)
-            worstAvatarStats['physBoneColliderCount'] = {
-                'value': res.data.avatarStats.physBoneColliderCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['physBoneCollisionCheckCount'].value < res.data.avatarStats.physBoneCollisionCheckCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.physBoneCollisionCheckCount} [physBoneCollisionCheckCount]`)
-            worstAvatarStats['physBoneCollisionCheckCount'] = {
-                'value': res.data.avatarStats.physBoneCollisionCheckCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['contactCount'].value < res.data.avatarStats.contactCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.contactCount} [contactCount]`)
-            worstAvatarStats['contactCount'] = {
-                'value': res.data.avatarStats.contactCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['constraintCount'].value < res.data.avatarStats.constraintCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.constraintCount} [constraintCount]`)
-            worstAvatarStats['constraintCount'] = {
-                'value': res.data.avatarStats.constraintCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['constraintDepth'].value < res.data.avatarStats.constraintDepth) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.constraintDepth} [constraintDepth]`)
-            worstAvatarStats['constraintDepth'] = {
-                'value': res.data.avatarStats.constraintDepth,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['animatorCount'].value < res.data.avatarStats.animatorCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.animatorCount} [animatorCount]`)
-            worstAvatarStats['animatorCount'] = {
-                'value': res.data.avatarStats.animatorCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['boneCount'].value < res.data.avatarStats.boneCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.boneCount} [boneCount]`)
-            worstAvatarStats['boneCount'] = {
-                'value': res.data.avatarStats.boneCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['lightCount'].value < res.data.avatarStats.lightCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.lightCount} [lightCount]`)
-            worstAvatarStats['lightCount'] = {
-                'value': res.data.avatarStats.lightCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['particleSystemCount'].value < res.data.avatarStats.particleSystemCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.particleSystemCount} [particleSystemCount]`)
-            worstAvatarStats['particleSystemCount'] = {
-                'value': res.data.avatarStats.particleSystemCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['totalMaxParticles'].value < res.data.avatarStats.totalMaxParticles) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.totalMaxParticles} [totalMaxParticles]`)
-            worstAvatarStats['totalMaxParticles'] = {
-                'value': res.data.avatarStats.totalMaxParticles,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['meshParticleMaxPolygons'].value < res.data.avatarStats.meshParticleMaxPolygons) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.meshParticleMaxPolygons} [meshParticleMaxPolygons]`)
-            worstAvatarStats['meshParticleMaxPolygons'] = {
-                'value': res.data.avatarStats.meshParticleMaxPolygons,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['trailRendererCount'].value < res.data.avatarStats.trailRendererCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.trailRendererCount} [trailRendererCount]`)
-            worstAvatarStats['trailRendererCount'] = {
-                'value': res.data.avatarStats.trailRendererCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['lineRendererCount'].value < res.data.avatarStats.lineRendererCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.lineRendererCount} [lineRendererCount]`)
-            worstAvatarStats['lineRendererCount'] = {
-                'value': res.data.avatarStats.lineRendererCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['clothCount'].value < res.data.avatarStats.clothCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.clothCount} [clothCount]`)
-            worstAvatarStats['clothCount'] = {
-                'value': res.data.avatarStats.clothCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['totalClothVertices'].value < res.data.avatarStats.totalClothVertices) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.totalClothVertices} [totalClothVertices]`)
-            worstAvatarStats['totalClothVertices'] = {
-                'value': res.data.avatarStats.totalClothVertices,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['physicsColliders'].value < res.data.avatarStats.physicsColliders) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.physicsColliders} [physicsColliders]`)
-            worstAvatarStats['physicsColliders'] = {
-                'value': res.data.avatarStats.physicsColliders,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['physicsRigidbodies'].value < res.data.avatarStats.physicsRigidbodies) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.physicsRigidbodies} [physicsRigidbodies]`)
-            worstAvatarStats['physicsRigidbodies'] = {
-                'value': res.data.avatarStats.physicsRigidbodies,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['audioSourceCount'].value < res.data.avatarStats.audioSourceCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.audioSourceCount} [audioSourceCount]`)
-            worstAvatarStats['audioSourceCount'] = {
-                'value': res.data.avatarStats.audioSourceCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['raycastCount'].value < res.data.avatarStats.raycastCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.raycastCount} [raycastCount]`)
-            worstAvatarStats['raycastCount'] = {
-                'value': res.data.avatarStats.raycastCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['blendShapeCount'].value < res.data.avatarStats.blendShapeCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.blendShapeCount} [blendShapeCount]`)
-            worstAvatarStats['blendShapeCount'] = {
-                'value': res.data.avatarStats.blendShapeCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['cameraCount'].value < res.data.avatarStats.cameraCount) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats.cameraCount} [cameraCount]`)
-            worstAvatarStats['cameraCount'] = {
-                'value': res.data.avatarStats.cameraCount,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['uncompressedSize'].value < res.data.uncompressedSize) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${formatBytes(res.data.uncompressedSize, 2)} [uncompressedSize]`)
-            worstAvatarStats['uncompressedSize'] = {
-                'value': res.data.uncompressedSize,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
-        if (worstAvatarStats['fileSize'].value < res.data.fileSize) {
-            console.log(`${loglv.hey}${selflogA} New worst detected: ${formatBytes(res.data.fileSize, 2)} [uncompressedSize]`)
-            worstAvatarStats['fileSize'] = {
-                'value': res.data.fileSize,
-                'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-            }
-        }
+        })
 
 
         // Summary Chart Data
@@ -2244,10 +1850,10 @@ function inviteLocalQueue(I_autoNext = false) {
         console.log(`${loglv.info}${selflogA} ${localQueueList.length} worlds to explore. [${extimelow} to ${extimehig} Hours]`)
         apiEmitter.emit('switch', localQueueList.length, 'world')
 
-        let { data: checkCap } = await limiter.reqCached('world', world_id).catch(async () => {
+        let gotWorld = await limiter.reqCached('world', world_id).catch(async () => {
             return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': world_id } }), 'world')
         })
-        if (checkCap == undefined) {
+        if (gotWorld.data == undefined) {
             console.log(`${loglv.hey}${selflogA} World failed to fetch. Try again..`);
             oscChatBoxV2(`World fetch failed.\vTry another.`, 5000, true, true, false, false, false)
             fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
@@ -2256,9 +1862,17 @@ function inviteLocalQueue(I_autoNext = false) {
                 }
             })
             return
-        } else if (checkCap.capacity < getPlayersInInstance().length && getInstanceGroupID() == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+        }
+
+        var filter_UserAndroid = playersInstanceObject.find(u => u.platform == 'android')
+        var filter_PlatformAdnroid = gotWorld.data.unityPackages.find(p => p.platform == 'android')
+        if (gotWorld.data.capacity < playersInInstance.length && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
             console.log(`${loglv.hey}${selflogA} World can not fit everyone. Retry..`);
-            oscChatBoxV2(`World fetch failed.\vTry another.`, 5000, true, true, false, false, false)
+            oscChatBoxV2(`World can not fit everyone.\vTry another.`, 5000, true, true, false, false, false)
+            return
+        } else if (filter_UserAndroid != undefined && filter_PlatformAdnroid == undefined && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+            console.log(`${loglv.hey}${selflogA} World is not Quest compatible. Retry..`);
+            oscChatBoxV2(`World is not Quest compatible.\vTry another.`, 5000, true, true, false, false, false)
             return
         }
 
@@ -2445,7 +2059,7 @@ async function scanGroupAuditLogs() {
 async function requestAllOnlineFriends() {
     var { data: onlineFriends } = await limiter.req(vrchat.getFriends({ query: { offset: 0, n: 100, offline: false } }))
     var privateFriends = onlineFriends.filter(onlineFriends => onlineFriends.location == 'private')
-    var privateFriendsNotHere = privateFriends.filter(privateFriends => getPlayersInInstance().includes(privateFriends.displayName) == false)
+    var privateFriendsNotHere = privateFriends.filter(privateFriends => playersInInstance.includes(privateFriends.displayName) == false)
     privateFriendsNotHere.forEach((friend, index, friendArr) => {
         setTimeout(() => {
             console.log(`${loglv.info}${selflogA} [BulkFrendRequestInviter] (${index + 1}/${friendArr.length}) Checking ${friend.displayName}`)
@@ -2656,6 +2270,17 @@ async function eventPropSpawned(propID) {
         console.log(`${loglv.info}${selflogL} Item spawned: ${vrcpropcount[propID].name} - ${vrcpropcount[propID].count - 1} -> ${vrcpropcount[propID].count}`)
         fs.writeFile('./datasets/propcounts.json', JSON.stringify(vrcpropcount, null, 2), (err) => { if (err) { console.log(err); return } })
     }
+}
+
+function requestUserTrustTable() {
+    var playersInstancePlatforms = playersInstanceObject.reduce((acc, ply) => { acc[ply.platform || loglv.false + 'Joining' + loglv.reset] = (acc[ply.platform] || 0) + 1; return acc }, {})
+    var playersInstanceTrustRanks = playersInstanceObject.reduce((acc, ply) => { acc[ply.trust || loglv.false + 'Joining' + loglv.reset] = (acc[ply.trust] || 0) + 1; return acc }, {})
+    var playersInstanceStatus = playersInstanceObject.reduce((acc, ply) => { acc[ply.status || loglv.false + 'Joining' + loglv.reset] = (acc[ply.status] || 0) + 1; return acc }, {})
+    var a = table(Object.entries(playersInstanceTrustRanks).sort((a, b) => b[1] - a[1]))
+    var b = table(Object.entries(playersInstancePlatforms).sort((a, b) => b[1] - a[1]))
+    var c = table(Object.entries(playersInstanceStatus).sort((a, b) => b[1] - a[1]))
+    var stringDebugTables = table([['Trust Ranks', 'Platform', 'Status'], [a, b, c]])
+    console.log(`${loglv.debug}\n${stringDebugTables}`)
 }
 
 async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, resetData = false) {
@@ -3355,23 +2980,7 @@ function eventJoinWorld() {
         }
     })
 
-    logEmitter.once('avatarQueueFinish', () => {
-        if (vrchatRunning == false) { return }
-        var playersInstancePlatforms = playersInstanceObject.reduce((acc, ply) => { acc[ply.platform || loglv.false + 'Joining' + loglv.reset] = (acc[ply.platform] || 0) + 1; return acc }, {})
-        var playersInstanceTrustRanks = playersInstanceObject.reduce((acc, ply) => { acc[ply.trust || loglv.false + 'Joining' + loglv.reset] = (acc[ply.trust] || 0) + 1; return acc }, {})
-        var playersInstanceStatus = playersInstanceObject.reduce((acc, ply) => { acc[ply.status || loglv.false + 'Joining' + loglv.reset] = (acc[ply.status] || 0) + 1; return acc }, {})
 
-        var a = table(Object.entries(playersInstanceTrustRanks).sort((a, b) => b[1] - a[1]))
-        var b = table(Object.entries(playersInstancePlatforms).sort((a, b) => b[1] - a[1]))
-        var c = table(Object.entries(playersInstanceStatus).sort((a, b) => b[1] - a[1]))
-
-        var stringDebugTables = table([
-            ['Trust Ranks', 'Platform', 'Status'],
-            [a, b, c]
-        ])
-
-        console.log(`${loglv.debug}\n${stringDebugTables}`)
-    })
 
 }
 
@@ -3499,6 +3108,7 @@ async function eventPlayerInitialized(logOutputLine) {
 }
 
 
+var userTrustTableTimer
 async function eventPlayerJoin(logOutputLine) {
     var playerDisplayName = logOutputLine.split('[Behaviour] OnPlayerJoined ')[1]
 
@@ -3597,11 +3207,10 @@ async function eventPlayerJoin(logOutputLine) {
                 })
             }
 
-
+            clearTimeout(userTrustTableTimer)
+            userTrustTableTimer = setTimeout(() => { requestUserTrustTable() }, 10000);
 
         }
-
-
 
 
         try {
