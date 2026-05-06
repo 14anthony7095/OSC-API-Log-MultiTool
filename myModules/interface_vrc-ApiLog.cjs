@@ -1866,11 +1866,13 @@ function inviteLocalQueue(I_autoNext = false) {
 
 		var filter_UserAndroid = playersInstanceObject.find(u => u.platform == 'android')
 		var filter_PlatformAdnroid = gotWorld.data.unityPackages.find(p => p.platform == 'android')
-		if (gotWorld.data.capacity < playersInInstance.length && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+		// if (gotWorld.data.capacity < playersInInstance.length && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+		if (gotWorld.data.capacity < playersInInstance.length ) {
 			console.log(`${loglv.hey}${selflogA} World can not fit everyone. Retry..`);
 			oscChatBoxV2(`World can not fit everyone.\vTry another.`, 5000, true, true, false, false, false)
 			return
-		} else if (filter_UserAndroid != undefined && filter_PlatformAdnroid == undefined && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+		// } else if (filter_UserAndroid != undefined && filter_PlatformAdnroid == undefined && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+		} else if (filter_UserAndroid != undefined && filter_PlatformAdnroid == undefined ) {
 			console.log(`${loglv.hey}${selflogA} World is not Quest compatible. Retry..`);
 			oscChatBoxV2(`World is not Quest compatible.\vTry another.`, 5000, true, true, false, false, false)
 			return
@@ -1898,12 +1900,12 @@ function inviteLocalQueue(I_autoNext = false) {
 				break;
 			case 2:
 				instanceBody['type'] = 'private'
-				instanceBody['ownerId'] = currentAccountInUse.id
+				instanceBody['ownerId'] = process.env["VRC_ACC_ID_1"]
 				instanceBody['canRequestInvite'] = true
 				break;
 			default:
 				instanceBody['type'] = 'hidden'
-				instanceBody['ownerId'] = currentAccountInUse.id
+				instanceBody['ownerId'] = process.env["VRC_ACC_ID_1"]
 				break;
 		}
 
