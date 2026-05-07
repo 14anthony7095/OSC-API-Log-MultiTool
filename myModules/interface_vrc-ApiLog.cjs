@@ -1234,17 +1234,21 @@ async function avatarFileAnalysis(fileid, fileversion) {
 		})
 	}
 
-	Object.keys(res.data.avatarStats).forEach((key, index, arr) => {
+	Object.keys(res.data).forEach(async (key, index, arr) => {
 		if (key == 'uncompressedSize' || key == 'totalTextureUsage' || key == 'fileSize') {
 			if (worstAvatarStats[key].value < res.data[key]) {
-				console.log(`${loglv.hey}${selflogA} New worst detected: ${formatBytes(res.data[key], 2)} [${key}]`)
+				let formatSize = await formatBytes(res.data[key], 2)
+				console.log(`${loglv.hey}${selflogA} New worst detected: ${formatSize} [${key}]`)
 				worstAvatarStatSaveTrigger = true
 				worstAvatarStats[key] = {
 					'value': res.data[key],
 					'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
 				}
 			}
-		} else if (key == 'bounds') {
+		}
+	})
+	Object.keys(res.data.avatarStats).forEach((key, index, arr) => {
+		if (key == 'bounds') {
 			if (worstAvatarStats['boundsLongest'].value < Math.max(...res.data.avatarStats.bounds)) {
 				console.log(`${loglv.hey}${selflogA} New worst detected: ${Math.max(...res.data.avatarStats.bounds)} [boundsLongest]`)
 				worstAvatarStatSaveTrigger = true
@@ -1268,9 +1272,11 @@ async function avatarFileAnalysis(fileid, fileversion) {
 	clearTimeout(worstAvatarStatsSaveTimer)
 	worstAvatarStatsSaveTimer = setTimeout(() => {
 		if (worstAvatarStatSaveTrigger == true) {
-			console.log(`${loglv.info}${selflogA} Updating Worst Avatar Stats file`)
+			console.log(`${loglv.hey}${selflogA} [WorstStat] Updating Stats file`)
 			fs.writeFile('./datasets/worstAvatarStats.json', JSON.stringify(worstAvatarStats), (err) => { if (err) { console.error(err) } })
 			worstAvatarStatSaveTrigger = false
+		} else {
+			console.log(`${loglv.debug}${selflogA} [WorstStat] No Change needed`)
 		}
 	}, 10000)
 
@@ -1362,26 +1368,33 @@ async function scanAllAvatarStats() {
              📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)}`)
 
 
-		Object.keys(res.data.avatarStats).forEach((key, index, arr) => {
+		Object.keys(res.data).forEach(async (key, index, arr) => {
 			if (key == 'uncompressedSize' || key == 'totalTextureUsage' || key == 'fileSize') {
 				if (worstAvatarStats[key].value < res.data[key]) {
-					console.log(`${loglv.hey}${selflogA} New worst detected: ${formatBytes(res.data[key], 2)} [${key}]`)
+					let formatSize = await formatBytes(res.data[key], 2)
+					console.log(`${loglv.hey}${selflogA} New worst detected: ${formatSize} [${key}]`)
+					worstAvatarStatSaveTrigger = true
 					worstAvatarStats[key] = {
 						'value': res.data[key],
 						'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
 					}
 				}
-			} else if (key == 'boundsLongest') {
+			}
+		})
+		Object.keys(res.data.avatarStats).forEach((key, index, arr) => {
+			if (key == 'bounds') {
 				if (worstAvatarStats['boundsLongest'].value < Math.max(...res.data.avatarStats.bounds)) {
 					console.log(`${loglv.hey}${selflogA} New worst detected: ${Math.max(...res.data.avatarStats.bounds)} [boundsLongest]`)
+					worstAvatarStatSaveTrigger = true
 					worstAvatarStats['boundsLongest'] = {
 						'value': Math.max(...res.data.avatarStats.bounds),
 						'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
 					}
 				}
 			} else {
-				if (worstAvatarStats[key].value < res.data.avatarStats[key]) {
+				if (worstAvatarStats[key]?.value < res.data.avatarStats[key]) {
 					console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats[key]} [${key}]`)
+					worstAvatarStatSaveTrigger = true
 					worstAvatarStats[key] = {
 						'value': res.data.avatarStats[key],
 						'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
@@ -1389,6 +1402,17 @@ async function scanAllAvatarStats() {
 				}
 			}
 		})
+
+		clearTimeout(worstAvatarStatsSaveTimer)
+		worstAvatarStatsSaveTimer = setTimeout(() => {
+			if (worstAvatarStatSaveTrigger == true) {
+				console.log(`${loglv.hey}${selflogA} [WorstStat] Updating Stats file`)
+				fs.writeFile('./datasets/worstAvatarStats.json', JSON.stringify(worstAvatarStats), (err) => { if (err) { console.error(err) } })
+				worstAvatarStatSaveTrigger = false
+			} else {
+				console.log(`${loglv.debug}${selflogA} [WorstStat] No Change needed`)
+			}
+		}, 10000)
 
 
 		// Summary Chart Data
@@ -3051,10 +3075,10 @@ async function eventPlayerInitialized(logOutputLine) {
 
 		playerRatio = playersInInstance.length / playerHardLimit
 
-		if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType) && G_groupMembersVisible == true) {
+		if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
 			memberRatio = membersInInstance.length / playersInInstance.length
-			console.log(`${loglv.info}${selflogL} There are now ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`)
-			process.title = `Instance: ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`
+			console.log(`${loglv.info}${selflogL} There are now ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`)
+			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`
 		} else {
 			console.log(`${loglv.info}${selflogL} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`)
 			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`
@@ -3273,6 +3297,8 @@ function eventPlayerLeft(logOutputLine) {
 		if (playerDisplayName == currentAccountInUse.name) {
 			clearTimeout(worldHopTimeout)
 			clearTimeout(loadingAvatarTimer)
+			clearTimeout(userTrustTableTimer)
+			userTrustTableTimer = null
 			loadingAvatarTimer = null
 			worldHopTimeout = null
 			cooldownUrl = true

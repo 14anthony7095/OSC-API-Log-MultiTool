@@ -1,91 +1,91 @@
 {
     "totalTextureUsage": {
-        "value": 3152544287,
-        "source": "eN7ity's avatar Samara"
+        "value": 524800594,
+        "source": "Layla Κitsune's avatar Cyn 2026 Murder Drone"
     },
     "totalPolygons": {
-        "value": 14791598,
-        "source": "Un delivery's avatar emiya komano"
+        "value": 1511300,
+        "source": "悦悦愉悦的悦's avatar 彩飒猫猫v1․5"
     },
     "boundsLongest": {
-        "value": 200000.4,
-        "source": "Strawberry Dogg's avatar Invincible"
+        "value": 1173341.1,
+        "source": "25時Nightcord's avatar 赠送的芙蓉王"
     },
     "skinnedMeshCount": {
-        "value": 770,
-        "source": "OwnAHole's avatar German Officer"
+        "value": 215,
+        "source": "悦悦愉悦的悦's avatar 彩飒猫猫v1․5"
     },
     "meshCount": {
-        "value": 6957,
-        "source": "candcejohnson's avatar laughing coffin public"
+        "value": 384,
+        "source": "stellarkaylee's avatar JJS Ten Shadows"
     },
     "materialSlotsUsed": {
-        "value": 10743,
-        "source": "Un delivery's avatar emiya komano"
+        "value": 861,
+        "source": "25時Nightcord's avatar 赠送的芙蓉王"
     },
     "materialCount": {
-        "value": 837,
-        "source": "Repentless666's avatar Spawn of Satan"
+        "value": 553,
+        "source": "悦悦愉悦的悦's avatar 彩飒猫猫v1․5"
     },
     "physBoneComponentCount": {
-        "value": 445,
-        "source": "Neixus's avatar 不可以涩涩"
+        "value": 180,
+        "source": "兔兔子不会郁郁's avatar 马露露卡 M"
     },
     "physBoneTransformCount": {
-        "value": 5382,
-        "source": "泽野弘零's avatar 小白玉-猫"
+        "value": 1799,
+        "source": "悦悦愉悦的悦's avatar 彩飒猫猫v1․5"
     },
     "physBoneColliderCount": {
-        "value": 211,
-        "source": "sᴇɴʏᴀ's avatar Nokk？"
+        "value": 61,
+        "source": "悦悦愉悦的悦's avatar 彩飒猫猫v1․5"
     },
     "physBoneCollisionCheckCount": {
-        "value": 21967,
-        "source": "ᵕ˘ᴋᴀɪxxᴠɪɪ˘ᵕ's avatar ᴊᴇᴀɴɴᴀ"
+        "value": 1877,
+        "source": "悦悦愉悦的悦's avatar 彩飒猫猫v1․5"
     },
     "contactCount": {
-        "value": 249,
-        "source": "Razz ChaosHowl's avatar Combat System V2 Test"
+        "value": 79,
+        "source": "D4rk_Chrome89's avatar ≻［Chrome's V edit］≺"
     },
     "constraintCount": {
-        "value": 2662,
-        "source": "Jonnytest's avatar karmaf"
+        "value": 211,
+        "source": "The Bozak Hordе's avatar Jax"
     },
     "constraintDepth": {
-        "value": 2662,
-        "source": "Jonnytest's avatar karmaf"
+        "value": 48,
+        "source": "25時Nightcord's avatar 赠送的芙蓉王"
     },
     "animatorCount": {
-        "value": 1808,
-        "source": "milkeys_69's avatar ghostbuster"
+        "value": 67,
+        "source": "Astronaut701's avatar BF3 RU Engineer"
     },
     "boneCount": {
-        "value": 8489,
-        "source": "༒ȶʀɨƈӄֆȶɛʀ༒'s avatar WIPP"
+        "value": 1532,
+        "source": "悦悦愉悦的悦's avatar 彩飒猫猫v1․5"
     },
     "lightCount": {
-        "value": 60000042,
-        "source": "ǃRaidenǃ's avatar hajime"
+        "value": 5125,
+        "source": "GhostDotMidi's avatar Game Manager （GAW4 X Squid Game）"
     },
     "particleSystemCount": {
-        "value": 1342,
-        "source": "--CriticalHit--'s avatar Unsealed Satoru Gojo"
+        "value": 394,
+        "source": "悦悦愉悦的悦's avatar 彩飒猫猫v1․5"
     },
     "totalMaxParticles": {
-        "value": 345744868169,
-        "source": "Call Me Sleepy's avatar Personal"
+        "value": 4316235482,
+        "source": "Mr Prolapse's avatar Goku biggy"
     },
     "meshParticleMaxPolygons": {
-        "value": 35303500698,
-        "source": "KimeraJin's avatar AdylitKiggy"
+        "value": 18873690,
+        "source": "Mr Prolapse's avatar Goku biggy"
     },
     "trailRendererCount": {
-        "value": 394,
-        "source": "Neko1X's avatar XChara-Event"
+        "value": 334,
+        "source": "S-P-A's avatar Darth Maul"
     },
     "lineRendererCount": {
-        "value": 20,
-        "source": "webbtail245's avatar Leon Scott Kennedy （Resident Evil 4）"
+        "value": 6,
+        "source": "stellarkaylee's avatar JJS Ten Shadows"
     },
     "clothCount": {
         "value": 11,
@@ -96,35 +96,35 @@
         "source": "-Rekka-'s avatar maomao˸3"
     },
     "physicsColliders": {
-        "value": 1728,
-        "source": "milkeys_69's avatar ghostbuster"
+        "value": 11,
+        "source": "The Bozak Hordе's avatar Jax"
     },
     "physicsRigidbodies": {
-        "value": 205,
-        "source": "PotatoStrangler's avatar The Funniest Valentine"
+        "value": 13,
+        "source": "The Bozak Hordе's avatar Jax"
     },
     "audioSourceCount": {
-        "value": 14002,
-        "source": "classіst's avatar Pawn"
+        "value": 99,
+        "source": "悦悦愉悦的悦's avatar 彩飒猫猫v1․5"
     },
     "raycastCount": {
-        "value": 32,
-        "source": "14anthony7095's avatar raycast tests"
+        "value": 0,
+        "source": ""
     },
     "blendShapeCount": {
-        "value": 9156,
-        "source": "kokomi_ovo's avatar nyashka⁄⁄"
+        "value": 994,
+        "source": "25時Nightcord's avatar 赠送的芙蓉王"
     },
     "cameraCount": {
-        "value": 150,
-        "source": "アズキ。's avatar しなの_アズキカスタムv62"
+        "value": 16,
+        "source": "悦悦愉悦的悦's avatar 彩飒猫猫v1․5"
     },
     "uncompressedSize": {
-        "value": 524252003,
-        "source": "EquusDaemonium's avatar Yeen"
+        "value": 522110908,
+        "source": "ShioriQ6's avatar Krolicek 3"
     },
     "fileSize": {
-        "value": 208682857,
-        "source": "Kingnaldo's avatar Super Manuka Public"
+        "value": 153802756,
+        "source": "Layla Κitsune's avatar Cyn 2026 Murder Drone"
     }
 }
