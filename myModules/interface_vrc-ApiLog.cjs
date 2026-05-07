@@ -1374,10 +1374,12 @@ async function scanAllAvatarStats() {
 					let formatSize = await formatBytes(res.data[key], 2)
 					console.log(`${loglv.hey}${selflogA} New worst detected: ${formatSize} [${key}]`)
 					worstAvatarStatSaveTrigger = true
-					worstAvatarStats[key] = {
-						'value': res.data[key],
-						'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-					}
+					try {
+						worstAvatarStats[key] = {
+							'value': res.data[key],
+							'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
+						}
+					} catch (err) { console.log(err) }
 				}
 			}
 		})
