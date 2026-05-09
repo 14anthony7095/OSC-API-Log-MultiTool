@@ -1,7 +1,7 @@
 {
   "89be973f-9e1a-4260-8deb-211e32da8196": {
     "name": "Rainbow Ribbon",
-    "count": 743
+    "count": 745
   },
   "829ba6f6-b837-49d9-b9a9-056b82103b58": {
     "name": "THE REFERENCE CUBE",
@@ -17,7 +17,7 @@
   },
   "49fec698-f0cb-475c-9bc3-8f24e1bcc4eb": {
     "name": "Campfire",
-    "count": 754
+    "count": 755
   },
   "fb4e6b9e-ddd2-464c-8e44-cdba7f77eb5d": {
     "name": "Marshmallow on a Stick",
@@ -65,7 +65,7 @@
   },
   "062e8001-d338-4dd1-b3c7-ecfb4f30eb1c": {
     "name": "Frosted Scribe",
-    "count": 153
+    "count": 155
   },
   "b121c206-666e-4a61-ba8b-5315d2303276": {
     "name": "Portable Winterizer",
@@ -85,7 +85,7 @@
   },
   "d974e56d-443e-4409-99c2-f5c9e5705d5b": {
     "name": "Party Popper",
-    "count": 401
+    "count": 402
   },
   "a1573c82-9767-4b42-a45d-4050e42a92b9": {
     "name": "Fortune Box",
@@ -101,7 +101,7 @@
   },
   "ce118c16-53d9-4d56-bcb2-717057eca102": {
     "name": "Roman Candle",
-    "count": 115
+    "count": 117
   },
   "cb3cad70-5354-4ce6-810b-9e0364264e2f": {
     "name": "Fiery Sky Fireworks Show",
@@ -109,7 +109,7 @@
   },
   "036389b7-3c9d-4e0d-96d1-f23cb195e76b": {
     "name": "Snow Blaster",
-    "count": 374
+    "count": 376
   },
   "25a95ca1-bba4-48d0-8a31-249bbc3af78e": {
     "name": "MAGFest26 Coin",
@@ -125,7 +125,7 @@
   },
   "ece03ecc-b2fe-49b7-b453-835c3dfa7b31": {
     "name": "Cupid’s Bow",
-    "count": 127
+    "count": 129
   },
   "3cd4e1ac-dd76-4bb2-bb64-9caa64e2fa28": {
     "name": "PropRoseTest",
@@ -137,7 +137,7 @@
   },
   "cfa88cde-520a-4e28-83f4-bb40dadda5c2": {
     "name": "Pellet Drum",
-    "count": 29
+    "count": 31
   },
   "ae29e3d6-7005-45cc-bd9a-a17b15eaa20d": {
     "name": "Firecrackers",
@@ -149,7 +149,7 @@
   },
   "99576fc3-8b16-434c-92fd-1aba605d3fac": {
     "name": "The Plunger",
-    "count": 71
+    "count": 73
   },
   "abbc7df2-2be2-47aa-8d2a-3f4c245da22f": {
     "name": "Shopping Cart",
@@ -161,7 +161,7 @@
   },
   "f7f48957-06e6-4fed-9e4f-25f71f68ae8b": {
     "name": "Bee Blaster",
-    "count": 124
+    "count": 126
   },
   "b69cef3f-6624-43e9-b44d-43aefe86cc64": {
     "name": "Hanami Dango",
@@ -182,5 +182,9 @@
   "73aefdb1-d8af-4ffd-84a8-ab9d038e300a": {
     "name": "Tabetchane",
     "count": 4
+  },
+  "553569e8-a6ce-4718-9637-c298466af705": {
+    "name": "SC-4N Reader",
+    "count": 1
   }
 }

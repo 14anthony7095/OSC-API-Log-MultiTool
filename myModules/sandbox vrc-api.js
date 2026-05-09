@@ -40,11 +40,25 @@ function maindev() {
 
 main()
 const myVrcID = 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752';
+var authToken = ''
 async function main() {
 	try {
-		const { data: currentUser } = await vrchat.getCurrentUser({ throwOnError: true })
+		const { data: currentUser } = await limiter.req(vrchat.getCurrentUser({ throwOnError: true }))
 		console.log(`${loglv.info}${selflog} Logged in as: ${currentUser.displayName}`);
-	} catch (error) { if (error.statusCode == 500) { isApiErrorSkip = true }; return }
+		const { data: auth } = await limiter.req(vrchat.verifyAuthToken())
+		if (auth.ok == true) {
+			authToken = auth.token
+		}
+	} catch (error) {
+		console.log(`${loglv.warn}${selflog} API is down.. Cry`)
+		isApiErrorSkip = true
+	}
+
+
+
+	// console.log(await manualCall('avatarparts/avp_8f6bb9b7-4875-4b72-95d1-5cd3c2fb1dd2', 'GET'))
+
+
 
 	/* 
 		for (const item in vrcFriendsList.friends) {
@@ -77,6 +91,27 @@ async function main() {
 	// var gModr = await limiter.req(vrchat.getModerationReports({ 'query': { 'reportingUserId': myVrcID, 'n': 100, 'offset': 0 } }));    console.log(gModr.data)
 
 }
+
+async function manualCall(vrcapiEndpoint, methodType = 'GET', bodyJson) {
+	return new Promise(async (resolve, reject) => {
+		const vrcapihttp = `https://api.vrchat.cloud/api/1/`
+
+		var apiRequest = {
+			method: methodType,
+			headers: { 'User-Agent': '14anthony7095/Curl', 'Cookie': 'auth=' + authToken },
+		}
+		if (bodyJson != undefined) {
+			apiRequest['body'] = JSON.stringify(bodyJson)
+			apiRequest['headers']['Content-Type'] = 'application/json'
+		}
+
+		var request = await fetch(vrcapihttp + '' + vrcapiEndpoint, apiRequest)
+		// console.log(request)
+		var jsonResponse = await request.json()
+		resolve(jsonResponse)
+	})
+}
+
 
 async function outputPropsData() {
 	fs.readFile('./datasets/propcounts.json', 'utf8', async (err, data) => {
@@ -325,28 +360,7 @@ async function fileCheck(fileid, fileversion) {
 
 
 
-async function equipPortal() {
-	return new Promise(async (resolve, reject) => {
-		let { data: auth } = await vrchat.verifyAuthToken()
-		auth.ok == true ? console.log(auth.token) : console.log(`Couldn't return authcookie for whatever reason..`)
-		const vrcapihttp = `https://api.vrchat.cloud/api/1/`
-		const vrcinvid = `inv_240faddb-318e-4365-809e-2094747c4f1c` // Magic Gateway
-		// const vrcinvid = `inv_81612f95-8f84-4fd0-82c9-e86fcb5bb23a` // Beta Portal
-		const vrcapiEndpoint = `inventory/${vrcinvid}/equip`
 
-		var bodyJson = { "equipSlot": "portal" }
-		var putReq = {
-			method: 'PUT',
-			headers: { 'User-Agent': '14anthony7095/Curl', 'Cookie': 'auth=' + auth.token, 'Content-Type': 'application/json' },
-			body: JSON.stringify(bodyJson)
-		}
-
-		var request = await fetch(vrcapihttp + '' + vrcapiEndpoint, putReq)
-		var data = await request.json()
-		console.log(data)
-		resolve(data)
-	})
-}
 
 
 // setInterval(() => { console.log('30s') }, 30_000);
