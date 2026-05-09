@@ -489,14 +489,18 @@ function fetchLogFile() {
 			})
 		tarFile = files[files.length - 1]
 		tarFilePath = path + '' + files[files.length - 1]
-		tarFileSize = fs.statSync(tarFilePath).size || 0
-		console.log(`${loglv.info}${selflogL} Found newest log file: ${files[files.length - 1]}`)
-		startWatching()
+		try {
+			tarFileSize = fs.statSync(tarFilePath).size || 0
+			console.log(`${loglv.info}${selflogL} Found newest log file: ${files[files.length - 1]}`)
+		} catch (err) {
+			console.log(`${loglv.error}${selflogL} tarFileSize Failed: ${err}`)
+		}finally{
+			startWatching()
+		}
 	})
 }
 exports.fetchLogFile = fetchLogFile;
 fetchLogFile()
-
 
 
 
@@ -530,7 +534,7 @@ function startWatching() {
 }
 function updateWatcher() {
 	console.log(`${loglv.info}${selflogL} Updating Watcher`)
-	watcher.close()
+	watcher?.close()
 	fetchLogFile()
 }
 
@@ -3158,8 +3162,8 @@ async function eventPlayerJoin(logOutputLine) {
 			membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
 			memberRatio = membersInInstance.length / playersInInstance.length
 			playerRatio = playersInInstance.length / playerHardLimit
-			console.log(`${loglv.info}${selflogA} There are now ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`)
-			process.title = `Instance: ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`
+			console.log(`${loglv.info}${selflogA} There are now ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`)
+			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`
 		}
 
 		if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
@@ -3271,11 +3275,11 @@ function eventPlayerLeft(logOutputLine) {
 		}
 
 
-		if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType) && G_groupMembersVisible == true) {
+		if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
 			membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
 			memberRatio = membersInInstance.length / playersInInstance.length
-			console.log(`${loglv.info}${selflogL} There are now ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`)
-			process.title = `Instance: ${membersInInstance.length} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${Math.round(memberRatio * 100)}% - ${Math.round(playerRatio * 100)}% ]`
+			console.log(`${loglv.info}${selflogL} There are now ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`)
+			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`
 		} else {
 			console.log(`${loglv.info}${selflogL} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`)
 			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`

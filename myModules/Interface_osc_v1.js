@@ -78,9 +78,9 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	// 	},60_000)
 	// }
 	if (cmd == 'osc' && args[0] == 'kat') { oscSendKATmsg(sendStringKAT = raw.slice(8 + ((args[1] || "false").length + 1) + ((args[2] || "3").length + 1)).toString() + ' ', clearBefore = JSON.parse(args[1] || "false"), displayColor = parseInt(args[2] || "3")) }
-	if (cmd == 'osc' && args[0] == 'serial') {
-		OSCBinaryBurst(args[1], 200, 400)
-	}
+	if (cmd == 'osc' && args[0] == 'serial') { OSCBinaryBurst(args[1], 200, 400) }
+	if (cmd == 'osc' && args[0] == 'serialx2') { OSCBinaryBurst(args[1], 100, 200) }
+	if (cmd == 'osc' && args[0] == 'serialx4') { OSCBinaryBurst(args[1], 20, 100) }
 	if (cmd == 'osc' && args[0] == 'scale') {
 		oscSend('/avatar/eyeheight', parseFloat(args[1]))
 	}
@@ -227,36 +227,46 @@ setInterval(()=>{
 */
 
 
-async function OSCBinaryBurst(serializedBinary = 11111111, pulseClkHold = 200, bitGapDelay = 400, isLoop = false) {
+async function OSCBinaryBurst(serializedBinary = 11111111, pulseClkActive = 200, pulseClkGap = 400, isLoop = false) {
+	/* 
+	Usage Chart
+	[0000][000][000]	PlayerPlatformTrust
+	*/
 	if (isLoop == false) { binaryBurstQueue.push(serializedBinary) }
-	if (binaryBurstQueue.length < 2 || isLoop == true) {
-		console.log(`${loglv.debug}${selflog} [Serial-Burst] Sending ${binaryBurstQueue[0]}...`)
-		for (const bit in binaryBurstQueue[0]) {
-			// console.log(`${loglv.debug}${selflog} [Serial-Burst] bit ${binaryBurstQueue[0][bit]}`)
-			await sendSerializedBinary(parseInt(binaryBurstQueue[0][bit]), bit == binaryBurstQueue[0].length - 1)
-			if (bit == binaryBurstQueue[0].length - 1) {
-				binaryBurstQueue.shift()
-				if (binaryBurstQueue.length != 0) {
-					setTimeout(() => { OSCBinaryBurst(undefined, pulseClkHold, bitGapDelay, true) }, bitGapDelay)
-				} else {
-					console.log(`${loglv.debug}${selflog} [Serial-Burst] Idle.`)
-				}
+	if (binaryBurstQueue.length >= 2 && isLoop == false) {
+		console.log(`${loglv.debug}${selflog} [Serial-Burst] Busy: Adding to Queue`)
+		return
+	}
+
+	console.log(`${loglv.debug}${selflog} [Serial-Burst] Sending ${binaryBurstQueue[0]}...`)
+	for (const bit in binaryBurstQueue[0]) {
+		// console.log(`${loglv.debug}${selflog} [Serial-Burst] bit ${binaryBurstQueue[0][bit]}`)
+		// Loop through all Bits in current string
+		await sendSerializedBinary(parseInt(binaryBurstQueue[0][bit]), bit == binaryBurstQueue[0].length - 1)
+
+		// Finish and move to next Bit String
+		if (bit == binaryBurstQueue[0].length - 1) {
+			binaryBurstQueue.shift()
+			if (binaryBurstQueue.length != 0) {
+				setTimeout(() => { OSCBinaryBurst(undefined, pulseClkActive, pulseClkGap, true) }, pulseClkGap)
+			} else {
+				console.log(`${loglv.debug}${selflog} [Serial-Burst] Idle.`)
 			}
 		}
-		async function sendSerializedBinary(bit, lastbit) {
-			return new Promise((resolve, reject) => {
-				oscSend(vrcap + '14a/osc/data', bit == 1);
-				oscSend(vrcap + '14a/osc/sync', lastbit);
-				oscSend(vrcap + '14a/osc/clk', true);
-				setTimeout(() => {
-					oscSend(vrcap + '14a/osc/clk', false);
-					setTimeout(() => { resolve(true) }, bitGapDelay)
-				}, pulseClkHold);
-			})
-		};
-	} else {
-		console.log(`${loglv.debug}${selflog} [Serial-Burst] Busy: Adding to Queue`)
 	}
+
+	async function sendSerializedBinary(bit, isFinalBit = false) {
+		return new Promise((resolve, reject) => {
+			oscSend(vrcap + '14a/osc/data', bit == 1);
+			oscSend(vrcap + '14a/osc/sync', isFinalBit);
+			oscSend(vrcap + '14a/osc/clk', true);
+			setTimeout(() => {
+				oscSend(vrcap + '14a/osc/clk', false);
+				setTimeout(() => { resolve(true) }, pulseClkGap)
+			}, pulseClkActive);
+		})
+	};
+
 }
 exports.OSCBinaryBurst = OSCBinaryBurst
 

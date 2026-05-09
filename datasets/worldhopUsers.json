@@ -1,49 +1,80 @@
 {
 	"ranks": [
-		"Amateur",
-		"Novice",
-		"Knowledgeable",
-		"Experienced",
-		"Seasoned",
-		"Advanced",
-		"Expert",
-		"Veteran",
-		"Master",
-		"Legendary",
-		"Ancient"
+		{
+			"name": "Amateur",
+			"preq_time_ms": 120000,
+			"preq_worlds": 1
+		},
+		{
+			"preq_rank":"Amateur",
+			"name": "Novice",
+			"preq_time_ms": 14400000,
+			"preq_worlds": 48
+		},
+		{
+			"preq_rank":"Novice",
+			"name": "Knowledgeable",
+			"preq_time_ms": 21600000,
+			"preq_worlds": 72
+		},
+		{
+			"preq_rank":"Knowledgeable",
+			"name": "Experienced",
+			"preq_time_ms": 32400000,
+			"preq_worlds": 108
+		},
+		{
+			"preq_rank":"Experienced",
+			"name": "Seasoned",
+			"preq_time_ms": 50400000,
+			"preq_worlds": 162
+		},
+		{
+			"preq_rank":"Seasoned",
+			"name": "Advanced",
+			"preq_time_ms": 79200000,
+			"preq_worlds": 259
+		},
+		{
+			"preq_rank":"Advanced",
+			"name": "Expert",
+			"preq_time_ms": 129600000,
+			"preq_worlds": 440
+		},
+		{
+			"preq_rank":"Expert",
+			"name": "Veteran",
+			"preq_time_ms": 241200000,
+			"preq_worlds": 792
+		},
+		{
+			"preq_rank":"Veteran",
+			"name": "Master",
+			"preq_time_ms": 457200000,
+			"preq_worlds": 1505
+		},
+		{
+			"preq_rank":"Master",
+			"name": "Legendary",
+			"preq_time_ms": 918000000,
+			"preq_worlds": 3010
+		},
+		{
+			"preq_rank":"Legendary",
+			"name": "Ancient",
+			"preq_time_ms": 2754000000,
+			"preq_worlds": 10000
+		}
 	],
-	"rank_by_time": [
-		2,
-		240,
-		360,
-		540,
-		840,
-		1320,
-		2160,
-		4020,
-		7620,
-		15300,
-		45900
-	],
-	"rank_by_worlds": [
-		1,
-		48,
-		72,
-		108,
-		162,
-		259,
-		440,
-		792,
-		1505,
-		3010,
-		9030
-	],
-	"usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752": {
-		"name": "14anthony7095",
-		"time": 780000,
-		"lastCheckTime": 1760931711987,
-		"worlds": 1474,
-		"rank": "Veteran",
-		"promotedAt": 1760931711987
-	}
+	"users": [
+		{
+			"id": "usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752",
+			"name": "14anthony7095",
+			"rank_name": "",
+			"rank_tier": 0,
+			"explore_time_ms": 0,
+			"explore_world_visits": 0,
+			"lastCheckTime": 0
+		}
+	]
 }
