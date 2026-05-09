@@ -1796,5 +1796,68 @@
         "version": 71,
         "visibilityType": "everyone",
         "worldPlacementMask": 0
+    },
+    {
+        "_created_at": "2026-05-01T00:10:40.932Z",
+        "_updated_at": "2026-05-08T20:56:15.191Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "What does the scanner say?",
+        "id": "prop_553569e8-a6ce-4718-9637-c298466af705",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_465628da-7f0a-480e-abb9-7bbd68d63a11/1/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                },
+                "publisher": null
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-05-01T00:10:40.911Z",
+            "defaultAttributes": {},
+            "description": "What does the scanner say?",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_2722d967-e011-4913-b1fa-9d2cc8262c4f",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_f3d8f0e5-e7a3-4fd5-a024-05b3c2348e36/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_f3d8f0e5-e7a3-4fd5-a024-05b3c2348e36",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_f3d8f0e5-e7a3-4fd5-a024-05b3c2348e36/1/file",
+                "propId": "prop_553569e8-a6ce-4718-9637-c298466af705",
+                "propKind": 0
+            },
+            "name": "SC-4N Reader",
+            "productId": "prod_b366d01d-dbf0-4f06-9f75-a66814bd42ee",
+            "status": "live",
+            "tags": [
+                "prop",
+                "included_in_product"
+            ],
+            "updated_at": "2026-05-08T20:56:14.812Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "SC-4N Reader",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_465628da-7f0a-480e-abb9-7bbd68d63a11/1/256",
+        "unityPackages": [],
+        "version": 25,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
     }
 ]
