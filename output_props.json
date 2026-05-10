@@ -1859,5 +1859,81 @@
         "version": 25,
         "visibilityType": "everyone",
         "worldPlacementMask": 0
+    },
+    {
+        "_created_at": "2026-05-05T17:10:00.300Z",
+        "_updated_at": "2026-05-08T20:56:42.545Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "Remember: a falling slicer has no handle.",
+        "id": "prop_f75d9413-6fb7-44a6-9862-ed33aa76c268",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_78cb06f5-6b81-4af0-8aad-f8de4d2370f0/1/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                },
+                "publisher": null
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-05-05T17:10:00.273Z",
+            "defaultAttributes": {
+                "emission": {
+                    "defaultValue": "#7CFFEC",
+                    "validator": {
+                        "type": "color"
+                    }
+                },
+                "plasma": {
+                    "defaultValue": "#7CB1FF",
+                    "validator": {
+                        "type": "color"
+                    }
+                }
+            },
+            "description": "Remember: a falling slicer has no handle.",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_d49fcb2a-3283-478a-8501-ca3e9c333d4d",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_27705d2e-690d-44aa-b533-8acd6a58c181/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Item",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_27705d2e-690d-44aa-b533-8acd6a58c181",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_27705d2e-690d-44aa-b533-8acd6a58c181/1/file",
+                "propId": "prop_f75d9413-6fb7-44a6-9862-ed33aa76c268",
+                "propKind": 0
+            },
+            "name": "Photonic Slicer",
+            "productId": "prod_5cddd474-b0c8-4973-9373-adfc804eac81",
+            "status": "live",
+            "tags": [
+                "prop",
+                "included_in_product"
+            ],
+            "updated_at": "2026-05-08T20:56:42.381Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "Photonic Slicer",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_78cb06f5-6b81-4af0-8aad-f8de4d2370f0/1/256",
+        "unityPackages": [],
+        "version": 10,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
     }
 ]
