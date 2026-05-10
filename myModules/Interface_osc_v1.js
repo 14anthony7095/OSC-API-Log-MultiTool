@@ -171,14 +171,16 @@ function oscChatBoxV2(I_say = "~", I_display_time_ms = 5000, I_highPriority = fa
 	// console.log(chatboxQueue.length)
 
 	if (chatboxQueue.length < 2 + firstLong || isLoop == true) {
-
-		udpPort.send({ address: "/chatbox/input", args: [chatboxQueue[0].message.slice(0, 144), true, chatboxQueue[0].play_audio] }, deviceIP, remotePort);
-		console.log(`${loglv.debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m]${chatboxQueue[0].play_audio == true ? '🔊' : '🔇'} ${chatboxQueue[0].message.slice(0, 144).replace(/\v/g, '\n                                       ')}`)
+		let msgSlice = chatboxQueue[0].message.slice(0, 144)
+		udpPort.send({ address: "/chatbox/input", args: [msgSlice, true, chatboxQueue[0].play_audio] }, deviceIP, remotePort);
+		console.log(`${loglv.debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m]${chatboxQueue[0].play_audio == true ? '🔊' : '🔇'} ${msgSlice.replace(/\v/g, '\n                                       ')}`)
 
 		// console.log(`${loglv.debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m] Delay`+Math.max(5000, chatboxQueue[0].display_time_ms))		
 
 		setTimeout(() => {
-			if (chatboxQueue.length == 1 && chatboxQueue[0].auto_clear == true) { udpPort.send({ address: "/chatbox/input", args: [``, true, chatboxQueue[0].play_audio] }, deviceIP, remotePort); }
+			if (chatboxQueue.length == 1 && chatboxQueue[0].auto_clear == true) {
+				udpPort.send({ address: "/chatbox/input", args: [``, true, chatboxQueue[0].play_audio] }, deviceIP, remotePort);
+			}
 			chatboxQueue.shift()
 			if (chatboxQueue.length != 0) {
 				oscChatBoxV2(undefined, undefined, undefined, undefined, true)
@@ -186,7 +188,7 @@ function oscChatBoxV2(I_say = "~", I_display_time_ms = 5000, I_highPriority = fa
 				// console.log(`${loglv.debug}${selflog} [\x1b[33m/chatbox/input\x1b[0m] Idle.`)
 				oscChatTyping(0)
 			}
-		}, Math.max(1500, chatboxQueue[0].display_time_ms, (chatboxQueue[0].message.slice(0, 144).split(" ").length / 150) * 60_000));
+		}, Math.max(1500, chatboxQueue[0].display_time_ms, msgSlice.split(" ").length * 600, msgSlice.length * 120));
 
 	} else {
 		oscChatTyping(1)

@@ -349,6 +349,35 @@ function socket_VRC_API_Connect() {
 			// case 'friend-delete': break;
 			case 'friend-online':
 				console.log(`${loglv.info}${selflogWS} [GPS] ${wsContent.user.displayName} - Now Online`);
+				// console.log(wsContent)
+
+				if (wsContent.location != 'private' || wsContent.travelingToLocation != 'private' || wsContent.travelingToLocation != 'private') {
+					var notif_user_location = wsContent.location.includes('wrld_') ? wsContent.location.split(':')[0] : wsContent.travelingToLocation.includes('wrld_') ? wsContent.travelingToLocation.split(':')[0] : wsContent.worldId.includes('wrld_') ? wsContent.worldId : 'private'
+					if (notif_user_location != 'private') {
+						console.log(`${loglv.debug}${selflogA} Checking if Friend location is an Unlisted world.`)
+						var gotWorld = await limiter.reqCached('world', notif_user_location).catch(async () => {
+							return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': notif_user_location } }), 'world')
+						})
+						if (gotWorld.data != undefined && gotWorld.data?.releaseStatus == 'private') {
+							var fileHandler;
+							try {
+								fileHandler = await fsp.open('./datasets/private-worlds.txt')
+								var fileRead = await fileHandler.readFile('utf8')
+								if (!fileRead.includes(gotWorld.data.id)) {
+									console.log(`${loglv.hey}${selflogA} Attempting to save discovered Private world to list.\n${wsContent.user.displayName} launched:\n${gotWorld.data.id} ${gotWorld.data.name} by ${gotWorld.data.authorName}`)
+									// console.log(`${loglv.debug}${selflogA} World not saved, Saving..`)
+									var appendText = `\r\n${gotWorld.data.id}|${gotWorld.data.name}|${gotWorld.data.authorName}|${gotWorld.data.authorId}`
+									fs.appendFile('./datasets/private-worlds.txt', appendText, (err) => { if (err) { console.error(err) } })
+								} else {
+									// console.log(`${loglv.debug}${selflogA} World already saved.`)
+								}
+							} catch (error) {
+								console.log(`${loglv.warn}${selflogL}`, error)
+							} finally { if (fileHandler) { await fileHandler.close() } }
+						}
+					}
+				}
+
 				break;
 
 			case 'friend-offline':
@@ -422,10 +451,32 @@ function socket_VRC_API_Connect() {
 			// break;
 
 			case 'friend-location':
+				// break;
+				var notif_user_location = wsContent.location != '' ? wsContent.location : wsContent.travelingTolocation != '' ? wsContent.travelingTolocation : 'private'
+				if (notif_user_location != 'private') {
+					var gotWorld = await limiter.reqCached('world', notif_user_location.split(':')[0]).catch(async () => {
+						return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': notif_user_location.split(':')[0] } }), 'world')
+					})
+					if (gotWorld.data != undefined && gotWorld.data?.releaseStatus == 'private') {
+						var fileHandler;
+						try {
+							fileHandler = await fsp.open('./datasets/private-worlds.txt')
+							var fileRead = await fileHandler.readFile('utf8')
+							if (!fileRead.includes(gotWorld.data.id)) {
+								console.log(`${loglv.hey}${selflogA} Attempting to save discovered Private world to list.\n${wsContent.user.displayName} visited:\n${gotWorld.data.id} ${gotWorld.data.name} by ${gotWorld.data.authorName}`)
+								// console.log(`${loglv.debug}${selflogA} World not saved, Saving..`)
+								var appendText = `\r\n${gotWorld.data.id}|${gotWorld.data.name}|${gotWorld.data.authorName}|${gotWorld.data.authorId}`
+								fs.appendFile('./datasets/private-worlds.txt', appendText, (err) => { if (err) { console.error(err) } })
+							} else {
+								// console.log(`${loglv.debug}${selflogA} World already saved.`)
+							}
+						} catch (error) {
+							console.log(`${loglv.warn}${selflogL}`, error)
+						} finally { if (fileHandler) { await fileHandler.close() } }
+					}
+				}
+				// console.log(`${loglv.info}${selflogWS} [GPS] ${wsContent.user.displayName} - ${notif_user_location}`);
 				break;
-				let notif_user_location = wsContent.location != '' ? wsContent.location : wsContent.travelingTolocation != '' ? wsContent.travelingTolocation : 'private'
-				console.log(`${loglv.info}${selflogWS} [GPS] ${wsContent.user.displayName} - ${notif_user_location}`);
-			// break;
 
 			case 'user-update': break;
 			case 'user-location': break;
@@ -494,7 +545,7 @@ function fetchLogFile() {
 			console.log(`${loglv.info}${selflogL} Found newest log file: ${files[files.length - 1]}`)
 		} catch (err) {
 			console.log(`${loglv.error}${selflogL} tarFileSize Failed: ${err}`)
-		}finally{
+		} finally {
 			startWatching()
 		}
 	})
@@ -3144,8 +3195,8 @@ async function eventPlayerJoin(logOutputLine) {
 		// Append UserID to tracked player
 		let pioIndex = playersInstanceObject.findIndex(playersInstanceObject => playersInstanceObject.name == playerDisplayName)
 
-		if (playerDisplayName == '14anthony7095') {
-			logEmitter.emit('joinedworld', G_worldID)
+		if (playerDisplayName == currentAccountInUse.name ) { 
+			logEmitter.emit('joinedworld', G_worldID) 
 		}
 
 		// Group Member tagging
