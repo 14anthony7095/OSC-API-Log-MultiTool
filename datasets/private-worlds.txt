@@ -59,3 +59,5 @@ wrld_b6c051c8-4288-4712-a41f-b9fbd19d7156| The Echo Dome                        
 wrld_d2d17423-6597-4b5b-98c1-09cf42b3505c| Sundown Solace                                  | RAVENHARTEX       | usr_4332bc5d-3f7e-4391-adad-164d2430cf32
 wrld_ec874a16-f96e-4052-82b3-b3da6d6c5504| snowy                                           | bílly             | usr_d7fe7e3b-9f58-4e84-972b-415ac7030639
 wrld_13ea29aa-cdbc-41c3-b66d-d70c25b23662| すぴハウス                                      | たけすぴおん      | usr_70298530-f398-422e-ae8c-6cc41c53f537
+wrld_c6a93752-75d2-440a-809d-0bfe6a56d13f| BracketTest                                     | ShuiZero          | usr_0c4ed20e-54fd-453e-b0dd-a1b978f3e92c
+wrld_c7ca4f12-61e7-4a7d-a044-a7482ccd07f7| Vernidius Spire                                 | Novatosh          | usr_88aa1580-2e84-4ecf-a199-d800eb1784aa
