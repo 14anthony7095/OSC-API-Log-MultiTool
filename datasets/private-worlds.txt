@@ -67,3 +67,4 @@ wrld_c0232597-4314-4900-9a26-a0169b5e964e| Phantom Thieves Hideout - Persona 5 R
 wrld_4117ca4d-a9b0-430a-8410-26577ab5dd5d| Mansion ˸ Echo Night summer                     | 翠深アオイ        | usr_0610e510-7083-447e-82dd-c189291551dd
 wrld_7fa0aaa0-c07c-427e-a4f6-6ce1e812badc| Zilverk Club                                    | Ziilverk          | usr_7869e5f6-6503-4c50-a123-31e45fc34029
 wrld_9b000829-e84b-4858-a207-fb35a43da83c| Googie Cove                                     | Rassilion         | usr_97097477-00b4-4283-b486-9c14789991be
+wrld_c8490a0d-8b16-4841-bac7-1e5b7c42b725| world test 2                                    | XulesTDragonFox   | usr_1db312e5-8cdf-4ada-85a8-0c316c35a6a8
