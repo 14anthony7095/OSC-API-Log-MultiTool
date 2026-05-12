@@ -61,7 +61,6 @@ var authToken = null
 var isApiErrorSkip = false
 var socket_VRC_API
 var cacheWS = {}
-var G_lastlocation = ''
 var lastVideoURL = ``
 var seenVideoURLs = [] // For current instance only
 var worldHopTimeout;
@@ -69,13 +68,31 @@ var worldHopTimeoutHour;
 var tonRoundType = ''
 var tonAvgStartWait = []
 var tonRoundReadyTime = 0
-var G_worldID = ``
-var G_currentLocation = ''
+var InstanceHistory = [
+	{
+		'location': 'offline',
+		'join_timestamp': 0,
+		"leave_timestamp": 0,
+		'timeSpent': 0,
+		'worldID': '',
+		'groupID': '',
+		'instanceType': '',
+		'current': false
+	},
+	{
+		'location': 'offline',
+		'join_timestamp': 0,
+		"leave_timestamp": 0,
+		'timeSpent': 0,
+		'worldID': '',
+		'groupID': '',
+		'instanceType': '',
+		'current': false
+	}
+]
 var G_InstanceClosed = false
-var G_groupID_last = ``
-var G_groupID = ``
 var G_groupMembersVisible = false
-var instanceType = ''
+var G_instanceJoinQueue = []
 var lastSetUserStatus = ''
 var cooldownPortalVanish = false
 var vrchatRunning = false
@@ -89,7 +106,6 @@ var currentLength = 0
 var cooldownLogRead = false
 var urlType = 'none'
 var logCooldown = 0.001 // secs
-var worldjointimestamp = 0
 
 // Restore saved into Scope
 fs.readFile('./lastFetchGroupLogs.txt', 'utf8', (err, data) => {
@@ -178,8 +194,12 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'years' && args[0] == 'close') { switchYearGroupsClosed() }
 	if (cmd == 'years' && args[0] == 'open') { switchYearGroupsReOpen() }
 	if (cmd == 'forceaudit') { scanGroupAuditLogs() }
+	if (cmd == 'findjoinable') {
+		findJoinableInstances().then(d => { G_instanceJoinQueue = d })
+	}
 
 	if (cmd == 'avatars') { requestAvatarStatTable(false, 0.05, false) }
+	if (cmd == 'worstavatars') { requestWorstStatTable() }
 	if (cmd == 'collectavatars') { collectActiveInstanceStats() }
 	if (cmd == 'collectavatars2') { collectActiveInstanceStats(true) }
 	if (cmd == 'allavatars') { scanAllAvatarStats() }
@@ -265,7 +285,7 @@ function socket_VRC_API_Connect() {
 
 					if (userAutoAcceptWhiteList.includes(wsContent.senderUsername)) {
 						// Requester is Whitelisted
-						if (getSelfLocation() == undefined || getSelfLocation() == '') {
+						if (InstanceHistory[0].location == undefined || InstanceHistory[0].location == '') {
 							let res = await limiter.req(vrchat.getCurrentUser())
 							if (res.data.presence.world != 'offline') {
 								let resIU = await limiter.req(vrchat.inviteUser({ 'path': { 'userId': wsContent.senderUserId }, 'body': { 'instanceId': res.data.presence.world + ":" + res.data.presence.instance, 'messageSlot': 0 } }))
@@ -274,7 +294,7 @@ function socket_VRC_API_Connect() {
 								await limiter.req(vrchat.respondInvite({ 'body': { 'responseSlot': 0 }, 'path': { 'notificationId': wsContent.id } }))
 							}
 						} else {
-							let resIU = await limiter.req(vrchat.inviteUser({ 'path': { 'userId': wsContent.senderUserId }, 'body': { 'instanceId': getSelfLocation(), 'messageSlot': 0 } }))
+							let resIU = await limiter.req(vrchat.inviteUser({ 'path': { 'userId': wsContent.senderUserId }, 'body': { 'instanceId': InstanceHistory[0].location, 'messageSlot': 0 } }))
 							resIU.data == undefined ? console.log(resIU.error) : console.log(resIU.data)
 						}
 					}
@@ -293,7 +313,7 @@ function socket_VRC_API_Connect() {
 					console.log(`${loglv.info}${selflogWS} [${JSON.parse(line).type}] ${wsContent.message} - ${wsContent.link.slice(6)}`)
 
 					// Auto Block if not long enough
-					if (wsContent.link.slice(6) == G_groupID && Date.now() < (worldjointimestamp + 300_000)) {
+					if (wsContent.link.slice(6) == InstanceHistory[0].groupID && Date.now() < (InstanceHistory[0].join_timestamp + 300_000)) {
 
 						if (currentAccountInUse['Agroup'] == true) {
 							oscChatBoxV2(`Group performed an undesirable action.\vTaking countermeasures`, 10_000, true, true, false, false)
@@ -364,10 +384,11 @@ function socket_VRC_API_Connect() {
 								fileHandler = await fsp.open('./datasets/private-worlds.txt')
 								var fileRead = await fileHandler.readFile('utf8')
 								if (!fileRead.includes(gotWorld.data.id)) {
-									console.log(`${loglv.hey}${selflogA} Attempting to save discovered Private world to list.\n${wsContent.user.displayName} launched:\n${gotWorld.data.id} ${gotWorld.data.name} by ${gotWorld.data.authorName}`)
+									console.log(`${loglv.hey}${selflogA} Saving Unlisted world.\n${wsContent.user.displayName} launched:\n${gotWorld.data.id} ${gotWorld.data.name} by ${gotWorld.data.authorName}`)
 									// console.log(`${loglv.debug}${selflogA} World not saved, Saving..`)
 									var appendText = `\r\n${gotWorld.data.id}|${gotWorld.data.name}|${gotWorld.data.authorName}|${gotWorld.data.authorId}`
 									fs.appendFile('./datasets/private-worlds.txt', appendText, (err) => { if (err) { console.error(err) } })
+									// open(`vrcx://world/${gotWorld.data.id}`)
 								} else {
 									// console.log(`${loglv.debug}${selflogA} World already saved.`)
 								}
@@ -463,10 +484,11 @@ function socket_VRC_API_Connect() {
 							fileHandler = await fsp.open('./datasets/private-worlds.txt')
 							var fileRead = await fileHandler.readFile('utf8')
 							if (!fileRead.includes(gotWorld.data.id)) {
-								console.log(`${loglv.hey}${selflogA} Attempting to save discovered Private world to list.\n${wsContent.user.displayName} visited:\n${gotWorld.data.id} ${gotWorld.data.name} by ${gotWorld.data.authorName}`)
+								console.log(`${loglv.hey}${selflogA} Saving Unlisted world.\n${wsContent.user.displayName} visited:\n${gotWorld.data.id} ${gotWorld.data.name} by ${gotWorld.data.authorName}`)
 								// console.log(`${loglv.debug}${selflogA} World not saved, Saving..`)
 								var appendText = `\r\n${gotWorld.data.id}|${gotWorld.data.name}|${gotWorld.data.authorName}|${gotWorld.data.authorId}`
 								fs.appendFile('./datasets/private-worlds.txt', appendText, (err) => { if (err) { console.error(err) } })
+								// open(`vrcx://world/${gotWorld.data.id}`)
 							} else {
 								// console.log(`${loglv.debug}${selflogA} World already saved.`)
 							}
@@ -644,7 +666,7 @@ function processLogLine(line) {
 	}
 
 	// Terrors of Nowhere
-	if (G_worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd') {
+	if (InstanceHistory[0].worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd') {
 		// if (line.includes(`[DEATH][14anthony7095]`)) { PiShockAll(30, 1) }
 		if (line.includes(`Round type is`)) {
 			tonRoundType = line.split('Round type is ')[1]
@@ -673,7 +695,7 @@ function processLogLine(line) {
 	}
 
 	// Fish! [RELEASE]
-	if (G_worldID == 'wrld_ae001ea3-ed05-42f0-adf2-3d47efd10a77') {
+	if (InstanceHistory[0].worldID == 'wrld_ae001ea3-ed05-42f0-adf2-3d47efd10a77') {
 		if (line.includes(`[PlayerStats] `)) {
 			var plystats = line.split(`[PlayerStats] `)[1].split(' ')
 			console.log(`${loglv.info}${selflogL} [FISH] You're Level ${plystats[2].slice(2)} with ${plystats[3].slice(3)} XP and ${plystats[4].slice(6)} Gold.`)
@@ -1361,7 +1383,7 @@ async function avatarFileAnalysis(fileid, fileversion) {
 	if (statPunished.length > 0 && statWarnings == true) {
 		console.log('currentAccountInUse', currentAccountInUse['Agroup'])
 		if (currentAccountInUse['Agroup'] == true) {
-			if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+			if (InstanceHistory[0].groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
 				oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunishedEA[0].log)}${fitChars(statPunishedEA[1]?.log)}${fitChars(statPunishedEA[2]?.log)}`, 15000, false, true, false, false, true)
 			} else {
 				oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunished[0].log)}${fitChars(statPunished[1]?.log)}${fitChars(statPunished[2]?.log)}`, 15000, false, true, false, false, true)
@@ -1388,8 +1410,6 @@ async function avatarFileAnalysis(fileid, fileversion) {
 
 async function scanAllAvatarStats() {
 	console.time('Full-Avatar-Scan')
-
-	G_lastlocation = `All Avatar Stats in Cache`
 
 	var fsrddir = await fsp.readdir('./datasets/avatarStatCache/', 'utf8')
 	for (const findex in fsrddir) {
@@ -1491,7 +1511,7 @@ async function scanAllAvatarStats() {
 		if (findex == fsrddir.length - 1) {
 			console.timeEnd('Full-Avatar-Scan')
 			setTimeout(() => {
-				requestAvatarStatTable(false, 0.05, true)
+				requestAvatarStatTable(false, 0.05, true, `All Avatar Stats in Cache`)
 			}, 2000)
 			setTimeout(() => {
 				avatarStatSummary = {
@@ -1551,8 +1571,6 @@ async function scanAllAvatarStats() {
 
 async function scanListAvatarStats(I_list = []) {
 
-	G_lastlocation = `Specific List of Avatar Stats from Cache`
-
 	var fsrddir = I_list
 	fsrddir.forEach(async (file, index, arr) => {
 		var res = {}
@@ -1584,7 +1602,7 @@ async function scanListAvatarStats(I_list = []) {
 
 		if (index == arr.length - 1) {
 			setTimeout(() => {
-				requestAvatarStatTable(false, 0.05, true)
+				requestAvatarStatTable(false, 0.05, true, `Specific List of Avatar Stats from Cache`)
 			}, 2000)
 			setTimeout(() => {
 				avatarStatSummary = {
@@ -1643,7 +1661,6 @@ async function scanListAvatarStats(I_list = []) {
 }
 
 async function collectActiveInstanceStats(skipLaunch = false) {
-	var instanceList = []
 	// Active World List
 	var activeworlds = await limiter.req(vrchat.getActiveWorlds({ 'query': { 'n': 100, 'order': 'ascending' } }))
 	// Worlds Data
@@ -1757,9 +1774,7 @@ function queueInstanceDataBurst() {
 
 oscEmitter.on('osc', (addr, value) => {
 	if (addr == `/avatar/parameters/api/explore/start` && value == true) { inviteHubQueue() }
-	if (addr == `/avatar/parameters/api/explore/next` && value == true) {
-		inviteLocalQueue()
-	}
+	if (addr == `/avatar/parameters/api/explore/next` && value == true) { inviteLocalQueue() }
 	// if (address == `/avatar/parameters/api/explore/hub` && value == true) { }
 	if (addr == `/avatar/parameters/api/explore/stop` && value == true) {
 		apiEmitter.emit('switch', 0, 'world')
@@ -1771,29 +1786,18 @@ oscEmitter.on('osc', (addr, value) => {
 	if (addr == `/avatar/parameters/api/explore/privacy` && value == 3) { explorePrivacyLevel = 3 }
 	if (addr == `/avatar/parameters/api/requestall` && value == true) { requestAllOnlineFriends(currentUser) }
 	if (addr == '/avatar/parameters/api/favWorld' && value != 0) {
-		if (G_worldID == '') { console.error('No World ID in location buffer'); return }
-		var wrld_fav = {}
-		fs.readFile('./datasets/wrld_fav.json', 'utf8', (err, data) => {
-			if (err) { console.error(err); return }
-			wrld_fav = JSON.parse(data)
-			// console.debug(wrld_fav)
-			switch (value) {
-				case 1:
-					oscChatBoxV2('Added world to "Approve" list', 2000, false, true, undefined, false);
-					wrld_fav["1_Approve"].push(G_worldID); break;
-				case 2:
-					oscChatBoxV2('Added world to "Likes" list', 2000, false, true, undefined, false);
-					wrld_fav["2_Likes"].push(G_worldID); break;
-				case 3:
-					oscChatBoxV2('Added world to "Love / Show Off" list', 2000, false, true, undefined, false);
-					wrld_fav["3_Love_ShowOff"].push(G_worldID); break;
-				case 4:
-					oscChatBoxV2('Added world to "Games & Activity" list', 2000, false, true, undefined, false);
-					wrld_fav["4_Game_Activity"].push(G_worldID); break;
-				default: break;
-			}
-			fs.writeFile('./datasets/wrld_fav.json', JSON.stringify(wrld_fav), 'utf8', (err) => { if (err) { console.error(err) } })
-		})
+		switch (value) {
+			case 1:
+				findJoinableInstances().then(d => {
+					G_instanceJoinQueue = d
+					oscChatBoxV2(`~Found ${d.length} joinable instances`, 5000, false, true, false, false)
+					console.log(`${loglv.hey}${selflogA} Found ${d.length} joinable instances`)
+				})
+				break
+			case 2:
+				inviteJoinableInstanceQueue(); break;
+			default: break;
+		}
 	}
 
 })
@@ -1805,7 +1809,7 @@ oscEmitter.on('avatar', (avtrID) => {
 	].includes(avtrID)) {
 		queueInstanceDataBurst()
 		oscSend('/avatar/parameters/log/instance_closed', G_InstanceClosed)
-		applyGroupLogo(G_groupID)
+		applyGroupLogo(InstanceHistory[0].groupID)
 	}
 });
 
@@ -1921,12 +1925,12 @@ function inviteLocalQueue(I_autoNext = false) {
 
 		var filter_UserAndroid = playersInstanceObject.find(u => u.platform == 'android')
 		var filter_PlatformAdnroid = gotWorld.data.unityPackages.find(p => p.platform == 'android')
-		// if (gotWorld.data.capacity < playersInInstance.length && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+		// if (gotWorld.data.capacity < playersInInstance.length && G_InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 		if (gotWorld.data.capacity < playersInInstance.length) {
 			console.log(`${loglv.hey}${selflogA} World can not fit everyone. Retry..`);
 			oscChatBoxV2(`World can not fit everyone.\vTry another.`, 5000, true, true, false, false, false)
 			return
-			// } else if (filter_UserAndroid != undefined && filter_PlatformAdnroid == undefined && G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+			// } else if (filter_UserAndroid != undefined && filter_PlatformAdnroid == undefined && G_InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 		} else if (filter_UserAndroid != undefined && filter_PlatformAdnroid == undefined) {
 			console.log(`${loglv.hey}${selflogA} World is not Quest compatible. Retry..`);
 			oscChatBoxV2(`World is not Quest compatible.\vTry another.`, 5000, true, true, false, false, false)
@@ -1937,7 +1941,6 @@ function inviteLocalQueue(I_autoNext = false) {
 			'worldId': world_id,
 			'region': 'use',
 			// 'displayName': 'World Hop',
-			'minimumAvatarPerformance': 'Poor',
 			'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
 		}
 		switch (explorePrivacyLevel) {
@@ -1945,12 +1948,14 @@ function inviteLocalQueue(I_autoNext = false) {
 				instanceBody['type'] = 'group'
 				instanceBody['ownerId'] = 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce'
 				instanceBody['groupAccessType'] = 'public'
+				instanceBody['minimumAvatarPerformance'] = 'Poor'
 				instanceBody['queueEnabled'] = true
 				break;
 			case 1:
 				instanceBody['type'] = 'group'
 				instanceBody['ownerId'] = 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce'
 				instanceBody['groupAccessType'] = 'plus'
+				instanceBody['minimumAvatarPerformance'] = 'Poor'
 				instanceBody['queueEnabled'] = true
 				break;
 			case 2:
@@ -1983,6 +1988,9 @@ function inviteLocalQueue(I_autoNext = false) {
 		}
 	})
 }
+
+
+
 
 var lastSetUserStatus = ''
 function setUserStatus(status) {
@@ -2165,7 +2173,7 @@ function eventPopcornPalace(json) {
 	//     "looping": false
 	// }
 	let movieShowName = ''
-	if (jsondata.videoName != '' && Date.now() > (worldjointimestamp + 60000)) {
+	if (jsondata.videoName != '' && InstanceHistory[0].join_timestamp != 0 && InstanceHistory[0].join_timestamp + 600_000 < Date.now()) {
 		if (jsondata.videoName.includes('One Piece')) {
 			movieShowName = jsondata.videoName.replace('- S1E', 'ep.').split(' -')[0]
 		} else {
@@ -2179,6 +2187,71 @@ function eventPopcornPalace(json) {
 			}
 		}
 	}
+}
+
+async function findJoinableInstances() {
+	return new Promise(async (resolve, reject) => {
+		// Creating instance array to return later
+		var joinableInstances = []
+		console.log(`${loglv.debug}${selflogL} [InstanceHistory]`, InstanceHistory)
+
+		// Fetching 100 online friends from api
+		var gotOnlineFriends = await limiter.req(vrchat.getFriends({ 'query': { 'n': 100, 'offline': false, 'offset': 0 } }))
+		if (gotOnlineFriends.data != undefined) {
+			if (gotOnlineFriends.data.length == 100) {
+				// Fetching 100 more online friends from api
+				var gotMoreOnlineFriends = await limiter.req(vrchat.getFriends({ 'query': { 'n': 100, 'offline': false, 'offset': 100 } }))
+				if (gotMoreOnlineFriends.data != undefined) {
+					// Merging with first
+					gotOnlineFriends.data = gotOnlineFriends.data.concat(gotMoreOnlineFriends.data)
+				}
+			}
+			// Filtering Private and Offline instances out of friend data
+			gotOnlineFriends.data
+				.filter(f => f.location != 'private' && f.location != 'offline')
+				.forEach((i) => {
+					// Pushing instance locations into return array
+					var srcInstHistory = InstanceHistory.find(f => f.location == i.location)
+					if (srcInstHistory == undefined && !joinableInstances.includes(i.location)) {
+						joinableInstances.push(i.location)
+					}
+				})
+		}
+
+		// Joinable Group Instances
+		// Fetching active Group Instances from api
+		var gotUserGroupInstances = await vrchat.getUserGroupInstances({ 'path': { 'userId': process.env['VRC_ACC_ID_1'] } })
+		if (gotUserGroupInstances.data != undefined) {
+			// Filtering out Full instances without queue enabled
+			gotUserGroupInstances.data.instances
+				.filter(f => f.closedAt == null || (f.closedAt != null && f.closedAt > Date.now()) || f.queueEnabled == true)
+				.forEach((i) => {
+					// Pushing instance locations into return array
+					var srcInstHistory = InstanceHistory.find(f => f.location == i.location)
+					if (srcInstHistory == undefined && !joinableInstances.includes(i.location)) {
+						joinableInstances.push(i.location)
+					}
+				})
+
+		}
+
+		// Resolving function's Promise
+		resolve(joinableInstances)
+	})
+}
+
+
+function inviteJoinableInstanceQueue() {
+	if (G_instanceJoinQueue.length == 0) {
+		console.log(`${loglv.hey}${selflogA} Joinable queue is empty`);
+		oscChatBoxV2(`~Joinable Queue is empty`, 5000, false, true, false, false, false);
+		return
+	}
+	// let randnum = Math.round(Math.random() * (G_instanceJoinQueue.length - 1))
+	// let instanceJoinID = G_instanceJoinQueue[randnum]
+	startvrc(G_instanceJoinQueue[0])
+	// G_instanceJoinQueue.splice(randnum, 1)
+	G_instanceJoinQueue.shift()
 }
 
 function applyGroupLogo(gID) {
@@ -2269,7 +2342,6 @@ function eventGameClose() {
 		lastSetUserStatus = ''
 		setUserStatus('')
 	}
-	G_groupID = ''
 	G_InstanceClosed = false
 	tonAvgStartWait = []
 	worldHoppers = []
@@ -2360,7 +2432,7 @@ function requestUserTrustTable() {
 	console.log(`${loglv.debug}\n${stringDebugTables}`)
 }
 
-async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, resetData = false) {
+async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, resetData = false, sourceLocation) {
 	return new Promise((resolve, reject) => {
 		var avatarStatSummaryTable = [['Components - ' + avatarStatSummary.totalAvatars + ' Avatars', 'Min', 'Q1', 'Median', 'Q3', 'Max', trAvgPercent * 100 + '% Tr.Avg', 'Total']]
 		Object.keys(avatarStatSummary.stats).forEach(async (key, index, arr) => {
@@ -2446,9 +2518,9 @@ async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, 
 		setTimeout(() => {
 			var tableOptions = { 'drawHorizontalLine': (lineIndex, rowCount) => { return lineIndex === 0 || lineIndex === 1 || lineIndex === 30 || lineIndex === rowCount } }
 			if (avatarStatSummary.totalAvatars >= 4) {
-				console.log('=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent ✅: ${avatarStatSummary.Excellent}\n         Good 🟢: ${avatarStatSummary.Good}\n       Medium 🟡: ${avatarStatSummary.Medium}\n         Poor 🔴: ${avatarStatSummary.Poor}\n     VeryPoor ❌: ${avatarStatSummary.VeryPoor}`)
+				console.log('=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + sourceLocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent ✅: ${avatarStatSummary.Excellent}\n         Good 🟢: ${avatarStatSummary.Good}\n       Medium 🟡: ${avatarStatSummary.Medium}\n         Poor 🔴: ${avatarStatSummary.Poor}\n     VeryPoor ❌: ${avatarStatSummary.VeryPoor}`)
 				if (writeToFile == true) {
-					fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + ' ' + G_lastlocation + '.txt', '=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + G_lastlocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent ✅: ${avatarStatSummary.Excellent}\n         Good 🟢: ${avatarStatSummary.Good}\n       Medium 🟡: ${avatarStatSummary.Medium}\n         Poor 🔴: ${avatarStatSummary.Poor}\n     VeryPoor ❌: ${avatarStatSummary.VeryPoor}\n` + '\n--Avatar Security Checks used--' + avatarStatSummary.checkedFileIDs.map((v) => { return '\n' + v }), 'utf8', (err) => {
+					fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + ' ' + sourceLocation + '.txt', '=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + sourceLocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent ✅: ${avatarStatSummary.Excellent}\n         Good 🟢: ${avatarStatSummary.Good}\n       Medium 🟡: ${avatarStatSummary.Medium}\n         Poor 🔴: ${avatarStatSummary.Poor}\n     VeryPoor ❌: ${avatarStatSummary.VeryPoor}\n` + '\n--Avatar Security Checks used--' + avatarStatSummary.checkedFileIDs.map((v) => { return '\n' + v }), 'utf8', (err) => {
 						if (err) { console.error(err) }
 					})
 				}
@@ -2506,6 +2578,29 @@ async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, 
 
 			}
 			resolve(true)
+		}, 2000)
+	})
+}
+
+async function requestWorstStatTable() {
+	return new Promise((resolve, reject) => {
+		var worstStatSummaryTable = [['Component', 'Value', 'Blame Source']]
+		Object.keys(worstAvatarStats).forEach(async (key, index, arr) => {
+			if (key == 'fileSize' || key == 'uncompressedSize' || key == 'totalTextureUsage') {
+				var vValue = await formatBytes(worstAvatarStats[key].value)
+				worstStatSummaryTable.push([avatarStatSummary.stats[key].label, vValue, worstAvatarStats[key].source])
+			} else {
+				worstStatSummaryTable.push([avatarStatSummary.stats[key].label, worstAvatarStats[key].value, worstAvatarStats[key].source])
+			}
+		})
+		setTimeout(() => {
+			var logString = ''
+			worstStatSummaryTable.map(([l, v, b]) => { return `${l}	${v}		${b}` }).forEach(line => {
+				logString += `${logString.length == 0 ? '' : '\n'}${line}`
+			})
+			fs.writeFile('./output.txt', logString, (err) => { if (err) { console.error(err) } })
+			console.log(logString, '\n\nWrote to output.txt file')
+			open('./output.txt')
 		}, 2000)
 	})
 }
@@ -2958,8 +3053,6 @@ function scanaudit(logoutput, groupID) {
 	})
 }
 
-function getSelfLocation() { return G_currentLocation }
-exports.getSelfLocation = getSelfLocation;
 
 async function eventHeadingToWorld(logOutputLine) {
 	clearTimeout(worldHopTimeout)
@@ -2967,16 +3060,17 @@ async function eventHeadingToWorld(logOutputLine) {
 	clearTimeout(worldHopTimeoutHour)
 	worldHopTimeoutHour = null
 
-	G_groupID_last = G_groupID
-	G_worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
-	console.log(`${loglv.info}${selflogL} World ID ${G_worldID}`)
+	var worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
+	var groupID = ''
+	var instanceType = ''
+	console.log(`${loglv.info}${selflogL} World ID ${worldID}`)
 	G_groupMembersVisible = false
 
 	// 2026.01.27 14:20:50 Debug      -  [Behaviour] Destination set: wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5:65895~hidden(usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752)~region(use)
 
 	if (logOutputLine.includes(`~group(grp_`)) {
-		G_groupID = /grp_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
-		console.log(`${loglv.info}${selflogL} Group ID ${G_groupID}`)
+		groupID = /grp_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
+		console.log(`${loglv.info}${selflogL} Group ID ${groupID}`)
 		if (logOutputLine.includes(`~groupAccessType(plus)`)) {
 			instanceType = `groupPlus`
 		} else if (logOutputLine.includes(`~groupAccessType(public)`)) {
@@ -2986,8 +3080,8 @@ async function eventHeadingToWorld(logOutputLine) {
 		}
 
 		// Group Member visibility
-		var gotGroup = await limiter.reqCached('group', G_groupID).catch(async () => {
-			return await limiter.req(vrchat.getGroup({ 'path': { 'groupId': G_groupID } }), 'group')
+		var gotGroup = await limiter.reqCached('group', groupID).catch(async () => {
+			return await limiter.req(vrchat.getGroup({ 'path': { 'groupId': groupID } }), 'group')
 		})
 		if (gotGroup.data.membershipStatus == 'member' || gotGroup.data.privacy == 'default') {
 			G_groupMembersVisible = true
@@ -2996,7 +3090,6 @@ async function eventHeadingToWorld(logOutputLine) {
 		}
 
 	} else {
-		G_groupID = ''
 		if (logOutputLine.includes(`~private(`)) {
 			instanceType = `invite`
 		} else if (logOutputLine.includes(`~canRequestInvite`)) {
@@ -3009,20 +3102,33 @@ async function eventHeadingToWorld(logOutputLine) {
 			instanceType = `public`
 		}
 	}
-	G_currentLocation = 'wrld_' + logOutputLine.split('wrld_')[1]
+
+	InstanceHistory[0].current = false
+	InstanceHistory.unshift({
+		'current': true,
+		'location': 'wrld_' + logOutputLine.split('wrld_')[1],
+		'worldID': worldID,
+		'groupID': groupID,
+		'instanceType': instanceType,
+		'join_timestamp': 0,
+		'leave_timestamp': 0,
+		'timeSpent': 0
+	});
+
+
 	// Get world info for OBS Stream
-	let res = await limiter.reqCached('world', G_worldID).catch(async () => {
-		return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': G_worldID } }), 'world')
+	let res = await limiter.reqCached('world', worldID).catch(async () => {
+		return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': worldID } }), 'world')
 	})
-	apiEmitter.emit('fetchedDistThumbnail', res.data.imageUrl, res.data.name.slice(0, 50), res.data.authorName.slice(0, 50), G_worldID)
+	apiEmitter.emit('fetchedDistThumbnail', res.data.imageUrl, res.data.name.slice(0, 50), res.data.authorName.slice(0, 50), worldID)
 
 	// Save avatar stats for the instance
-	await requestAvatarStatTable(true, 0.05, true)
-	G_lastlocation != `${G_worldID} - ${instanceType}${G_groupID != '' ? ' - ' + G_groupID : ''}` ? G_lastlocation = `${G_worldID} - ${instanceType}${G_groupID != '' ? ' - ' + G_groupID : ''}` : ''
+	await requestAvatarStatTable(true, 0.05, true, `${InstanceHistory[1].worldID} - ${InstanceHistory[1].instanceType}${InstanceHistory[1].groupID != '' ? ' - ' + InstanceHistory[1].groupID : ''}`)
+
 
 	// El Alba starting world
-	if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && G_worldID == 'wrld_f6445b27-037d-4926-b51f-d79ada716b31') { worldHoppers = [] }
-	if (G_groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && G_groupID_last != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && G_groupID != '') { worldHoppers = [] }
+	if (groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && worldID == 'wrld_f6445b27-037d-4926-b51f-d79ada716b31') { worldHoppers = [] }
+	if (groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && InstanceHistory[1]?.groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && groupID != '') { worldHoppers = [] }
 
 	console.log(`${loglv.info}${selflogL} Instance Type ${instanceType}`)
 }
@@ -3042,28 +3148,33 @@ function eventJoinWorld() {
 
 	if (cooldownUrl == true) { cooldownUrl = false }
 
-	worldjointimestamp = Date.now()
+	InstanceHistory[0].join_timestamp = Date.now()
+	// console.log(`${loglv.debug}${selflogL} [InstanceHistory]`, InstanceHistory)
+
 	playersInInstance = []
 	membersInInstance = []
 	playersInstanceObject = []
 	fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
-		if (data.includes(G_worldID) && G_worldID != '') {
-			fs.writeFile(worldQueueTxt, data.replace(`${G_worldID}\r\n`, ''), (err) => {
+		if (data.includes(InstanceHistory[0].worldID) && InstanceHistory[0].worldID != '') {
+			fs.writeFile(worldQueueTxt, data.replace(`${InstanceHistory[0].worldID}\r\n`, ''), (err) => {
 				if (err) { console.log(err) }
-				console.log(`${loglv.debug}${selflogL} ${G_worldID} was successfully purged from queue`)
+				console.log(`${loglv.debug}${selflogL} ${InstanceHistory[0].worldID} was successfully purged from queue`)
 			})
 		}
 	})
 
 
+	if (lastSetUserStatus == movieShowNameLast && InstanceHistory[0].worldID != 'wrld_266523e8-9161-40da-acd0-6bd82e075833') {
+		setUserStatus(``)
+	}
 
 }
 
 function eventInstanceClosed() {
-	if (G_worldID != 'wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5' && G_groupID != 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+	if (InstanceHistory[0].worldID != 'wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5' && InstanceHistory[0].groupID != 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 		lastSetUserStatus = 'Instance is closed'
 		setUserStatus('Instance is closed')
-	} else if (G_groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+	} else if (InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 		if (lastSetUserStatus != `Exploring World Queue`) {
 			lastSetUserStatus = `Exploring World Queue`
 			setUserStatus(`Exploring World Queue`)
@@ -3119,9 +3230,9 @@ async function eventPlayerInitialized(logOutputLine) {
 		logEmitter.emit('playerJoin', playerDisplayName)
 
 		// Terrors of Nowhere alert friend join
-		if (G_worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd' &&
-			[`invite`, `invitePlus`, `friends`, `friendsPlus`].includes(instanceType) &&
-			Date.now() > (worldjointimestamp + 120_000) &&
+		if (InstanceHistory[0].worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd' &&
+			[`invite`, `invitePlus`, `friends`, `friendsPlus`].includes(InstanceHistory[0].instanceType) &&
+			Date.now() > (InstanceHistory[0].join_timestamp + 120_000) &&
 			currentAccountInUse['Agroup'] == true) {
 			oscChatBoxV2(`~Someone is joining if you want to wait for them: ${playerDisplayName}`, undefined, false, true, false, true, false)
 		}
@@ -3132,7 +3243,7 @@ async function eventPlayerInitialized(logOutputLine) {
 
 		playerRatio = playersInInstance.length / playerHardLimit
 
-		if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
+		if ([`groupPlus`, `groupPublic`, `group`].includes(InstanceHistory[0].instanceType)) {
 			memberRatio = membersInInstance.length / playersInInstance.length
 			console.log(`${loglv.info}${selflogL} There are now ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`)
 			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`
@@ -3141,7 +3252,7 @@ async function eventPlayerInitialized(logOutputLine) {
 			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`
 		}
 
-		if (Date.now() > (worldjointimestamp + 30000)) { queueInstanceDataBurst() }
+		if (Date.now() > (InstanceHistory[0].join_timestamp + 30000)) { queueInstanceDataBurst() }
 
 		switch (playerDisplayName) {
 			case process.env["VRC_ACC_NAME_6"]:
@@ -3195,8 +3306,8 @@ async function eventPlayerJoin(logOutputLine) {
 		// Append UserID to tracked player
 		let pioIndex = playersInstanceObject.findIndex(playersInstanceObject => playersInstanceObject.name == playerDisplayName)
 
-		if (playerDisplayName == currentAccountInUse.name ) { 
-			logEmitter.emit('joinedworld', G_worldID) 
+		if (playerDisplayName == currentAccountInUse.name) {
+			logEmitter.emit('joinedworld', InstanceHistory[0].worldID)
 		}
 
 		// Group Member tagging
@@ -3217,27 +3328,30 @@ async function eventPlayerJoin(logOutputLine) {
 			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`
 		}
 
-		if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+		if (InstanceHistory[0].groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+
 			var gotUserGroups = await limiter.reqCached('userGroups', playerID).catch(async () => {
 				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
 			})
-			if (gotUserGroups.data.find(g => g.groupId == G_groupID) == undefined) {
+			if (gotUserGroups.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
 				markUserAsMember(false, 'ElAlba', true)
 			} else { markUserAsMember(true, 'ElAlba', true) }
 
-		} else if (G_groupID == 'grp_c24efb98-3234-4060-94f1-7729523e9689') {
+		} else if (InstanceHistory[0].groupID == 'grp_c24efb98-3234-4060-94f1-7729523e9689') {
+
 			var gotUserGroups = await limiter.reqCached('userGroups', playerID).catch(async () => {
 				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
 			})
-			if (gotUserGroups.data.find(g => g.groupId == G_groupID) == undefined) {
+			if (gotUserGroups.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
 				markUserAsMember(false, 'CommunityMeetup', true)
 			} else { markUserAsMember(true, 'CommunityMeetup', true) }
 
-		} else if (G_groupID != '' && G_groupMembersVisible == true) {
+		} else if (InstanceHistory[0].groupID != '' && G_groupMembersVisible == true) {
+
 			var gotUserGroups = await limiter.reqCached('userGroups', playerID).catch(async () => {
 				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
 			})
-			if (gotUserGroups.data.find(g => g.groupId == G_groupID) == undefined) {
+			if (gotUserGroups.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
 				markUserAsMember(false)
 			} else { markUserAsMember(true) }
 
@@ -3315,7 +3429,7 @@ function eventPlayerLeft(logOutputLine) {
 		playersInstanceObject = playersInstanceObject.filter(playersInstanceObject => playersInstanceObject.name !== playerDisplayName)
 		playerRatio = playersInInstance.length / playerHardLimit
 
-		if (Date.now() > (worldjointimestamp + 30000) && worldHopTimeout != null) { queueInstanceDataBurst() }
+		if (Date.now() > (InstanceHistory[0].join_timestamp + 30000) && worldHopTimeout != null) { queueInstanceDataBurst() }
 
 		try {
 			avatarStatSummary.seenAvatars
@@ -3326,7 +3440,7 @@ function eventPlayerLeft(logOutputLine) {
 		}
 
 
-		if ([`groupPlus`, `groupPublic`, `group`].includes(instanceType)) {
+		if ([`groupPlus`, `groupPublic`, `group`].includes(InstanceHistory[0].instanceType)) {
 			membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
 			memberRatio = membersInInstance.length / playersInInstance.length
 			console.log(`${loglv.info}${selflogL} There are now ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`)
@@ -3338,7 +3452,7 @@ function eventPlayerLeft(logOutputLine) {
 		// logEmitter.emit('playerLeft', playerDisplayName, playerID, playersInInstance)
 
 		// El Alba starting world
-		if (G_groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+		if (InstanceHistory[0].groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
 			var filteredhoppers = worldHoppers.find(a => a.name == playerDisplayName)
 			if (filteredhoppers != undefined) {
 				var foundindex = worldHoppers.findIndex(a => a.name == playerDisplayName)
@@ -3366,6 +3480,14 @@ function eventPlayerLeft(logOutputLine) {
 				}
 				G_InstanceClosed = false
 			}
+
+			if (InstanceHistory.length > 1) {
+				InstanceHistory[1].current = false
+				InstanceHistory[1].leave_timestamp = Date.now()
+				InstanceHistory[1].timeSpent = InstanceHistory[1].leave_timestamp - InstanceHistory[1].join_timestamp
+				InstanceHistory = InstanceHistory.filter(ih => (ih.leave_timestamp + 3600_000 > Date.now() && ih.join_timestamp != 0) || ih.current == true)
+			}
+
 			oscSend('/avatar/parameters/log/instance_closed', false)
 			tonAvgStartWait = []
 			let buildLog = `${loglv.info}${selflogL}`

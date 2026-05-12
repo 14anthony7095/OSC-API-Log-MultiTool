@@ -55,31 +55,16 @@ async function main() {
 	}
 
 
-
 	// console.log(await manualCall('avatarparts/avp_8f6bb9b7-4875-4b72-95d1-5cd3c2fb1dd2', 'GET'))
 
 
-
-	/* 
-		for (const item in vrcFriendsList.friends) {
-			var res = await vrchat.getUser({ 'path': { 'userId': vrcFriendsList.friends[item] } })
-			res.data.discordId != undefined ? console.log(`${res.data.displayName} - ${res.data.discordId}`) : ''
-		}
-	*/
-	// await sleep(10000)
-
 	// Get pending group join requests
 	// Get pending group join requests
-	// var gotReqJoinGroups = await limiter.req(vrchat.getUserGroupRequests({ 'path': { 'userId': myVrcID } }));    console.log(gotReqJoinGroups.data)
-
+	// var gotReqJoinGroups = await limiter.req(vrchat.getUserGroupRequests({ 'path': { 'userId': myVrcID } })); console.log(gotReqJoinGroups.data)
 
 	// outputPropsData()
 
 	// await foundMemberMutualGroups('grp_43fe21c7-0b51-4ff4-80ed-23b73aa0c13e', undefined, undefined, true, false)
-
-	// var gi = await vrchat.getWorld({ 'path': { 'worldId': 'wrld_0c3caeaa-7224-4800-aa64-bc473ccb18a2' } }); console.log(gi.data)
-
-	// scanGroupAuditLogs()
 
 	// searchForAntiFlightWorlds()
 
@@ -88,7 +73,8 @@ async function main() {
 
 	// Get Feedback Reports
 	// Get Feedback Reports
-	// var gModr = await limiter.req(vrchat.getModerationReports({ 'query': { 'reportingUserId': myVrcID, 'n': 100, 'offset': 0 } }));    console.log(gModr.data)
+	// var gModr = await limiter.req(vrchat.getModerationReports({ 'query': { 'reportingUserId': myVrcID, 'n': 100, 'offset': 0 } }));
+	// var reportedAvatars_array = gModr.data.results.filter((f) => { return f.type == 'avatar' }).map((m)=>{return m.contentId });	console.log(reportedAvatars_array)
 
 }
 

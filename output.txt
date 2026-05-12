@@ -1,0 +1,33 @@
+Component	Value		Blame Source
+Polygons	14791598		Un delivery's avatar emiya komano
+Bounds (Longest Edge)	5930272300		Arbiter_King500's avatar Musketeers˸ Gravestone Mimic
+Skinned Meshes	1025		Dannyfewie's avatar 미친 여자
+Basic Meshes	6957		candcejohnson's avatar laughing coffin public
+Material Slots	10743		Un delivery's avatar emiya komano
+Material Count	837		Repentless666's avatar Spawn of Satan
+PhysBone Components	445		Neixus's avatar 不可以涩涩
+PhysBone Transforms	5382		泽野弘零's avatar 小白玉-猫
+PhysBone Colliders	211		sᴇɴʏᴀ's avatar Nokk？
+PhysBone Collision Checks	21967		ᵕ˘ᴋᴀɪxxᴠɪɪ˘ᵕ's avatar ᴊᴇᴀɴɴᴀ
+Contacts	249		Razz ChaosHowl's avatar Combat System V2 Test
+Constraint Count	2662		Jonnytest's avatar karmaf
+Constraint Depth	2662		Jonnytest's avatar karmaf
+Animators	1808		milkeys_69's avatar ghostbuster
+Bones	8489		༒ȶʀɨƈӄֆȶɛʀ༒'s avatar WIPP
+Lights	60000042		ǃRaidenǃ's avatar hajime
+Particle Systems	1342		--CriticalHit--'s avatar Unsealed Satoru Gojo
+Max Particles	345744868169		Call Me Sleepy's avatar Personal
+Particle Max Polygons	35303500698		KimeraJin's avatar AdylitKiggy
+Trail Renderers	511		Owen007's avatar Anakin Owen
+Line Renderers	20		webbtail245's avatar Leon Scott Kennedy （Resident Evil 4）
+Cloth Count	11		ω I Ł Ł I's avatar Maya Animations
+Cloth Vertices	18052		-Rekka-'s avatar maomao˸3
+Unity Colliders	1728		milkeys_69's avatar ghostbuster
+Rigidbodies	205		PotatoStrangler's avatar The Funniest Valentine
+AudioSources	14002		classіst's avatar Pawn
+Raycasts	6		Nexal's avatar ReinheitWB ［VRC3․0-S］
+BlendShapes	9443		náví's avatar heh
+Cameras	150		〔るぅ〕's avatar LuminAs_Deceit
+Texture Memory (VRAM)	2.9 GB		eN7ity's avatar Samara
+Uncompressed Size (RAM)	500 MB		EquusDaemonium's avatar Yeen
+Download Size	199 MB		Kingnaldo's avatar Super Manuka Public
