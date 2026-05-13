@@ -364,7 +364,8 @@ var oscCache = {
 	'eyeheightmax': 0,
 	'eyeheightscalingallowed': 0,
 	'eyeheight_RateLimit': 0,
-	'doAutoJump': false
+	'doAutoJump': false,
+	'earsDown': false
 }
 udpPort.on("message", function (msg, rinfo) {
 	if (logOscIn == true) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
@@ -374,11 +375,13 @@ udpPort.on("message", function (msg, rinfo) {
 
 
 	// 83% of ceiling height
-	// if (oscCache['findUp_Hit'] == true && address == vrcap + 'findUp_Distance') { oscCache['findUp_Distance'] = value }
+	if (address == vrcap + 'findUp_Distance') { oscCache['findUp_Distance'] = value }
 	if (address == vrcap + 'findUp_Hit') { oscCache['findUp_Hit'] = value }
+	if (address == vrcap + 'toggle/earsDown') { oscCache['earsDown'] = value }
 	if (address == vrcap + '14a/button/roomScaleRay') { oscCache['roomScaleRay'] = value }
-	if (address == vrcap + 'findUp_Distance' && oscCache['roomScaleRay'] == true && oscCache['findUp_Hit'] == true) {
-		oscSend('/avatar/eyeheight', parseFloat(value * 0.83))
+
+	if (oscCache['roomScaleRay'] == true && oscCache['findUp_Hit'] == true && oscCache['eyeheight_RateLimit'] < Date.now()) {
+		oscSend('/avatar/eyeheight', parseFloat(oscCache['findUp_Distance'] * parseFloat(oscCache['earsDown'] == true ? 0.83 : 0.7)))
 	}
 
 

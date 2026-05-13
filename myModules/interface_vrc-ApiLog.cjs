@@ -301,6 +301,30 @@ function socket_VRC_API_Connect() {
 				} else {
 					console.log(`${loglv.info}${selflogWS} [InviteRequest]`);
 					console.log(wsContent);
+
+					console.log(`${loglv.debug}${selflogA} Checking if Invite location is an Unlisted world.`)
+					var gotWorld = await limiter.reqCached('world', wsContent.details.worldId).catch(async () => {
+						return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': wsContent.details.worldId } }), 'world')
+					})
+					if (gotWorld.data != undefined && gotWorld.data?.releaseStatus == 'private') {
+						var fileHandler;
+						try {
+							fileHandler = await fsp.open('./datasets/private-worlds.txt')
+							var fileRead = await fileHandler.readFile('utf8')
+							if (!fileRead.includes(gotWorld.data.id)) {
+								console.log(`${loglv.hey}${selflogA} Saving Unlisted world.\n${wsContent.user.displayName} launched:\n${gotWorld.data.id} ${gotWorld.data.name} by ${gotWorld.data.authorName}`)
+								// console.log(`${loglv.debug}${selflogA} World not saved, Saving..`)
+								var appendText = `\r\n${gotWorld.data.id}|${gotWorld.data.name}|${gotWorld.data.authorName}|${gotWorld.data.authorId}`
+								fs.appendFile('./datasets/private-worlds.txt', appendText, (err) => { if (err) { console.error(err) } })
+								// open(`vrcx://world/${gotWorld.data.id}`)
+							} else {
+								// console.log(`${loglv.debug}${selflogA} World already saved.`)
+							}
+						} catch (error) {
+							console.log(`${loglv.warn}${selflogL}`, error)
+						} finally { if (fileHandler) { await fileHandler.close() } }
+					}
+
 				}
 				break;
 
@@ -1365,10 +1389,7 @@ async function avatarFileAnalysis(fileid, fileversion) {
 	}).filter(r => r.multi >= 2 && r.log != 'skip')
 
 	// Chatbox Stats - El Alba
-	var statPunishedEA = statPunish.sort((a, b) => {
-		const sortmulti = b.multi - a.multi; if (sortmulti !== 0) { return sortmulti }
-		const sortweight = a.weight - b.weight; if (sortweight !== 0) { return sortweight }
-	}).filter(r => r.multi >= 2 && r.weight == 0) // filter only Texture Memory - weight 0
+	var statPunishedEA = statPunish.find(f => f.multi >= 2 && f.weight == 0) // filter only Texture Memory - weight 0
 
 	// Console Stats
 	var statTotalAvatarEV = statPunish.sort((a, b) => {
@@ -1383,8 +1404,8 @@ async function avatarFileAnalysis(fileid, fileversion) {
 	if (statPunished.length > 0 && statWarnings == true) {
 		console.log('currentAccountInUse', currentAccountInUse['Agroup'])
 		if (currentAccountInUse['Agroup'] == true) {
-			if (InstanceHistory[0].groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
-				oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunishedEA[0].log)}${fitChars(statPunishedEA[1]?.log)}${fitChars(statPunishedEA[2]?.log)}`, 15000, false, true, false, false, true)
+			if (InstanceHistory[0].groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && statPunishedEA != undefined) {
+				oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunishedEA.log)}`, 15000, false, true, false, false, true)
 			} else {
 				oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunished[0].log)}${fitChars(statPunished[1]?.log)}${fitChars(statPunished[2]?.log)}`, 15000, false, true, false, false, true)
 			}
@@ -2161,7 +2182,6 @@ async function requestAllOnlineFriends() {
 
 var movieShowNameLast = ''
 function eventPopcornPalace(json) {
-	let jsondata = JSON.parse(json)
 	// {
 	//     "videoName": "Lilo and Stitch - 2025-05-17",
 	//     "videoPos": 0,
@@ -2172,20 +2192,22 @@ function eventPopcornPalace(json) {
 	//     "is3D": false,
 	//     "looping": false
 	// }
-	let movieShowName = ''
-	if (jsondata.videoName != '' && InstanceHistory[0].join_timestamp != 0 && InstanceHistory[0].join_timestamp + 600_000 < Date.now()) {
-		if (jsondata.videoName.includes('One Piece')) {
-			movieShowName = jsondata.videoName.replace('- S1E', 'ep.').split(' -')[0]
-		} else {
-			movieShowName = jsondata.videoName
-		}
-		if (movieShowName != movieShowNameLast) {
-			movieShowNameLast = movieShowName
+	var movieShowName = JSON.parse(json).videoName
+
+	// Reformat title for One Piece watch sessions
+	if (movieShowName.includes('One Piece')) { movieShowName = movieShowName.replace('- S1E', 'ep.').split(' -')[0] }
+
+	// Difference while on Main accounts
+	if (movieShowName != movieShowNameLast && currentAccountInUse['Agroup'] == true) {
+
+		oscChatBoxV2(`~MovieTitle:\v ${movieShowName}`, 5000, true, true, false, false, false)
+		movieShowNameLast = movieShowName
+
+		// Been in world long enough
+		if (InstanceHistory[0].join_timestamp + 600_000 < Date.now() && InstanceHistory[0].join_timestamp != 0) {
 			setUserStatus(`Watching ${movieShowName}`)
-			if (currentAccountInUse['Agroup'] == true) {
-				oscChatBoxV2(`~MovieTitle:\v ${movieShowName}`, 5000, true, true, false, false, false)
-			}
 		}
+
 	}
 }
 
@@ -3125,7 +3147,6 @@ async function eventHeadingToWorld(logOutputLine) {
 	// Save avatar stats for the instance
 	await requestAvatarStatTable(true, 0.05, true, `${InstanceHistory[1].worldID} - ${InstanceHistory[1].instanceType}${InstanceHistory[1].groupID != '' ? ' - ' + InstanceHistory[1].groupID : ''}`)
 
-
 	// El Alba starting world
 	if (groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && worldID == 'wrld_f6445b27-037d-4926-b51f-d79ada716b31') { worldHoppers = [] }
 	if (groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && InstanceHistory[1]?.groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && groupID != '') { worldHoppers = [] }
@@ -3306,6 +3327,8 @@ async function eventPlayerJoin(logOutputLine) {
 		// Append UserID to tracked player
 		let pioIndex = playersInstanceObject.findIndex(playersInstanceObject => playersInstanceObject.name == playerDisplayName)
 
+
+		// When I join instance
 		if (playerDisplayName == currentAccountInUse.name) {
 			logEmitter.emit('joinedworld', InstanceHistory[0].worldID)
 		}
@@ -3465,6 +3488,8 @@ function eventPlayerLeft(logOutputLine) {
 			}
 		}
 
+
+		// When I leave instance
 		if (playerDisplayName == currentAccountInUse.name) {
 			clearTimeout(worldHopTimeout)
 			clearTimeout(loadingAvatarTimer)
@@ -3501,6 +3526,7 @@ function eventPlayerLeft(logOutputLine) {
 				lastVideoURL = ''
 				seenVideoURLs = []
 			}
+			movieShowNameLast = ''
 			console.log(buildLog)
 		}
 	}
