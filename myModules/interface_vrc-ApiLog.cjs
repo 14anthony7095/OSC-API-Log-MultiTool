@@ -257,6 +257,30 @@ async function main() {
 	}
 }
 
+async function manualCall(vrcapiEndpoint, methodType = 'GET', bodyJson) {
+	return new Promise(async (resolve, reject) => {
+		const vrcapihttp = `https://api.vrchat.cloud/api/1/`
+
+		var apiRequest = {
+			method: methodType,
+			headers: { 'User-Agent': 'API-OSC-Interface/14anthony7095 v3', 'Cookie': 'auth=' + authToken },
+		}
+		if (bodyJson != undefined) {
+			apiRequest['body'] = JSON.stringify(bodyJson)
+			apiRequest['headers']['Content-Type'] = 'application/json'
+		}
+
+		var request = await fetch(vrcapihttp + '' + vrcapiEndpoint, apiRequest)
+		// console.log(request)
+		var jsonResponse = await request.json()
+		if (jsonResponse.error) {
+			reject(jsonResponse.error)
+		} else {
+			resolve(jsonResponse)
+		}
+	})
+}
+
 function socket_VRC_API_Connect() {
 	if (authToken == null) { console.log('No AuthToken stored'); return }
 	socket_VRC_API = new WebSocket(`wss://pipeline.vrchat.cloud/?authToken=` + authToken, { headers: { "cookie": `auth=${authToken}`, "user-agent": 'API-OSC-Interface/14anthony7095 v3' } })
@@ -1922,6 +1946,13 @@ function inviteLocalQueue(I_autoNext = false) {
 			oscChatBoxV2(`~Explore Queue is empty${data.includes('===') ? `\vRemove bookmark.` : ``}`, 5000, true, true, false, false, false);
 			return
 		}
+
+		if (playersInInstance.length >= 2 && InstanceHistory[0].worldHopNoticeSent != true && InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+			InstanceHistory[0].worldHopNoticeSent = true
+			manualCall(`instances/${InstanceHistory[0].location}/announce`, 'POST', { "title": 'Explorer Notice', "message": 'Genarating portal to the next world.\nRespawn if you are lost.', "imageId": 'file_072c4481-1642-4226-91b8-01bbb61444d9', "imageVersion": 1 }).catch(c => { console.error(c) })
+		}
+
+
 		let randnum = Math.round(Math.random() * (localQueueList.length - 1))
 		let world_id = localQueueList[randnum]
 
@@ -2204,7 +2235,7 @@ function eventPopcornPalace(json) {
 		movieShowNameLast = movieShowName
 
 		// Been in world long enough
-		if (InstanceHistory[0].join_timestamp + 600_000 < Date.now() && InstanceHistory[0].join_timestamp != 0) {
+		if (InstanceHistory[0].join_timestamp + 300_000 < Date.now() && InstanceHistory[0].join_timestamp != 0) {
 			setUserStatus(`Watching ${movieShowName}`)
 		}
 
@@ -2351,39 +2382,39 @@ function applyGroupLogo(gID) {
 
 
 function eventGameClose() {
-	clearTimeout(worldHopTimeout)
-	worldHopTimeout = null
-	clearTimeout(worldHopTimeoutHour)
-	worldHopTimeoutHour = null
-	clearTimeout(userTrustTableTimer)
-	userTrustTableTimer = null
 	console.log(`${loglv.hey}${selflogL} VRChat has Closed.`)
-	apiEmitter.emit('switch', 0, 'world')
+	clearTimeout(worldHopTimeout)
+	clearTimeout(worldHopTimeoutHour)
+	clearTimeout(userTrustTableTimer)
 	requestAvatarStatTable(true, 0.05, true)
+
+	apiEmitter.emit('switch', 0, 'world')
+
 	if (lastSetUserStatus == 'Instance is closed' || lastSetUserStatus == `Exploring World Queue`) {
 		lastSetUserStatus = ''
 		setUserStatus('')
 	}
+
+	console.log(`${loglv.info}${selflogL}${ttvFetchFrom == 1 && urlType == 'twitch' ? ` Resetting Twitch target channel${lastVideoURL != '' ? ` &` : ''}` : ''}${lastVideoURL != '' ? ` Clearing Video-URL history` : ''}`)
+	switchChannel(process.env["VRC_ACC_NAME_1"])
+
 	G_InstanceClosed = false
+	vrchatRunning = false
+	worldHopTimeout = null
+	worldHopTimeoutHour = null
+	userTrustTableTimer = null
+	lastVideoURL = ''
+	tarFile = 'nothing'
 	tonAvgStartWait = []
 	worldHoppers = []
+	seenVideoURLs = []
 
-	let buildLog = `${loglv.info}${selflogL}`
-	if (ttvFetchFrom == 1 && urlType == 'twitch') {
-		buildLog += ` Resetting Twitch target channel`
-		switchChannel(process.env["VRC_ACC_NAME_1"])
-		if (lastVideoURL != '') { buildLog += ` &` }
-	}
-	if (lastVideoURL != '') {
-		buildLog += ` Clearing Video-URL history`
-		lastVideoURL = ''
-		seenVideoURLs = []
-	}
-	console.log(buildLog)
 	process.title = `14anthony7095 OSC Multi-Interface`
-	if (vrchatRunning == true) { vrchatRunning = false }
+	
+	setTimeout(() => {
+		InstanceHistory = InstanceHistory.filter(ih => (ih.leave_timestamp + 3600_000 > Date.now() && ih.join_timestamp != 0) || ih.current == true)
+	}, 3610_000)
 
-	tarFile = 'nothing'
 }
 exports.eventGameClose = eventGameClose;
 
