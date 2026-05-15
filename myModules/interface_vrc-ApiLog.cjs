@@ -280,7 +280,7 @@ async function main() {
 			InstanceHistory[0] = {
 				'current': true,
 				'groupID': groupID,
-				'instanceType': currentUser.data.presence.instanceType,
+				'instanceType': instanceType,
 				'join_timestamp': Date.now(),
 				'leave_timestamp': 0,
 				'location': currentUser.data.presence.world + ':' + currentUser.data.presence.instance,
