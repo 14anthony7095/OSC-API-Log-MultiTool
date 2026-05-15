@@ -366,27 +366,7 @@ function socket_VRC_API_Connect() {
 					console.log(wsContent);
 
 					console.log(`${loglv.debug}${selflogA} Checking if Invite location is an Unlisted world.`)
-					var gotWorld = await limiter.reqCached('world', wsContent.details.worldId).catch(async () => {
-						return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': wsContent.details.worldId } }), 'world')
-					})
-					if (gotWorld.data != undefined && gotWorld.data?.releaseStatus == 'private') {
-						var fileHandler;
-						try {
-							fileHandler = await fsp.open('./datasets/private-worlds.txt')
-							var fileRead = await fileHandler.readFile('utf8')
-							if (!fileRead.includes(gotWorld.data.id)) {
-								console.log(`${loglv.hey}${selflogA} Saving Unlisted world.\n${wsContent.user.displayName} launched:\n${gotWorld.data.id} ${gotWorld.data.name} by ${gotWorld.data.authorName}`)
-								// console.log(`${loglv.debug}${selflogA} World not saved, Saving..`)
-								var appendText = `\r\n${gotWorld.data.id}|${gotWorld.data.name}|${gotWorld.data.authorName}|${gotWorld.data.authorId}`
-								fs.appendFile('./datasets/private-worlds.txt', appendText, (err) => { if (err) { console.error(err) } })
-								// open(`vrcx://world/${gotWorld.data.id}`)
-							} else {
-								// console.log(`${loglv.debug}${selflogA} World already saved.`)
-							}
-						} catch (error) {
-							console.log(`${loglv.warn}${selflogL}`, error)
-						} finally { if (fileHandler) { await fileHandler.close() } }
-					}
+					isWorldUnlisted(wsContent.details.worldId,'Invited')
 
 				}
 				break;
@@ -400,7 +380,7 @@ function socket_VRC_API_Connect() {
 					console.log(`${loglv.info}${selflogWS} [${JSON.parse(line).type}] ${wsContent.message} - ${wsContent.link.slice(6)}`)
 
 					// Auto Block if not long enough
-					if (wsContent.link.slice(6) == InstanceHistory[0].groupID && Date.now() < (InstanceHistory[0].join_timestamp + 300_000)) {
+					if (wsContent.link.slice(6) == InstanceHistory[0].groupID && Date.now() < (InstanceHistory[0].join_timestamp + 120_000)) {
 
 						if (currentAccountInUse['Agroup'] == true) {
 							oscChatBoxV2(`Group performed an undesirable action.\vTaking countermeasures`, 10_000, true, true, false, false)
@@ -462,27 +442,7 @@ function socket_VRC_API_Connect() {
 					var notif_user_location = wsContent.location.includes('wrld_') ? wsContent.location.split(':')[0] : wsContent.travelingToLocation.includes('wrld_') ? wsContent.travelingToLocation.split(':')[0] : wsContent.worldId.includes('wrld_') ? wsContent.worldId : 'private'
 					if (notif_user_location != 'private') {
 						console.log(`${loglv.debug}${selflogA} Checking if Friend location is an Unlisted world.`)
-						var gotWorld = await limiter.reqCached('world', notif_user_location).catch(async () => {
-							return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': notif_user_location } }), 'world')
-						})
-						if (gotWorld.data != undefined && gotWorld.data?.releaseStatus == 'private') {
-							var fileHandler;
-							try {
-								fileHandler = await fsp.open('./datasets/private-worlds.txt')
-								var fileRead = await fileHandler.readFile('utf8')
-								if (!fileRead.includes(gotWorld.data.id)) {
-									console.log(`${loglv.hey}${selflogA} Saving Unlisted world.\n${wsContent.user.displayName} launched:\n${gotWorld.data.id} ${gotWorld.data.name} by ${gotWorld.data.authorName}`)
-									// console.log(`${loglv.debug}${selflogA} World not saved, Saving..`)
-									var appendText = `\r\n${gotWorld.data.id}|${gotWorld.data.name}|${gotWorld.data.authorName}|${gotWorld.data.authorId}`
-									fs.appendFile('./datasets/private-worlds.txt', appendText, (err) => { if (err) { console.error(err) } })
-									// open(`vrcx://world/${gotWorld.data.id}`)
-								} else {
-									// console.log(`${loglv.debug}${selflogA} World already saved.`)
-								}
-							} catch (error) {
-								console.log(`${loglv.warn}${selflogL}`, error)
-							} finally { if (fileHandler) { await fileHandler.close() } }
-						}
+						isWorldUnlisted(notif_user_location,wsContent.user.displayName)		
 					}
 				}
 
@@ -561,28 +521,8 @@ function socket_VRC_API_Connect() {
 			case 'friend-location':
 				// break;
 				var notif_user_location = wsContent.location != '' ? wsContent.location : wsContent.travelingTolocation != '' ? wsContent.travelingTolocation : 'private'
-				if (notif_user_location != 'private') {
-					var gotWorld = await limiter.reqCached('world', notif_user_location.split(':')[0]).catch(async () => {
-						return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': notif_user_location.split(':')[0] } }), 'world')
-					})
-					if (gotWorld.data != undefined && gotWorld.data?.releaseStatus == 'private') {
-						var fileHandler;
-						try {
-							fileHandler = await fsp.open('./datasets/private-worlds.txt')
-							var fileRead = await fileHandler.readFile('utf8')
-							if (!fileRead.includes(gotWorld.data.id)) {
-								console.log(`${loglv.hey}${selflogA} Saving Unlisted world.\n${wsContent.user.displayName} visited:\n${gotWorld.data.id} ${gotWorld.data.name} by ${gotWorld.data.authorName}`)
-								// console.log(`${loglv.debug}${selflogA} World not saved, Saving..`)
-								var appendText = `\r\n${gotWorld.data.id}|${gotWorld.data.name}|${gotWorld.data.authorName}|${gotWorld.data.authorId}`
-								fs.appendFile('./datasets/private-worlds.txt', appendText, (err) => { if (err) { console.error(err) } })
-								// open(`vrcx://world/${gotWorld.data.id}`)
-							} else {
-								// console.log(`${loglv.debug}${selflogA} World already saved.`)
-							}
-						} catch (error) {
-							console.log(`${loglv.warn}${selflogL}`, error)
-						} finally { if (fileHandler) { await fileHandler.close() } }
-					}
+				if (notif_user_location != 'private' && notif_user_location != 'traveling') {
+					isWorldUnlisted(notif_user_location.split(':')[0],wsContent.user.displayName)					
 				}
 				// console.log(`${loglv.info}${selflogWS} [GPS] ${wsContent.user.displayName} - ${notif_user_location}`);
 				break;
@@ -602,6 +542,29 @@ function socket_VRC_API_Connect() {
 				break;
 		}
 	});
+}
+
+
+async function isWorldUnlisted(I_worldID = '', I_userDisplayName = '') {
+	var gotWorld = await limiter.req(vrchat.getWorld({ 'path': { 'worldId': I_worldID } }), 'world', I_worldID)
+	if (gotWorld.data != undefined && gotWorld.data?.releaseStatus == 'private') {
+		var fileHandler;
+		try {
+			fileHandler = await fsp.open('./datasets/private-worlds.txt')
+			var fileRead = await fileHandler.readFile('utf8')
+			if (!fileRead.includes(gotWorld.data.id)) {
+				console.log(`${loglv.hey}${selflogA} Saving Unlisted world.\nSource: ${I_userDisplayName}\n${gotWorld.data.id} ${gotWorld.data.name} by ${gotWorld.data.authorName}`)
+				// console.log(`${loglv.debug}${selflogA} World not saved, Saving..`)
+				var appendText = `\r\n${gotWorld.data.id}|${gotWorld.data.name}|${gotWorld.data.authorName}|${gotWorld.data.authorId}`
+				fs.appendFile('./datasets/private-worlds.txt', appendText, (err) => { if (err) { console.error(err) } })
+				// open(`vrcx://world/${gotWorld.data.id}`)
+			} else {
+				// console.log(`${loglv.debug}${selflogA} World already saved.`)
+			}
+		} catch (error) {
+			console.log(`${loglv.warn}${selflogL}`, error)
+		} finally { if (fileHandler) { await fileHandler.close() } }
+	}
 }
 
 function sleep(time) {
@@ -2887,16 +2850,7 @@ function scanaudit(logoutput, groupID) {
 					let { data: userData } = await limiter.reqCached('user', l.targetId).catch(async () => {
 						return await limiter.req(vrchat.getUser({ path: { userId: l.targetId } }), 'user')
 					})
-					/* if( userData.userIcon ){
-						actorHookImage = userData.userIcon
-						console.log(`Icon Pic ${userData.userIcon}`)
-					}else if( userData.profilePicOverrideThumbnail ){
-						actorHookImage = userData.profilePicOverride
-						console.log(`Profile Pic ${userData.profilePicOverride}`)
-					}else{
-						actorHookImage = userData.currentAvatarImageUrl
-						console.log(`Avatar Pic ${userData.currentAvatarImageUrl}`)
-					} */
+
 					targetUserPlatform = userData.last_platform
 					targetUserJoinDate = userData.date_joined.toISOString().split('T')[0]
 					if (userData.ageVerified == true) { targetUserAgeVerified = userData.ageVerificationStatus } else { targetUserAgeVerified = 'False' }
