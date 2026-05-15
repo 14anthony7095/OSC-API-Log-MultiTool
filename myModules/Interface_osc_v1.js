@@ -426,7 +426,7 @@ udpPort.on("message", function (msg, rinfo) {
 
 
 	// Save XYZ cordnets using camera mode switching
-	if (address == `/usercamera/Pose`) { oscCache['lastCameraPos'] = value }
+	if (address == `/usercamera/Pose`) { oscCache['lastCameraPos'] = String(msg['args']) }
 	if (address == `/usercamera/Mode` && value == 2) { fs.appendFile('datasets/cameraPositions.txt', `\r\n${oscCache['lastCameraPos']}`, 'utf-8', (err) => { if (err) { console.log(err) } }) }
 
 

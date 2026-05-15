@@ -132,8 +132,8 @@ var vrchat = new VRChat({
 	// baseUrl: "https://api.vrchat.cloud/api/1",
 	// meta: {},
 	application: {
-		name: "Api-Osc-Interface",
-		version: "1.2",
+		name: "OSC_Multi-Interface",
+		version: "2.5",
 		contact: process.env["CONTACT_EMAIL"]
 	},
 	authentication: {
@@ -242,15 +242,53 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 })
 
 async function main() {
-	console.log(`${loglv.debug}${selflogA} start main function`)
+	console.log(`${loglv.debug}${selflogA} Started main function`)
 	try {
-		const { data: currentUser } = await limiter.req(vrchat.getCurrentUser({ throwOnError: true }))
-		console.log(`${loglv.info}${selflogA} Logged in as: ${currentUser.displayName}`);
+		const currentUser = await limiter.req(vrchat.getCurrentUser({ throwOnError: true }))
+		console.log(`${loglv.info}${selflogA} Logged in as: ${currentUser.data.displayName}`);
 		const { data: auth } = await limiter.req(vrchat.verifyAuthToken())
 		if (auth.ok == true) {
 			authToken = auth.token
 			socket_VRC_API_Connect()
 		}
+
+		lastSetUserStatus = currentUser.data.statusDescription
+
+		if (currentUser.data.presence.world != 'offline') {
+			var instanceType = 'public'
+			var groupID = ''
+
+			if (currentUser.data.presence.instance.includes(`~group(grp_`)) {
+				groupID = /grp_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(currentUser.data.presence.instance)[0]
+				console.log(`${loglv.info}${selflogL} Group ID ${groupID}`)
+			}
+			if (currentUser.data.presence.instance.includes(`~groupAccessType(plus)`)) {
+				instanceType = `groupPlus`
+			} else if (currentUser.data.presence.instance.includes(`~groupAccessType(public)`)) {
+				instanceType = `groupPublic`
+			} else if (currentUser.data.presence.instance.includes(`~groupAccessType(members)`)) {
+				instanceType = `group`
+			} else if (currentUser.data.presence.instance.includes(`~private(`)) {
+				instanceType = `invite`
+			} else if (currentUser.data.presence.instance.includes(`~canRequestInvite`)) {
+				instanceType = `invitePlus`
+			} else if (currentUser.data.presence.instance.includes(`~friends(`)) {
+				instanceType = `friends`
+			} else if (currentUser.data.presence.instance.includes(`~hidden(`)) {
+				instanceType = `friendsPlus`
+			}
+			InstanceHistory[0] = {
+				'current': true,
+				'groupID': groupID,
+				'instanceType': currentUser.data.presence.instanceType,
+				'join_timestamp': Date.now(),
+				'leave_timestamp': 0,
+				'location': currentUser.data.presence.world + ':' + currentUser.data.presence.instance,
+				'worldID': currentUser.data.presence.world,
+				'timeSpent': 0
+			}
+		}
+
 	} catch (error) {
 		console.log(`${loglv.warn}${selflogA} API is down.. Cry`)
 		isApiErrorSkip = true
@@ -263,7 +301,7 @@ async function manualCall(vrcapiEndpoint, methodType = 'GET', bodyJson) {
 
 		var apiRequest = {
 			method: methodType,
-			headers: { 'User-Agent': 'API-OSC-Interface/14anthony7095 v3', 'Cookie': 'auth=' + authToken },
+			headers: { 'User-Agent': `${process.env['VRC_USER_AGENT']} (${process.env['CONTACT_EMAIL']})`, 'Cookie': 'auth=' + authToken },
 		}
 		if (bodyJson != undefined) {
 			apiRequest['body'] = JSON.stringify(bodyJson)
@@ -281,9 +319,10 @@ async function manualCall(vrcapiEndpoint, methodType = 'GET', bodyJson) {
 	})
 }
 
+
 function socket_VRC_API_Connect() {
 	if (authToken == null) { console.log('No AuthToken stored'); return }
-	socket_VRC_API = new WebSocket(`wss://pipeline.vrchat.cloud/?authToken=` + authToken, { headers: { "cookie": `auth=${authToken}`, "user-agent": 'API-OSC-Interface/14anthony7095 v3' } })
+	socket_VRC_API = new WebSocket(`wss://pipeline.vrchat.cloud/?authToken=` + authToken, { headers: { "cookie": `auth=${authToken}`, "user-agent": `${process.env['VRC_USER_AGENT']} (${process.env['CONTACT_EMAIL']})` } })
 	socket_VRC_API.on('error', (data) => {
 		console.log(`${loglv.warn}${selflogWS}`)
 		console.log(data)
@@ -309,7 +348,7 @@ function socket_VRC_API_Connect() {
 
 					if (userAutoAcceptWhiteList.includes(wsContent.senderUsername)) {
 						// Requester is Whitelisted
-						if (InstanceHistory[0].location == undefined || InstanceHistory[0].location == '') {
+						if (InstanceHistory[0].location == 'offline' && InstanceHistory[1].location == 'offline') {
 							let res = await limiter.req(vrchat.getCurrentUser())
 							if (res.data.presence.world != 'offline') {
 								let resIU = await limiter.req(vrchat.inviteUser({ 'path': { 'userId': wsContent.senderUserId }, 'body': { 'instanceId': res.data.presence.world + ":" + res.data.presence.instance, 'messageSlot': 0 } }))
@@ -2045,14 +2084,19 @@ function inviteLocalQueue(I_autoNext = false) {
 
 
 var lastSetUserStatus = ''
-function setUserStatus(status) {
+function setUserStatus(I_statusText = '', I_status) {
 	// console.log(`${loglv.hey}${selflog} Status Update Cancelled`);return
-	if (status.slice(0, 32) !== lastSetUserStatus && currentAccountInUse['Agroup'] == true) {
-		vrchat.updateUser({ path: { userId: process.env["VRC_ACC_ID_1"] }, body: { statusDescription: status.slice(0, 32) } })
-		console.log(`${loglv.hey}${selflogA} Status Updated: ${status.slice(0, 32)}`)
-		lastSetUserStatus = status.slice(0, 32)
+	if (I_statusText.slice(0, 32) !== lastSetUserStatus && currentAccountInUse['Agroup'] == true) {
+		var bodyJson = { 'statusDescription': I_statusText.slice(0, 32) }
+		if (I_status != undefined) { bodyJson['status'] = I_status }
+
+		vrchat.updateUser({ 'path': { 'userId': process.env["VRC_ACC_ID_1"] }, 'body': bodyJson })
+
+		console.log(`${loglv.hey}${selflogA} Status Updated: ${I_statusText.slice(0, 32)}`)
+		lastSetUserStatus = I_statusText.slice(0, 32)
 	}
 }
+
 
 var highestCount = 0
 fs.readFile('./datasets/vrcMaxPop.txt', 'utf-8', (err, data) => { highestCount = data })
@@ -2235,7 +2279,7 @@ function eventPopcornPalace(json) {
 		movieShowNameLast = movieShowName
 
 		// Been in world long enough
-		if (InstanceHistory[0].join_timestamp + 300_000 < Date.now() && InstanceHistory[0].join_timestamp != 0) {
+		if (InstanceHistory[0].join_timestamp + 300_000 < Date.now() && InstanceHistory[0].join_timestamp != 0 && movieShowName != '') {
 			setUserStatus(`Watching ${movieShowName}`)
 		}
 
@@ -2410,7 +2454,7 @@ function eventGameClose() {
 	seenVideoURLs = []
 
 	process.title = `14anthony7095 OSC Multi-Interface`
-	
+
 	setTimeout(() => {
 		InstanceHistory = InstanceHistory.filter(ih => (ih.leave_timestamp + 3600_000 > Date.now() && ih.join_timestamp != 0) || ih.current == true)
 	}, 3610_000)
