@@ -678,13 +678,16 @@ function processLogLine(line) {
 	if (vrchatRunning == false) { vrchatRunning = true }
 
 	logEmitter.emit('log', line)
+	// log without TimeStamp and LogLevel
+	// no expanded details
+	// line.slice(34)
 
 	if (line.includes('[Behaviour] Destination set: wrld_')) { eventHeadingToWorld(line) }
 	if (line.includes('[Behaviour] Joining wrld_')) { eventJoinWorld() }
 	if (line.includes('Instance closed: ')) { eventInstanceClosed() }
 	if (line.includes(`Shocked: `) && line.includes(process.env["VRC_ACC_NAME_1"])) { PiShockAll(30, 1) }
 	if (line.includes('[Behaviour] Hard max is ')) {
-		playerHardLimit = parseInt(line.split('[Behaviour] Hard max is ')[1])
+		playerHardLimit = parseInt(line.slice(58))
 		oscSend('/avatar/parameters/log/player_max', playerHardLimit > 80 ? 80 : playerHardLimit)
 	}
 	if (line.includes('[Behaviour] Initialized player')) { eventPlayerInitialized(line) }
@@ -699,7 +702,7 @@ function processLogLine(line) {
 
 	if (line.includes(`[VRCItems] Item prop_`)) { eventPropSpawned(line.split('prop_')[1].split(' ')[0]) }
 
-	if (line.includes(`[VRCX] VideoPlay(PopcornPalace) `)) { eventPopcornPalace(line.split('[VRCX] VideoPlay(PopcornPalace) ')[1]) }
+	if (line.includes(`[VRCX] VideoPlay(PopcornPalace) `)) { eventPopcornPalace(line.slice(66)) }
 
 	// [Behaviour] Could not enter room because: If the instance exists‚ you're not allowed to access it․ (You are not allowed to travel to that location. If the instance exists‚ you're not allowed to access it․ (Code: 403))
 	if (line.includes(`[Behaviour] Could not enter room because: ` && line.includes('You are not allowed to travel to that location'))) {
@@ -707,7 +710,7 @@ function processLogLine(line) {
 	}
 
 	if (line.includes(`[API] Requesting Get analysis/`)) {
-		const fileAPIreq = line.split(`[API] Requesting Get analysis/`)[1].split('/')
+		const fileAPIreq = line.slice(64).split('/')
 		avatarFileAnalysis(fileAPIreq[0], parseInt(fileAPIreq[1]))
 		clearTimeout(loadingAvatarTimer)
 		loadingAvatarTimer = setTimeout(() => {
@@ -716,6 +719,7 @@ function processLogLine(line) {
 	}
 
 	// Terrors of Nowhere
+	// [2026.05.17 02:18:04 Debug      -  ] 
 	if (InstanceHistory[0].worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd') {
 		// if (line.includes(`[DEATH][14anthony7095]`)) { PiShockAll(30, 1) }
 		if (line.includes(`Round type is`)) {
@@ -727,7 +731,7 @@ function processLogLine(line) {
 			say.speak('Impostor is ' + tonSusPlayer, 'Microsoft Zira Desktop', 1.0)
 			console.log(`${loglv.info}${selflogL} [TON] Impostor is ${tonSusPlayer}`)
 		}
-		if (line.includes(`Verified Round End`)) {
+		if (line.slice(34) == `Verified Round End`) {
 			tonRoundReadyTime = Date.now()
 			let avgStartDisplay = new Date(average(tonAvgStartWait)).toISOString()
 			console.log(`${loglv.info}${selflogL} [TON] Intermission.. Ready to start next round. ${tonAvgStartWait.length > 1 ? 'Avg. wait time: ' + avgStartDisplay.substring(11, 19) : ''}`)
@@ -736,11 +740,14 @@ function processLogLine(line) {
 				tonAvgStartWait.length > 1 ? oscChatBoxV2(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}`, 5000, false, true) : oscChatBoxV2(`~Round ready to start`, 5000, false, true)
 			}
 		}
-		if (line.includes(`Everything recieved, looks good`)) {
+		if (line.slice(34).includes(`Everything recieved, looks good`)) {
 			console.log(`${loglv.info}${selflogL} [TON] Round Starting.`)
 			if (tonRoundReadyTime != 0) {
 				tonAvgStartWait.push(Date.now() - (tonRoundReadyTime + 12000))
 			}
+		}
+		if (line.slice(34) == 'RoundOver' || line.slice(34) == 'You died.') {
+			oscSend('/avatar/parameters/osc/doAutoJump', false)
 		}
 	}
 
@@ -763,7 +770,7 @@ function processLogLine(line) {
 
 	// Portal Manager
 	if (line.includes(`[PortalManager]`)) {
-		var PortalLog = line.split(`[PortalManager] `)[1]
+		var PortalLog = line.slice(50)
 		if (PortalLog == 'Received portal destroy event.') {
 			if (cooldownPortalVanish == false && currentAccountInUse['Agroup'] == true) {
 				// oscChatBoxV2('~Portal has vanished', 5000, true, true, false, false, false)
@@ -1856,7 +1863,7 @@ oscEmitter.on('avatar', (avtrID) => {
 	].includes(avtrID)) {
 		queueInstanceDataBurst()
 		oscSend('/avatar/parameters/log/instance_closed', G_InstanceClosed)
-		applyGroupLogo(InstanceHistory[0].groupID || "")
+		applyGroupLogo(InstanceHistory[0]?.groupID)
 	}
 });
 
@@ -3166,6 +3173,7 @@ async function eventHeadingToWorld(logOutputLine) {
 		'instanceType': instanceType,
 		'join_timestamp': 0,
 		'leave_timestamp': 0,
+		'timeSpent_text': 0,
 		'timeSpent': 0
 	});
 
@@ -3296,7 +3304,7 @@ async function eventPlayerInitialized(logOutputLine) {
 
 		playerRatio = playersInInstance.length / playerHardLimit
 
-		if ([`groupPlus`, `groupPublic`, `group`].includes(InstanceHistory[0].instanceType)) {
+		if ([`groupPlus`, `groupPublic`].includes(InstanceHistory[0].instanceType)) {
 			memberRatio = membersInInstance.length / playersInInstance.length
 			console.log(`${loglv.info}${selflogL} There are now ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`)
 			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`
@@ -3495,7 +3503,7 @@ function eventPlayerLeft(logOutputLine) {
 		}
 
 
-		if ([`groupPlus`, `groupPublic`, `group`].includes(InstanceHistory[0].instanceType)) {
+		if ([`groupPlus`, `groupPublic`].includes(InstanceHistory[0].instanceType)) {
 			membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
 			memberRatio = membersInInstance.length / playersInInstance.length
 			console.log(`${loglv.info}${selflogL} There are now ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`)
@@ -3541,6 +3549,7 @@ function eventPlayerLeft(logOutputLine) {
 			if (InstanceHistory.length > 1) {
 				InstanceHistory[1].current = false
 				InstanceHistory[1].leave_timestamp = Date.now()
+				InstanceHistory[1].timeSpent_text = new Date(InstanceHistory[1].leave_timestamp - InstanceHistory[1].join_timestamp).toISOString().substring(11, 19)
 				InstanceHistory[1].timeSpent = InstanceHistory[1].leave_timestamp - InstanceHistory[1].join_timestamp
 				InstanceHistory = InstanceHistory.filter(ih => (ih.leave_timestamp + 3600_000 > Date.now() && ih.join_timestamp != 0) || ih.current == true)
 			}
