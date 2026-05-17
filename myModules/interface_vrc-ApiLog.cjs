@@ -198,7 +198,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 		findJoinableInstances().then(d => { G_instanceJoinQueue = d })
 	}
 
-	if (cmd == 'avatars') { requestAvatarStatTable(false, 0.05, false) }
+	if (cmd == 'avatars') { requestAvatarStatTable(false, 0.05, false, InstanceHistory[0].location) }
 	if (cmd == 'worstavatars') { requestWorstStatTable() }
 	if (cmd == 'collectavatars') { collectActiveInstanceStats() }
 	if (cmd == 'collectavatars2') { collectActiveInstanceStats(true) }
@@ -268,10 +268,10 @@ async function main() {
 				instanceType = `groupPublic`
 			} else if (currentUser.data.presence.instance.includes(`~groupAccessType(members)`)) {
 				instanceType = `group`
-			} else if (currentUser.data.presence.instance.includes(`~private(`)) {
-				instanceType = `invite`
 			} else if (currentUser.data.presence.instance.includes(`~canRequestInvite`)) {
 				instanceType = `invitePlus`
+			} else if (currentUser.data.presence.instance.includes(`~private(`)) {
+				instanceType = `invite`
 			} else if (currentUser.data.presence.instance.includes(`~friends(`)) {
 				instanceType = `friends`
 			} else if (currentUser.data.presence.instance.includes(`~hidden(`)) {
@@ -366,7 +366,7 @@ function socket_VRC_API_Connect() {
 					console.log(wsContent);
 
 					console.log(`${loglv.debug}${selflogA} Checking if Invite location is an Unlisted world.`)
-					isWorldUnlisted(wsContent.details.worldId,'Invited')
+					isWorldUnlisted(wsContent.details.worldId, 'Invited')
 
 				}
 				break;
@@ -442,7 +442,7 @@ function socket_VRC_API_Connect() {
 					var notif_user_location = wsContent.location.includes('wrld_') ? wsContent.location.split(':')[0] : wsContent.travelingToLocation.includes('wrld_') ? wsContent.travelingToLocation.split(':')[0] : wsContent.worldId.includes('wrld_') ? wsContent.worldId : 'private'
 					if (notif_user_location != 'private') {
 						console.log(`${loglv.debug}${selflogA} Checking if Friend location is an Unlisted world.`)
-						isWorldUnlisted(notif_user_location,wsContent.user.displayName)		
+						isWorldUnlisted(notif_user_location, wsContent.user.displayName)
 					}
 				}
 
@@ -522,7 +522,7 @@ function socket_VRC_API_Connect() {
 				// break;
 				var notif_user_location = wsContent.location != '' ? wsContent.location : wsContent.travelingTolocation != '' ? wsContent.travelingTolocation : 'private'
 				if (notif_user_location != 'private' && notif_user_location != 'traveling') {
-					isWorldUnlisted(notif_user_location.split(':')[0],wsContent.user.displayName)					
+					isWorldUnlisted(notif_user_location.split(':')[0], wsContent.user.displayName)
 				}
 				// console.log(`${loglv.info}${selflogWS} [GPS] ${wsContent.user.displayName} - ${notif_user_location}`);
 				break;
@@ -1856,7 +1856,7 @@ oscEmitter.on('avatar', (avtrID) => {
 	].includes(avtrID)) {
 		queueInstanceDataBurst()
 		oscSend('/avatar/parameters/log/instance_closed', G_InstanceClosed)
-		applyGroupLogo(InstanceHistory[0].groupID)
+		applyGroupLogo(InstanceHistory[0].groupID || "")
 	}
 });
 
@@ -1949,7 +1949,7 @@ function inviteLocalQueue(I_autoNext = false) {
 			return
 		}
 
-		if (playersInInstance.length >= 2 && InstanceHistory[0].worldHopNoticeSent != true && InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+		if (playersInInstance.length >= 2 && currentAccountInUse.id == process.env['VRC_ACC_ID_1'] && InstanceHistory[0].worldHopNoticeSent != true && InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 			InstanceHistory[0].worldHopNoticeSent = true
 			manualCall(`instances/${InstanceHistory[0].location}/announce`, 'POST', { "title": 'Explorer Notice', "message": 'Genarating portal to the next world.\nRespawn if you are lost.', "imageId": 'file_072c4481-1642-4226-91b8-01bbb61444d9', "imageVersion": 1 }).catch(c => { console.error(c) })
 		}
@@ -2237,17 +2237,20 @@ function eventPopcornPalace(json) {
 
 	// Difference while on Main accounts
 	if (movieShowName != movieShowNameLast && currentAccountInUse['Agroup'] == true) {
-
-		oscChatBoxV2(`~MovieTitle:\v ${movieShowName}`, 5000, true, true, false, false, false)
 		movieShowNameLast = movieShowName
 
-		// Been in world long enough
-		if (InstanceHistory[0].join_timestamp + 300_000 < Date.now() && InstanceHistory[0].join_timestamp != 0 && movieShowName != '') {
-			setUserStatus(`Watching ${movieShowName}`)
-		}
+		if (movieShowName != '') {
+			oscChatBoxV2(`~MovieTitle:\v ${movieShowName}`, 5000, true, true, false, false, false)
 
+			// Been in world long enough
+			if (InstanceHistory[0].join_timestamp + 300_000 < Date.now() && InstanceHistory[0].join_timestamp != 0) {
+				setUserStatus(`Watching ${movieShowName}`)
+			}
+
+		}
 	}
 }
+
 
 async function findJoinableInstances() {
 	return new Promise(async (resolve, reject) => {
@@ -2284,7 +2287,7 @@ async function findJoinableInstances() {
 		if (gotUserGroupInstances.data != undefined) {
 			// Filtering out Full instances without queue enabled
 			gotUserGroupInstances.data.instances
-				.filter(f => f.closedAt == null || (f.closedAt != null && f.closedAt > Date.now()) || f.queueEnabled == true)
+				.filter(f => f.closedAt == null || (f.closedAt != null && f.closedAt > Date.now()))
 				.forEach((i) => {
 					// Pushing instance locations into return array
 					var srcInstHistory = InstanceHistory.find(f => f.location == i.location)
@@ -2393,7 +2396,7 @@ function eventGameClose() {
 	clearTimeout(worldHopTimeout)
 	clearTimeout(worldHopTimeoutHour)
 	clearTimeout(userTrustTableTimer)
-	requestAvatarStatTable(true, 0.05, true)
+	requestAvatarStatTable(true, 0.05, true, InstanceHistory[0].location)
 
 	apiEmitter.emit('switch', 0, 'world')
 
@@ -3141,10 +3144,10 @@ async function eventHeadingToWorld(logOutputLine) {
 		}
 
 	} else {
-		if (logOutputLine.includes(`~private(`)) {
-			instanceType = `invite`
-		} else if (logOutputLine.includes(`~canRequestInvite`)) {
+		if (logOutputLine.includes(`~canRequestInvite`)) {
 			instanceType = `invitePlus`
+		} else if (logOutputLine.includes(`~private(`)) {
+			instanceType = `invite`
 		} else if (logOutputLine.includes(`~friends(`)) {
 			instanceType = `friends`
 		} else if (logOutputLine.includes(`~hidden(`)) {
@@ -3655,14 +3658,6 @@ function videoUrlResolver(videourl) {
 		}
 	}
 
-	//	---	Hyperbeam URL Resolver	---
-	if (videourl.includes('hyperbeam.com') && playersInInstance.includes('Chriin')) {
-		if (ttvFetchFrom == 1) { switchChannel('sirlarr') }
-		if (urlType != 'twitch') {
-			console.log(`${loglv.info}${selflogL} Video URL Type set to "Twitch"`)
-			urlType = 'twitch'
-		}
-	}
 
 	//	---	Youtube Title Resolver	---
 	if (videourl.includes('youtube.com/')) {
