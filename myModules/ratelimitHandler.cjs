@@ -1,5 +1,14 @@
 const { loglv } = require("./config.js");
 
+
+// TO DO
+// - Ratelimit based on endpoint
+// - Merged cache check into main Request function
+// - [Req] -> [isInCache] -Y> [Use data]
+//                        -N> [Endpoint RateLimited?] -Y> [WAIT Backoff time] -> [goto isInCache step]
+//                                                    -N> [Send API Request] -> [Store Cache if Tagged]
+
+
 class ratelimitHandler {
 	#pause_sec = 60
 	pause_exp = 1

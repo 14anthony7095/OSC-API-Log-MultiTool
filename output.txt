@@ -1,6 +1,6 @@
 Component	Value		Blame Source
 Polygons	14791598		Un delivery's avatar emiya komano
-Bounds (Longest Edge)	5930272300		Arbiter_King500's avatar Musketeers˸ Gravestone Mimic
+Bounds (Longest Edge)	8044078400000		I Skully I's avatar UNSC_MARINE_AR_WINTER
 Skinned Meshes	1025		Dannyfewie's avatar 미친 여자
 Basic Meshes	6957		candcejohnson's avatar laughing coffin public
 Material Slots	10743		Un delivery's avatar emiya komano
