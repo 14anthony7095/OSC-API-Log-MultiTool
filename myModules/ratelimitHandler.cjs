@@ -13,6 +13,27 @@ class ratelimitHandler {
 	#pause_sec = 60
 	pause_exp = 1
 	isLimiting = false
+	endpointLimits = {
+		'auth': { 'pause_exp': 1, 'isLimited': false },
+		'worlds': { 'pause_exp': 1, 'isLimited': false },
+		'avatars': { 'pause_exp': 1, 'isLimited': false },
+		'users': { 'pause_exp': 1, 'isLimited': false },
+		'user': { 'pause_exp': 1, 'isLimited': false },
+		'calendar': { 'pause_exp': 1, 'isLimited': false },
+		'economy': { 'pause_exp': 1, 'isLimited': false },
+		'favorite': { 'pause_exp': 1, 'isLimited': false },
+		'file': { 'pause_exp': 1, 'isLimited': false },
+		'groups': { 'pause_exp': 1, 'isLimited': false },
+		'instances': { 'pause_exp': 1, 'isLimited': false },
+		'inventory': { 'pause_exp': 1, 'isLimited': false },
+		'message': { 'pause_exp': 1, 'isLimited': false },
+		'invite': { 'pause_exp': 1, 'isLimited': false },
+		'jams': { 'pause_exp': 1, 'isLimited': false },
+		'notifications': { 'pause_exp': 1, 'isLimited': false },
+		'prints': { 'pause_exp': 1, 'isLimited': false },
+		'props': { 'pause_exp': 1, 'isLimited': false },
+		'visits': { 'pause_exp': 1, 'isLimited': false }
+	}
 	limiterCache = { 'user': [], 'group': [] }
 	#cachedTime = 1800_000
 
@@ -86,6 +107,11 @@ class ratelimitHandler {
 					self.isLimiting = true
 					// console.error('429')
 					await self.backoff()
+					if (self.pause_exp >= I_maxAttempts) { self.isLimiting = false; resolve(res) } else { attemptRequest() }
+				} else if (res.error?.statusCode == 503 || res.error?.response.status == 503) {
+					self.isLimiting = true
+					console.error('503')
+					await self.backoff(0.2)
 					if (self.pause_exp >= I_maxAttempts) { self.isLimiting = false; resolve(res) } else { attemptRequest() }
 				} else if (res.error?.statusCode == 500 || res.error?.response.status == 500) {
 					self.isLimiting = true

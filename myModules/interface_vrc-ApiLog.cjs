@@ -75,9 +75,9 @@ var InstanceHistory = [
 		"leave_timestamp": 0,
 		'timeSpent': 0,
 		'worldID': '',
+		'ownerID': '',
 		'groupID': '',
-		'instanceType': '',
-		'current': false
+		'instanceType': ''
 	},
 	{
 		'location': 'offline',
@@ -85,9 +85,9 @@ var InstanceHistory = [
 		"leave_timestamp": 0,
 		'timeSpent': 0,
 		'worldID': '',
+		'ownerID': '',
 		'groupID': '',
-		'instanceType': '',
-		'current': false
+		'instanceType': ''
 	}
 ]
 var G_InstanceClosed = false
@@ -257,6 +257,7 @@ async function main() {
 		if (currentUser.data.presence.world != 'offline') {
 			var instanceType = 'public'
 			var groupID = ''
+			var ownerID = ''
 
 			if (currentUser.data.presence.instance.includes(`~group(grp_`)) {
 				groupID = /grp_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(currentUser.data.presence.instance)[0]
@@ -269,18 +270,22 @@ async function main() {
 			} else if (currentUser.data.presence.instance.includes(`~groupAccessType(members)`)) {
 				instanceType = `group`
 			} else if (currentUser.data.presence.instance.includes(`~canRequestInvite`)) {
+				ownerID = currentUser.data.presence.instance.split(`~private(`)[1].slice(0, 40)
 				instanceType = `invitePlus`
 			} else if (currentUser.data.presence.instance.includes(`~private(`)) {
+				ownerID = currentUser.data.presence.instance.split(`~private(`)[1].slice(0, 40)
 				instanceType = `invite`
 			} else if (currentUser.data.presence.instance.includes(`~friends(`)) {
+				ownerID = currentUser.data.presence.instance.split(`~friends(`)[1].slice(0, 40)
 				instanceType = `friends`
 			} else if (currentUser.data.presence.instance.includes(`~hidden(`)) {
+				ownerID = currentUser.data.presence.instance.split(`~hidden(`)[1].slice(0, 40)
 				instanceType = `friendsPlus`
 			}
 			InstanceHistory[0] = {
-				'current': true,
 				'groupID': groupID,
 				'instanceType': instanceType,
+				'ownerID': ownerID,
 				'join_timestamp': Date.now(),
 				'leave_timestamp': 0,
 				'location': currentUser.data.presence.world + ':' + currentUser.data.presence.instance,
@@ -289,6 +294,7 @@ async function main() {
 			}
 			console.log(`${loglv.debug} [InstanceHistory] Adding User Presence instance to history: `, InstanceHistory[0])
 
+			// cacheWS
 
 		}
 
@@ -723,7 +729,7 @@ function processLogLine(line) {
 
 	// Terrors of Nowhere
 	// [2026.05.17 02:18:04 Debug      -  ] 
-	if (InstanceHistory[0]?.worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd') {
+	if (InstanceHistory[0].worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd') {
 		// if (line.includes(`[DEATH][14anthony7095]`)) { PiShockAll(30, 1) }
 		if (line.includes(`Round type is`)) {
 			tonRoundType = line.split('Round type is ')[1]
@@ -737,10 +743,11 @@ function processLogLine(line) {
 		if (line.slice(34) == `Verified Round End`) {
 			tonRoundReadyTime = Date.now()
 			let avgStartDisplay = new Date(average(tonAvgStartWait)).toISOString()
-			console.log(`${loglv.info}${selflogL} [TON] Intermission.. Ready to start next round. ${tonAvgStartWait.length > 1 ? 'Avg. wait time: ' + avgStartDisplay.substring(11, 19) : ''}`)
+			let avgRoundsPerHour = Math.floor(3600000 / (192000 + average(tonAvgStartWait)))
+			console.log(`${loglv.info}${selflogL} [TON] Intermission.. Ready to start next round. ${tonAvgStartWait.length > 1 ? `Avg. wait time: ${avgStartDisplay.substring(11, 19)} | Rounds Per Hour: ${avgRoundsPerHour}` : ''}`)
 
 			if (currentAccountInUse['Agroup'] == true) {
-				tonAvgStartWait.length > 1 ? oscChatBoxV2(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}`, 5000, false, true) : oscChatBoxV2(`~Round ready to start`, 5000, false, true)
+				tonAvgStartWait.length > 1 ? oscChatBoxV2(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}\vRounds Per Hour: ${avgRoundsPerHour}`, 5000, false, true) : oscChatBoxV2(`~Round ready to start`, 5000, false, true)
 			}
 		}
 		if (line.slice(34).includes(`Everything recieved, looks good`)) {
@@ -2227,7 +2234,7 @@ function eventPopcornPalace(json) {
 			oscChatBoxV2(`~MovieTitle:\v ${movieShowName}`, 5000, true, true, false, false, false)
 
 			// Been in world long enough
-			if (InstanceHistory[0].join_timestamp + 300_000 < Date.now() && InstanceHistory[0].join_timestamp != 0) {
+			if ((InstanceHistory[0].join_timestamp + 300_000 < Date.now() || InstanceHistory[0].ownerID == currentAccountInUse['id']) && InstanceHistory[0].join_timestamp != 0) {
 				setUserStatus(`Watching ${movieShowName}`)
 			}
 
@@ -2255,7 +2262,7 @@ async function findJoinableInstances() {
 			}
 			// Filtering Private and Offline instances out of friend data
 			gotOnlineFriends.data
-				.filter(f => f.location != 'private' && f.location != 'offline')
+				.filter(f => f.location != 'private' && f.location != 'offline' && f.id != 'usr_bba4ca7a-5447-4672-828d-0a09d85f854e')
 				.forEach((i) => {
 					// Pushing instance locations into return array
 					var srcInstHistory = InstanceHistory.find(f => f.location == i.location)
@@ -2455,6 +2462,7 @@ async function eventPropSpawned(propID) {
 function requestUserTrustTable() {
 
 	var playersInstancePlatforms = playersInstanceObject.reduce((acc, ply) => {
+		// console.log(`${loglv.debug} [DEBUG % JOINING]`, ply, ply.platform)
 		acc[ply.platform || loglv.false + 'Joining' + loglv.reset] = (acc[ply.platform] || 0) + 1;
 		return acc
 	}, {})
@@ -3103,6 +3111,7 @@ async function eventHeadingToWorld(logOutputLine) {
 
 	var worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
 	var groupID = ''
+	var ownerID = ''
 	var instanceType = ''
 	console.log(`${loglv.info}${selflogL} World ID ${worldID}`)
 	G_groupMembersVisible = false
@@ -3132,12 +3141,16 @@ async function eventHeadingToWorld(logOutputLine) {
 
 	} else {
 		if (logOutputLine.includes(`~canRequestInvite`)) {
+			ownerID = logOutputLine.split(`~private(`)[1].slice(0, 40)
 			instanceType = `invitePlus`
 		} else if (logOutputLine.includes(`~private(`)) {
+			ownerID = logOutputLine.split(`~private(`)[1].slice(0, 40)
 			instanceType = `invite`
 		} else if (logOutputLine.includes(`~friends(`)) {
+			ownerID = logOutputLine.split(`~friends(`)[1].slice(0, 40)
 			instanceType = `friends`
 		} else if (logOutputLine.includes(`~hidden(`)) {
+			ownerID = logOutputLine.split(`~hidden(`)[1].slice(0, 40)
 			instanceType = `friendsPlus`
 		} else {
 			instanceType = `public`
@@ -3150,16 +3163,15 @@ async function eventHeadingToWorld(logOutputLine) {
 	}
 
 	console.log(`${loglv.debug} [InstanceHistory] Marking instance as Leaving: ${InstanceHistory[0].location}`)
-	InstanceHistory[0].current = false
 	InstanceHistory[0].leave_timestamp = Date.now()
 	InstanceHistory[0].timespentDisplay = new Date(InstanceHistory[1].leave_timestamp - InstanceHistory[1].join_timestamp).toISOString().substring(11, 19)
 	InstanceHistory[0].timeSpent = InstanceHistory[1].leave_timestamp - InstanceHistory[1].join_timestamp
 
 	InstanceHistory.unshift({
-		'current': true,
 		'location': 'wrld_' + logOutputLine.split('wrld_')[1],
 		'worldID': worldID,
 		'groupID': groupID,
+		'ownerID': ownerID,
 		'instanceType': instanceType,
 		'join_timestamp': 0,
 		'leave_timestamp': 0,
@@ -3310,7 +3322,7 @@ async function eventPlayerJoin(logOutputLine) {
 
 			if (InstanceHistory.length > 2) {
 				let ihl = InstanceHistory.length
-				InstanceHistory = InstanceHistory.filter((ih, index) => ih.leave_timestamp + 3600_000 > Date.now() || ih.current == true || index <= 1)
+				InstanceHistory = InstanceHistory.filter((ih, index) => ih.leave_timestamp + 3600_000 > Date.now() || index <= 1)
 				console.log(`${loglv.debug} [InstanceHistory] Clearing "gone an hour" instances past index 2 - ${ihl} -> ${InstanceHistory.length}`)
 			}
 
@@ -3376,9 +3388,9 @@ async function eventPlayerJoin(logOutputLine) {
 		})
 		if (gotUser != undefined) {
 			var userCachePlatform = gotUser.data.platform == 'offline' ? gotUser.data.last_platform : gotUser.data.platform
-			var userCachePlatformLog = userCachePlatform == 'standalonewindows' ? '🖥️ PC     ' :
-				userCachePlatform == 'android' ? '🍏 Android' :
-					'📱 iOS    '
+			var userCachePlatformLog = userCachePlatform == 'android' ? '🍏 Android' :
+				userCachePlatform == 'ios' ? '📱 iOS    ' :
+					'🖥️ PC     '
 
 			var userCacheStatus = gotUser.data.status
 			var userCacheStatusLog = gotUser.data.status == 'join me' ? '🔵 Join Me' :
@@ -3407,7 +3419,7 @@ async function eventPlayerJoin(logOutputLine) {
 			}
 
 			clearTimeout(userTrustTableTimer)
-			userTrustTableTimer = setTimeout(() => {				requestUserTrustTable() }, 10000);
+			userTrustTableTimer = setTimeout(() => { requestUserTrustTable() }, 10000);
 
 		}
 
