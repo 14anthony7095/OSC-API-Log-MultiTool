@@ -1420,8 +1420,10 @@ async function avatarFileAnalysis(fileid, fileversion) {
 		// console.log('currentAccountInUse', currentAccountInUse['Agroup'])
 		if (currentAccountInUse['Agroup'] == true) {
 			if (InstanceHistory[0].groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && statPunishedEA != undefined) {
+				fs.appendFile('./datasets/over150mb.csv', `\n${res.data.ownerDisplayName}|${fitChars(res.data.name)}|${statPunishedEA.log.replace(/\v/, '').replace('Texture Mem ', '')}|${InstanceHistory[0].worldID}`, (err) => { if (err) { console.err(err) } })
 				oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunishedEA.log)}`, 15000, false, true, false, false, true)
 			} else if (InstanceHistory[0].groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+				// if (statPunishedEA != undefined) { fs.appendFile('./datasets/over150mb.csv', `\n${res.data.ownerDisplayName}|${fitChars(res.data.name)}|${statPunishedEA.log.replace(/\v/, '').replace('Texture Mem ', '')}|${InstanceHistory[0].location}`, (err) => { if (err) { console.err(err) } }) }
 				oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunished[0].log)}${fitChars(statPunished[1]?.log)}${fitChars(statPunished[2]?.log)}`, 15000, false, true, false, false, true)
 			}
 		}
@@ -2057,7 +2059,7 @@ fs.readFile('./datasets/vrcMaxPop.txt', 'utf-8', (err, data) => { highestCount =
 function getVisitsCount() {
 	return new Promise(async (resolve, reject) => {
 		if (isApiErrorSkip == true) { resolve(0) } else {
-			let { data: visitsCount } = await limiter.req(vrchat.getCurrentOnlineUsers())
+			let { data: visitsCount } = await vrchat.getCurrentOnlineUsers()
 			resolve(visitsCount == undefined ? 0 : visitsCount)
 
 			if (visitsCount > highestCount) {

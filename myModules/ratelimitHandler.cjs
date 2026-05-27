@@ -31,8 +31,7 @@ class ratelimitHandler {
 		'jams': { 'pause_exp': 1, 'isLimited': false },
 		'notifications': { 'pause_exp': 1, 'isLimited': false },
 		'prints': { 'pause_exp': 1, 'isLimited': false },
-		'props': { 'pause_exp': 1, 'isLimited': false },
-		'visits': { 'pause_exp': 1, 'isLimited': false }
+		'props': { 'pause_exp': 1, 'isLimited': false }
 	}
 	limiterCache = { 'user': [], 'group': [] }
 	#cachedTime = 1800_000
