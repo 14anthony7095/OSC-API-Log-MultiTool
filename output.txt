@@ -1,6 +1,6 @@
 Component	Value		Blame Source
 Polygons	14791598		Un delivery's avatar emiya komano
-Bounds (Longest Edge)	8044078400000		I Skully I's avatar UNSC_MARINE_AR_WINTER
+Bounds (Longest Edge)	14016808000000		Shadowriver's avatar Hochumi 3․0
 Skinned Meshes	1025		Dannyfewie's avatar 미친 여자
 Basic Meshes	6957		candcejohnson's avatar laughing coffin public
 Material Slots	10743		Un delivery's avatar emiya komano
@@ -14,7 +14,7 @@ Constraint Count	2662		Jonnytest's avatar karmaf
 Constraint Depth	2662		Jonnytest's avatar karmaf
 Animators	1808		milkeys_69's avatar ghostbuster
 Bones	8489		༒ȶʀɨƈӄֆȶɛʀ༒'s avatar WIPP
-Lights	60000042		ǃRaidenǃ's avatar hajime
+Lights	2147483647		RainyDagger's avatar Fenderg＋-
 Particle Systems	1342		--CriticalHit--'s avatar Unsealed Satoru Gojo
 Max Particles	345744868169		Call Me Sleepy's avatar Personal
 Particle Max Polygons	35303500698		KimeraJin's avatar AdylitKiggy

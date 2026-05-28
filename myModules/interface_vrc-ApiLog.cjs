@@ -2410,7 +2410,6 @@ function eventGameClose() {
 	lastVideoURL = ''
 	tarFile = 'nothing'
 	tonAvgStartWait = []
-	worldHoppers = []
 	seenVideoURLs = []
 
 	process.title = `14anthony7095 OSC Multi-Interface`
@@ -3333,12 +3332,14 @@ async function eventPlayerJoin(logOutputLine) {
 		// Group Member tagging
 		function markUserAsMember(I_memberStatus, I_groupName = 'GroupMember', I_addToWorldHop = false) {
 			console.log(`${loglv.info}${selflogA} [${I_groupName}] ${I_memberStatus == true ? '💜' : '👻'} ${playerDisplayName} ${I_memberStatus == true ? 'is' : 'NOT a'} member`)
+
 			try { playersInstanceObject[pioIndex].isGroupMember = I_memberStatus } catch (error) {
 				console.log(`${loglv.hey}${selflogL} playerTracker Object got Member before PlayerName - ${error}`)
 				playersInstanceObject.push({ 'name': playerDisplayName, 'id': playerID, 'isGroupMember': I_memberStatus })
-			}
-			if (I_addToWorldHop) {
-				worldHoppers.push({ "name": playerDisplayName, "id": playerID, "playtime": 0, "joinTime": Date.now(), "groupMember": I_memberStatus })
+			} finally {
+				if (I_addToWorldHop) {
+					worldHoppers.push({ "name": playerDisplayName, "id": playerID, "playtime": 0, "joinTime": Date.now(), "groupMember": I_memberStatus })
+				}
 			}
 
 			membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
