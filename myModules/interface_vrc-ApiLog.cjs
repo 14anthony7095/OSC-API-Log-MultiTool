@@ -50,10 +50,8 @@ var memberRatio = 0.5
 var G_autoNextWorldHop = false
 var worldHoppers = []
 var vrchatDiscord; fs.readFile('datasets/vrc-X-dis.json', 'utf8', (err, data) => { vrchatDiscord = JSON.parse(data) })
-var worstAvatarStats; fs.readFile('datasets/worstAvatarStats.json', 'utf8', (err, data) => { worstAvatarStats = JSON.parse(data) })
 var lastFetchGroupLogs;
 var currentUser;
-var statWarnings = false
 var userAutoAcceptWhiteList = []
 var worldQueueTxt = './datasets/worldQueue.txt'
 var explorePrivacyLevel = 0
@@ -97,8 +95,6 @@ var vrcUserStatusText = ''
 var cooldownPortalVanish = false
 var vrchatRunning = false
 var loadingAvatarTimer;
-var worstAvatarStatsSaveTimer;
-var worstAvatarStatSaveTrigger = false
 var watcher;
 var lastChecked = 0
 var previousLength = 0
@@ -197,15 +193,6 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'findjoinable') {
 		findJoinableInstances().then(d => { G_instanceJoinQueue = d })
 	}
-
-	if (cmd == 'avatars') { requestAvatarStatTable(false, 0.05, false, InstanceHistory[0].location) }
-	if (cmd == 'worstavatars') { requestWorstStatTable() }
-	if (cmd == 'collectavatars') { collectActiveInstanceStats() }
-	if (cmd == 'collectavatars2') { collectActiveInstanceStats(true) }
-	if (cmd == 'allavatars') { scanAllAvatarStats() }
-	if (cmd == 'listavatars') { scanListAvatarStats(raw.slice(12).split(',')) }
-	if (cmd == 'wearers') { console.log(avatarStatSummary.seenAvatars) }
-	if (cmd == 'statwarn') { statWarnings = JSON.parse(args[0]) }
 
 	if (cmd == 'preload') { worldAutoPreloadQueue(args[0].split(',')) }
 	if (cmd == 'addworlds') { addSearchToLocalQueue(raw.slice(10)) }
@@ -718,15 +705,6 @@ function processLogLine(line) {
 		logEmitter.emit('notAllowedToTravel')
 	}
 
-	if (line.includes(`[API] Requesting Get analysis/`)) {
-		const fileAPIreq = line.slice(64).split('/')
-		avatarFileAnalysis(fileAPIreq[0], parseInt(fileAPIreq[1]))
-		clearTimeout(loadingAvatarTimer)
-		loadingAvatarTimer = setTimeout(() => {
-			logEmitter.emit('avatarQueueFinish', true)
-		}, 10000);
-	}
-
 	// Terrors of Nowhere
 	// [2026.05.17 02:18:04 Debug      -  ] 
 	if (InstanceHistory[0].worldID == 'wrld_a61cdabe-1218-4287-9ffc-2a4d1414e5bd') {
@@ -855,91 +833,6 @@ function processLogLine(line) {
 	}
 }
 
-// - Avatar Perf Allowance -
-//  Stat / Value >= Threshold
-const avatarStatMaxPoor = {
-	"boundsLongest": 6,
-	"constraintCount": 350,
-	"constraintDepth": 100,
-	"totalTextureUsage": 157286400,
-	"totalPolygons": 70000,
-	"skinnedMeshCount": 16,
-	"meshCount": 24,
-	"physBoneCollisionCheckCount": 512,
-	"physBoneColliderCount": 32,
-	"physBoneComponentCount": 32,
-	"physBoneTransformCount": 256,
-	"contactCount": 32,
-	"animatorCount": 32,
-	"audioSourceCount": 8,
-	"boneCount": 400,
-	"cameraCount": 12,
-	"clothCount": 4,
-	"lineRendererCount": 8,
-	"materialCount": 99999,
-	"meshParticleMaxPolygons": 5000,
-	"particleSystemCount": 16,
-	"physicsColliders": 8,
-	"physicsRigidbodies": 8,
-	"totalClothVertices": 200,
-	"totalMaxParticles": 2500,
-	"trailRendererCount": 8,
-	"materialSlotsUsed": 32,
-	"raycastCount": 15,
-	"lightCount": 1,
-	"blendShapeCount": 99999
-}
-
-var avatarStatSummary = {
-	"totalAvatars": 0,
-	"checkedFileIDs": [],
-	"seenAuthors": [{
-		"id": "", "displayName": ""
-	}],
-	"seenAvatars": [{
-		"name": "", "author": null, "wearers": [], "lastAccessed": 0
-	}],
-	"Excellent": 0,
-	"Good": 0,
-	"Medium": 0,
-	"Poor": 0,
-	"VeryPoor": 0,
-	"stats": {
-		"totalPolygons": { "label": "Polygons", "values": [] },
-		"boundsLongest": { "label": "Bounds (Longest Edge)", "values": [] },
-		"skinnedMeshCount": { "label": "Skinned Meshes", "values": [] },
-		"meshCount": { "label": "Basic Meshes", "values": [] },
-		"materialSlotsUsed": { "label": "Material Slots", "values": [] },
-		"materialCount": { "label": "Material Count", "values": [] },
-		"physBoneColliderCount": { "label": "PhysBone Colliders", "values": [] },
-		"physBoneCollisionCheckCount": { "label": "PhysBone Collision Checks", "values": [] },
-		"physBoneComponentCount": { "label": "PhysBone Components", "values": [] },
-		"physBoneTransformCount": { "label": "PhysBone Transforms", "values": [] },
-		"contactCount": { "label": "Contacts", "values": [] },
-		"constraintCount": { "label": "Constraint Count", "values": [] },
-		"constraintDepth": { "label": "Constraint Depth", "values": [] },
-		"animatorCount": { "label": "Animators", "values": [] },
-		"boneCount": { "label": "Bones", "values": [] },
-		"lightCount": { "label": "Lights", "values": [] },
-		"particleSystemCount": { "label": "Particle Systems", "values": [] },
-		"totalMaxParticles": { "label": "Max Particles", "values": [] },
-		"meshParticleMaxPolygons": { "label": "Particle Max Polygons", "values": [] },
-		"trailRendererCount": { "label": "Trail Renderers", "values": [] },
-		"lineRendererCount": { "label": "Line Renderers", "values": [] },
-		"clothCount": { "label": "Cloth Count", "values": [] },
-		"totalClothVertices": { "label": "Cloth Vertices", "values": [] },
-		"physicsColliders": { "label": "Unity Colliders", "values": [] },
-		"physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
-		"audioSourceCount": { "label": "AudioSources", "values": [] },
-		"raycastCount": { "label": "Raycasts", "values": [] },
-		"blendShapeCount": { "label": "BlendShapes", "values": [] },
-		"cameraCount": { "label": "Cameras", "values": [] },
-		"totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
-		"fileSize": { "label": "Download Size", "values": [] },
-		"uncompressedSize": { "label": "Uncompressed Size (RAM)", "values": [] }
-	}
-}
-
 function fitChars(I_line = '', lineCount = 1) {
 	I_line = I_line || ''
 	const charWidth = {
@@ -964,797 +857,6 @@ function fitChars(I_line = '', lineCount = 1) {
 		if (trackingWidth >= lineCount) { limitLength = item; break; }
 	}
 	return I_line.slice(0, limitLength != 0 ? limitLength : I_line.length)
-}
-
-async function avatarFileAnalysis(fileid, fileversion) {
-	// Has avatar already been seen while in this instance? - Escape
-	if (avatarStatSummary.checkedFileIDs.includes(fileid + "-" + fileversion)) {
-		// console.log(`${loglv.info}${selflogA} [AvatarAnalysis] Skipping: ${fileid} - ver ${fileversion}`)
-		return
-	}
-
-	// Has avatar already been scanned before? - Check Cache folder
-	var res = {}
-	try {
-		var fsrdfile = await fsp.readFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', 'utf8')
-		// console.log(`${loglv.info}${selflogA} [AvatarAnalysis] Cached: ${fileid} - ver ${fileversion}`)
-		res.data = JSON.parse(fsrdfile)
-		if (avatarStatSummary.seenAuthors.filter(s => s.id == res.data.ownerId).length == 0) {
-			avatarStatSummary.seenAuthors.push({ "id": res.data.ownerId, "displayName": res.data.displayName })
-		}
-		if (res.data.ownerDisplayName == null) {
-			let getName = await limiter.req(vrchat.getFile({ 'path': { 'fileId': fileid } }))
-			res.data["name"] = getName.data.name.slice(9).split(' - Asset bundle - ')[0]
-
-			// Check Author
-			res.data["ownerId"] = getName.data.ownerId
-			try {
-				res.data["ownerDisplayName"] = avatarStatSummary.seenAuthors.filter(s => s.id == getName.data.ownerId)[0].displayName
-				if (res.data["ownerDisplayName"] == undefined) { throw new Error('no displayname') }
-				// console.log(`${loglv.info}${selflogA} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
-			} catch (err) {
-				// console.log(`${loglv.info}${selflogA} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
-
-				let getOwner = await limiter.reqCached('user', getName.data.ownerId).catch(() => {
-					return limiter.req(vrchat.getUser({ 'path': { 'userId': getName.data.ownerId } }), 'user')
-				})
-				res.data["ownerDisplayName"] = getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : getOwner.data.displayName
-				if (avatarStatSummary.seenAuthors.filter(s => s.id == res.data.ownerId).length == 0) {
-					avatarStatSummary.seenAuthors.push({ "id": getName.data.ownerId, "displayName": getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : getOwner.data.displayName })
-				}
-				if (avatarStatSummary.seenAuthors[0].id == "") { avatarStatSummary.seenAuthors.shift() }
-			}
-
-			if (JSON.stringify(res.data) != '') {
-				fs.writeFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', JSON.stringify(res.data), 'utf8', (err) => { if (err) { console.log(err) } })
-			}
-		}
-	} catch (error) {
-		// console.log(`${loglv.info}${selflogA} [AvatarAnalysis] Fetching: ${fileid} - ver ${fileversion}`)
-		res = await limiter.req(vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } }))
-
-		if (res.data == undefined) {
-			console.log(`${loglv.warn}${selflogA} [AvatarAnalysis] ErrorFile: ${fileid} - ver ${fileversion}`)
-			setTimeout(async () => {
-				res = await limiter.req(vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': fileid, 'versionId': fileversion } }))
-				console.log(res.data)
-			}, 10_000);
-			return
-		} else if (res.data.avatarStats && res.data.performanceRating) {
-			let getName = await limiter.req(vrchat.getFile({ 'path': { 'fileId': fileid } }))
-			res.data["name"] = getName.data.name.slice(9).split(' - Asset bundle - ')[0]
-
-			// Check Author
-			res.data["ownerId"] = getName.data.ownerId
-			try {
-				res.data["ownerDisplayName"] = avatarStatSummary.seenAuthors.filter(s => s.id == getName.data.ownerId)[0].displayName
-				if (res.data["ownerDisplayName"] == undefined) { throw new Error('no displayname') }
-				// console.log(`${loglv.info}${selflogA} [AvatarAuthor] Cached: ${getName.data.ownerId} - ${res.data["ownerDisplayName"]}`)
-			} catch (err) {
-				// console.log(`${loglv.info}${selflogA} [AvatarAuthor] Fetching: ${getName.data.ownerId}`)
-				let getOwner = await limiter.reqCached('user', getName.data.ownerId).catch(async () => {
-					return await limiter.req(vrchat.getUser({ 'path': { 'userId': getName.data.ownerId } }), 'user')
-				})
-				res.data["ownerDisplayName"] = getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : (getOwner.data || "").displayName
-				if (avatarStatSummary.seenAuthors.filter(s => s.id == res.data.ownerId).length == 0) {
-					avatarStatSummary.seenAuthors.push({ "id": getName.data.ownerId, "displayName": getName.data.ownerId == "8JoV9XEdpo" ? "VRChat" : (getOwner.data || "").displayName })
-				}
-				if (avatarStatSummary.seenAuthors[0].id == "") { avatarStatSummary.seenAuthors.shift() }
-			}
-			if (JSON.stringify(res.data) != '') {
-				fs.writeFile('./datasets/avatarStatCache/' + fileid + "-" + fileversion + '.json', JSON.stringify(res.data), 'utf8', (err) => { if (err) { console.log(err) } })
-			}
-		} else {
-			// console.log(res)
-			return
-		}
-	}
-	// console.log(avatarStatSummary.seenAuthors)
-
-	avatarStatSummary.checkedFileIDs.push(fileid + "-" + fileversion)
-
-	let filesize = await formatBytes(res.data.fileSize)
-	let uncompresssize = await formatBytes(res.data.uncompressedSize)
-	let vramTexsize = await formatBytes(res.data.avatarStats.totalTextureUsage)
-	if (verboseAvatarStatLogging == true) {
-		console.log(`${loglv.info}${selflogA} [AvatarAnalysis] ${res.data.performanceRating == 'VeryPoor' ? '❌ VeryPoor' : res.data.performanceRating == 'Poor' ? '🔴 Poor' : res.data.performanceRating == 'Medium' ? '🟡 Medium' : res.data.performanceRating == 'Good' ? '🟢 Good' : res.data.performanceRating == 'Excellent' ? '✅ Excellent' : ''} - ${res.data.name}
-             📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount}`)
-	} else {
-		console.log(`${loglv.info}${selflogA} [AvatarAnalysis] ${res.data.performanceRating == 'VeryPoor' ? '❌ VeryPoor' : res.data.performanceRating == 'Poor' ? '🔴 Poor' : res.data.performanceRating == 'Medium' ? '🟡 Medium' : res.data.performanceRating == 'Good' ? '🟢 Good' : res.data.performanceRating == 'Excellent' ? '✅ Excellent' : ''} - ${res.data.name}`)
-	}
-
-
-
-	// - Performance Marks-
-	var boundsLongest_Mul = Math.round(Math.max(...res.data.avatarStats.bounds) / avatarStatMaxPoor.boundsLongest)
-	var animatorCount_Mul = Math.round(res.data.avatarStats.animatorCount / avatarStatMaxPoor.animatorCount)
-	var audioSourceCount_Mul = Math.round(res.data.avatarStats.audioSourceCount / avatarStatMaxPoor.audioSourceCount)
-	var boneCount_Mul = Math.round(res.data.avatarStats.boneCount / avatarStatMaxPoor.boneCount)
-	var cameraCount_Mul = Math.round(res.data.avatarStats.cameraCount / avatarStatMaxPoor.cameraCount)
-	var clothCount_Mul = Math.round(res.data.avatarStats.clothCount / avatarStatMaxPoor.clothCount)
-	var constraintCount_Mul = Math.round(res.data.avatarStats.constraintCount / avatarStatMaxPoor.constraintCount)
-	var constraintDepth_Mul = Math.round(res.data.avatarStats.constraintDepth / avatarStatMaxPoor.constraintDepth)
-	var lineRendererCount_Mul = Math.round(res.data.avatarStats.lineRendererCount / avatarStatMaxPoor.lineRendererCount)
-	var materialCount_Mul = Math.round(res.data.avatarStats.materialCount / avatarStatMaxPoor.materialCount)
-	var meshParticleMaxPolygons_Mul = Math.round(res.data.avatarStats.meshParticleMaxPolygons / avatarStatMaxPoor.meshParticleMaxPolygons)
-	var particleSystemCount_Mul = Math.round(res.data.avatarStats.particleSystemCount / avatarStatMaxPoor.particleSystemCount)
-	var physicsColliders_Mul = Math.round(res.data.avatarStats.physicsColliders / avatarStatMaxPoor.physicsColliders)
-	var physicsRigidbodies_Mul = Math.round(res.data.avatarStats.physicsRigidbodies / avatarStatMaxPoor.physicsRigidbodies)
-	var totalClothVertices_Mul = Math.round(res.data.avatarStats.totalClothVertices / avatarStatMaxPoor.totalClothVertices)
-	var totalMaxParticles_Mul = Math.round(res.data.avatarStats.totalMaxParticles / avatarStatMaxPoor.totalMaxParticles)
-	var trailRendererCount_Mul = Math.round(res.data.avatarStats.trailRendererCount / avatarStatMaxPoor.trailRendererCount)
-	var totalTextureUsage_Mul = res.data.avatarStats.totalTextureUsage / avatarStatMaxPoor.totalTextureUsage
-	var uncompressedSize_Mul = Math.round(res.data.uncompressedSize / avatarStatMaxPoor.uncompressedSize)
-	var totalPolygons_Mul = Math.round(res.data.avatarStats.totalPolygons / avatarStatMaxPoor.totalPolygons)
-	var skinnedMeshCount_Mul = Math.round(res.data.avatarStats.skinnedMeshCount / avatarStatMaxPoor.skinnedMeshCount)
-	var meshCount_Mul = Math.round(res.data.avatarStats.meshCount / avatarStatMaxPoor.meshCount)
-	var physBoneCollisionCheckCount_Mul = Math.round(res.data.avatarStats.physBoneCollisionCheckCount / avatarStatMaxPoor.physBoneCollisionCheckCount)
-	var physBoneColliderCount_Mul = Math.round(res.data.avatarStats.physBoneColliderCount / avatarStatMaxPoor.physBoneColliderCount)
-	var physBoneComponentCount_Mul = Math.round(res.data.avatarStats.physBoneComponentCount / avatarStatMaxPoor.physBoneComponentCount)
-	var physBoneTransformCount_Mul = Math.round(res.data.avatarStats.physBoneTransformCount / avatarStatMaxPoor.physBoneTransformCount)
-	var contactCount_Mul = Math.round(res.data.avatarStats.contactCount / avatarStatMaxPoor.contactCount)
-	var materialSlotsUsed_Mul = Math.round(res.data.avatarStats.materialSlotsUsed / avatarStatMaxPoor.materialSlotsUsed)
-	var lightCount_Mul = Math.round(res.data.avatarStats.lightCount / avatarStatMaxPoor.lightCount)
-	var blendShapeCount_Mul = Math.round(res.data.avatarStats.blendShapeCount / avatarStatMaxPoor.blendShapeCount)
-	var raycastCount_Mul = Math.round(res.data.avatarStats.raycastCount / avatarStatMaxPoor.raycastCount)
-	var statPunish = []
-
-	if (totalTextureUsage_Mul > 1) {
-		statPunish.push({
-			"weight": 0,
-			"multi": Math.ceil(totalTextureUsage_Mul),
-			"log": `\v(x${Math.round(totalTextureUsage_Mul)}) Texture Mem ${vramTexsize}`,
-			"print": `\n              Texture Memory:            ${Math.round(totalTextureUsage_Mul)} EV ${totalTextureUsage_Mul >= 1 ? '⚠️🐏' : ''}`
-		})
-	}
-	if (totalPolygons_Mul > 1) {
-		statPunish.push({
-			"weight": 1,
-			"multi": Math.round(totalPolygons_Mul),
-			"log": `\v(x${totalPolygons_Mul}) Polygons ${res.data.avatarStats.totalPolygons}`,
-			"print": `\n              Polygons:                  ${totalPolygons_Mul} EV ${totalPolygons_Mul >= 1 ? '⚠️📐' : ''}`
-		})
-	}
-	if (boundsLongest_Mul > 1) {
-		statPunish.push({
-			"weight": 2,
-			"multi": Math.round(boundsLongest_Mul),
-			"log": `\v(x${boundsLongest_Mul}) Bounds ${Math.max(...res.data.avatarStats.bounds)}m`,
-			"print": `\n              Bounds:                    ${boundsLongest_Mul} EV ${boundsLongest_Mul >= 1 ? '⚠️🧊' : ''}`
-		})
-	}
-	if (skinnedMeshCount_Mul > 1) {
-		statPunish.push({
-			"weight": 3,
-			"multi": Math.round(skinnedMeshCount_Mul),
-			"log": `\v(x${skinnedMeshCount_Mul}) SkinnedMeshes ${res.data.avatarStats.skinnedMeshCount}`,
-			"print": `\n              Skinned Meshes:            ${skinnedMeshCount_Mul} EV ${skinnedMeshCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.skinnedMeshCount : ''}`
-		})
-	}
-	if (meshCount_Mul > 1) {
-		statPunish.push({
-			"weight": 4,
-			"multi": Math.round(meshCount_Mul),
-			"log": `\v(x${meshCount_Mul}) Basic Meshes ${res.data.avatarStats.meshCount}`,
-			"print": `\n              Basic Meshes:              ${meshCount_Mul} EV ${meshCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.meshCount : ''}`
-		})
-	}
-	if (materialSlotsUsed_Mul > 1) {
-		statPunish.push({
-			"weight": 5,
-			"multi": Math.round(materialSlotsUsed_Mul),
-			"log": `\v(x${materialSlotsUsed_Mul}) Material Slots ${res.data.avatarStats.materialSlotsUsed}`,
-			"print": `\n              Material Slots:            ${materialSlotsUsed_Mul} EV ${materialSlotsUsed_Mul >= 1 ? '⚠️' + res.data.avatarStats.materialSlotsUsed : ''}`
-		})
-	}
-	if (materialCount_Mul > 1) {
-		statPunish.push({
-			"weight": 6,
-			"multi": Math.round(materialCount_Mul),
-			"log": `\v(x${materialCount_Mul}) Material Count ${res.data.avatarStats.materialCount}`,
-			"print": `\n              Material Count:            ${materialCount_Mul} EV ${materialCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.materialCount : ''}`
-		})
-	}
-	if (physBoneComponentCount_Mul > 1) {
-		statPunish.push({
-			"weight": 7,
-			"multi": Math.round(physBoneComponentCount_Mul),
-			"log": `\v(x${physBoneComponentCount_Mul}) PhysBones ${res.data.avatarStats.physBoneComponentCount}`,
-			"print": `\n              PhysBone Components:       ${physBoneComponentCount_Mul} EV ${physBoneComponentCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.physBoneComponentCount : ''}`
-		})
-	}
-	if (physBoneTransformCount_Mul > 1) {
-		statPunish.push({
-			"weight": 8,
-			"multi": Math.round(physBoneTransformCount_Mul),
-			"log": `\v(x${physBoneTransformCount_Mul}) PhysBone Transforms ${res.data.avatarStats.physBoneTransformCount}`,
-			"print": `\n              PhysBone Transforms:       ${physBoneTransformCount_Mul} EV ${physBoneTransformCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.physBoneTransformCount : ''}`
-		})
-	}
-	if (physBoneColliderCount_Mul > 1) {
-		statPunish.push({
-			"weight": 9,
-			"multi": Math.round(physBoneColliderCount_Mul),
-			"log": `\v(x${physBoneColliderCount_Mul}) PhysBone Colliders ${res.data.avatarStats.physBoneColliderCount}`,
-			"print": `\n              PhysBone Colliders:        ${physBoneColliderCount_Mul} EV ${physBoneColliderCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.physBoneColliderCount : ''}`
-		})
-	}
-	if (physBoneCollisionCheckCount_Mul > 1) {
-		statPunish.push({
-			"weight": 10,
-			"multi": Math.round(physBoneCollisionCheckCount_Mul),
-			"log": `\v(x${physBoneCollisionCheckCount_Mul}) PhysBone Collisions ${res.data.avatarStats.physBoneCollisionCheckCount}`,
-			"print": `\n              PhysBone Collision Checks: ${physBoneCollisionCheckCount_Mul} EV ${physBoneCollisionCheckCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.physBoneCollisionCheckCount : ''}`
-		})
-	}
-	if (contactCount_Mul > 1) {
-		statPunish.push({
-			"weight": 11,
-			"multi": Math.round(contactCount_Mul),
-			"log": `\v(x${contactCount_Mul}) Contacts ${res.data.avatarStats.contactCount}`,
-			"print": `\n              Contact Count:             ${contactCount_Mul} EV ${contactCount_Mul >= 1 ? '⚠️🥎' : ''}`
-		})
-	}
-	if (constraintCount_Mul > 1) {
-		statPunish.push({
-			"weight": 12,
-			"multi": Math.round(constraintCount_Mul),
-			"log": `\v(x${constraintCount_Mul}) Constraints ${res.data.avatarStats.constraintCount}`,
-			"print": `\n              Constraint Count:           ${constraintCount_Mul} EV ${constraintCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.constraintCount : ''}`
-		})
-	}
-	if (constraintDepth_Mul > 1) {
-		statPunish.push({
-			"weight": 13,
-			"multi": Math.round(constraintDepth_Mul),
-			"log": `\v(x${constraintDepth_Mul}) Constraint Depth ${res.data.avatarStats.constraintDepth}`,
-			"print": `\n              Constraint Depth:          ${constraintDepth_Mul} EV ${constraintDepth_Mul >= 1 ? '⚠️' + res.data.avatarStats.constraintDepth : ''}`
-		})
-	}
-	if (animatorCount_Mul > 1) {
-		statPunish.push({
-			"weight": 14,
-			"multi": Math.round(animatorCount_Mul),
-			"log": `\v(x${animatorCount_Mul}) Animators ${res.data.avatarStats.animatorCount}`,
-			"print": `\n              Animator Count:            ${animatorCount_Mul} EV ${animatorCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.animatorCount : ''}`
-		})
-	}
-	if (boneCount_Mul > 1) {
-		statPunish.push({
-			"weight": 15,
-			"multi": Math.round(boneCount_Mul),
-			"log": `\v(x${boneCount_Mul}) Bones ${res.data.avatarStats.boneCount}`,
-			"print": `\n              Bones:                     ${boneCount_Mul} EV ${boneCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.boneCount : ''}`
-		})
-	}
-	if (lightCount_Mul > 1) {
-		statPunish.push({
-			"weight": 16,
-			"multi": Math.round(lightCount_Mul),
-			"log": `\v(x${lightCount_Mul}) Light Count ${res.data.avatarStats.lightCount}`,
-			"print": `\n              Light Count:               ${lightCount_Mul} EV ${lightCount_Mul >= 1 ? '⚠️💡' : ''}`
-		})
-	}
-	if (particleSystemCount_Mul > 1) {
-		statPunish.push({
-			"weight": 17,
-			"multi": Math.round(particleSystemCount_Mul),
-			"log": `\v(x${particleSystemCount_Mul}) Particle Systems ${res.data.avatarStats.particleSystemCount}`,
-			"print": `\n              Particle System Count:     ${particleSystemCount_Mul} EV ${particleSystemCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.particleSystemCount : ''}`
-		})
-	}
-	if (totalMaxParticles_Mul > 1) {
-		statPunish.push({
-			"weight": 18,
-			"multi": Math.round(totalMaxParticles_Mul),
-			"log": `\v(x${totalMaxParticles_Mul}) Max Particles ${res.data.avatarStats.totalMaxParticles}`,
-			"print": `\n              Max Particles:             ${totalMaxParticles_Mul} EV ${totalMaxParticles_Mul >= 1 ? '⚠️' + res.data.avatarStats.totalMaxParticles : ''}`
-		})
-	}
-	if (meshParticleMaxPolygons_Mul > 1) {
-		statPunish.push({
-			"weight": 19,
-			"multi": Math.round(meshParticleMaxPolygons_Mul),
-			"log": `\v(x${meshParticleMaxPolygons_Mul}) Particle Polys ${res.data.avatarStats.meshParticleMaxPolygons}`,
-			"print": `\n              Mesh Particle Max Polygons:${meshParticleMaxPolygons_Mul} EV ${meshParticleMaxPolygons_Mul >= 1 ? '⚠️' + res.data.avatarStats.meshParticleMaxPolygons : ''}`
-		})
-	}
-	if (trailRendererCount_Mul > 1) {
-		// warnbox += `\v(x${trailRendererCount}) Trail Renderers ${res.data.avatarStats.trailendererCount}`;
-		statPunish.push({
-			"weight": 20,
-			"multi": Math.round(trailRendererCount_Mul),
-			"log": `\v(x${trailRendererCount_Mul}) Trail Renderers ${res.data.avatarStats.trailRendererCount}`,
-			"print": `\n              Trail Renderer Count:      ${trailRendererCount_Mul} EV ${trailRendererCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.trailRendererCount : ''}`
-		})
-	}
-	if (lineRendererCount_Mul > 1) {
-		statPunish.push({
-			"weight": 21,
-			"multi": Math.round(lineRendererCount_Mul),
-			"log": `\v(x${lineRendererCount_Mul}) Line Renderers ${res.data.avatarStats.lineRendererCount}`,
-			"print": `\n              Line Renderer Count:       ${lineRendererCount_Mul} EV ${lineRendererCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.lineRendererCount : ''}`
-		})
-	}
-	if (clothCount_Mul > 1) {
-		statPunish.push({
-			"weight": 22,
-			"multi": Math.round(clothCount_Mul),
-			"log": `\v(x${clothCount_Mul}) Cloth Meshes ${res.data.avatarStats.clothCount}`,
-			"print": `\n              Cloth Meshes:               ${clothCount_Mul} EV ${clothCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.clothCount : ''}`
-		})
-	}
-	if (totalClothVertices_Mul > 1) {
-		statPunish.push({
-			"weight": 23,
-			"multi": Math.round(totalClothVertices_Mul),
-			"log": `\v(x${totalClothVertices_Mul}) Cloth Vertices ${res.data.avatarStats.totalClothVertices}`,
-			"print": `\n              Cloth Vertices:            ${totalClothVertices_Mul} EV ${totalClothVertices_Mul >= 1 ? '⚠️' + res.data.avatarStats.totalClothVertices : ''}`
-		})
-	}
-	if (physicsColliders_Mul > 1) {
-		statPunish.push({
-			"weight": 24,
-			"multi": Math.round(physicsColliders_Mul),
-			"log": `\v(x${physicsColliders_Mul}) Unity Colliders ${res.data.avatarStats.physicsColliders}`,
-			"print": `\n              Physics Colliders:         ${physicsColliders_Mul} EV ${physicsColliders_Mul >= 1 ? '⚠️' + res.data.avatarStats.physicsColliders : ''}`
-		})
-	}
-	if (physicsRigidbodies_Mul > 1) {
-		statPunish.push({
-			"weight": 25,
-			"multi": Math.round(physicsRigidbodies_Mul),
-			"log": `\v(x${physicsRigidbodies_Mul}) Rigidbodies ${res.data.avatarStats.physicsRigidbodies}`,
-			"print": `\n              Physics Rigidbodies:       ${physicsRigidbodies_Mul} EV ${physicsRigidbodies_Mul >= 1 ? '⚠️' + res.data.avatarStats.physicsRigidbodies : ''}`
-		})
-	}
-	if (audioSourceCount_Mul > 1) {
-		statPunish.push({
-			"weight": 26,
-			"multi": Math.round(audioSourceCount_Mul),
-			"log": `\v(x${audioSourceCount_Mul}) AudioSources ${res.data.avatarStats.audioSourceCount}`,
-			"print": `\n              AudioSource Count:         ${audioSourceCount_Mul} EV ${audioSourceCount_Mul >= 1 ? '⚠️🔊' : ''}`
-		})
-	}
-	if (raycastCount_Mul > 1) {
-		statPunish.push({
-			"weight": 27,
-			"multi": Math.round(raycastCount_Mul),
-			"log": `\v(x${raycastCount_Mul}) Raycasts ${res.data.avatarStats.raycastCount}`,
-			"print": `\n              Raycasts:                  ${raycastCount_Mul} EV ${raycastCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.raycastCount : ''}`
-		})
-	}
-	if (blendShapeCount_Mul > 1) {
-		statPunish.push({
-			"weight": 28,
-			"multi": Math.round(blendShapeCount_Mul),
-			"log": `skip`,
-			"print": `\n              BlendShapes:               ${blendShapeCount_Mul} EV ${blendShapeCount_Mul >= 1 ? '⚠️🧲' : ''}`
-		})
-	}
-	if (cameraCount_Mul > 1) {
-		statPunish.push({
-			"weight": 29,
-			"multi": Math.round(cameraCount_Mul),
-			"log": `skip`,
-			"print": `\n              Camera Count:              ${cameraCount_Mul} EV ${cameraCount_Mul >= 1 ? '⚠️' + res.data.avatarStats.cameraCount : ''}`
-		})
-	}
-	if (uncompressedSize_Mul > 1) {
-		statPunish.push({
-			"weight": 30,
-			"multi": Math.round(uncompressedSize_Mul),
-			"log": `skip`,
-			"print": `\n              Uncompressed Size:         ${uncompressedSize_Mul} EV ${uncompressedSize_Mul >= 1 ? '⚠️🐏' : ''}`
-		})
-	}
-
-	Object.keys(res.data).forEach(async (key, index, arr) => {
-		if (key == 'uncompressedSize' || key == 'totalTextureUsage' || key == 'fileSize') {
-			if (worstAvatarStats[key].value < res.data[key]) {
-				let formatSize = await formatBytes(res.data[key], 2)
-				console.log(`${loglv.hey}${selflogA} New worst detected: ${formatSize} [${key}]`)
-				worstAvatarStatSaveTrigger = true
-				worstAvatarStats[key] = {
-					'value': res.data[key],
-					'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-				}
-			}
-		}
-	})
-	Object.keys(res.data.avatarStats).forEach((key, index, arr) => {
-		if (key == 'bounds') {
-			if (worstAvatarStats['boundsLongest'].value < Math.max(...res.data.avatarStats.bounds)) {
-				console.log(`${loglv.hey}${selflogA} New worst detected: ${Math.max(...res.data.avatarStats.bounds)} [boundsLongest]`)
-				worstAvatarStatSaveTrigger = true
-				worstAvatarStats['boundsLongest'] = {
-					'value': Math.max(...res.data.avatarStats.bounds),
-					'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-				}
-			}
-		} else {
-			if (worstAvatarStats[key]?.value < res.data.avatarStats[key]) {
-				console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats[key]} [${key}]`)
-				worstAvatarStatSaveTrigger = true
-				worstAvatarStats[key] = {
-					'value': res.data.avatarStats[key],
-					'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-				}
-			}
-		}
-	})
-
-	clearTimeout(worstAvatarStatsSaveTimer)
-	worstAvatarStatsSaveTimer = setTimeout(() => {
-		if (worstAvatarStatSaveTrigger == true) {
-			console.log(`${loglv.hey}${selflogA} [WorstStat] Updating Stats file`)
-			fs.writeFile('./datasets/worstAvatarStats.json', JSON.stringify(worstAvatarStats), (err) => { if (err) { console.error(err) } })
-			worstAvatarStatSaveTrigger = false
-		} else {
-			console.log(`${loglv.debug}${selflogA} [WorstStat] No Change needed`)
-		}
-	}, 10000)
-
-
-	// Chatbox Stats
-	var statPunished = statPunish.sort((a, b) => {
-		const sortmulti = b.multi - a.multi; if (sortmulti !== 0) { return sortmulti }
-		const sortweight = a.weight - b.weight; if (sortweight !== 0) { return sortweight }
-	}).filter(r => r.multi >= 2 && r.log != 'skip')
-
-	// Chatbox Stats - El Alba
-	var statPunishedEA = statPunish.find(w => w.weight == 0 && w.multi >= 2)
-	// filter only Texture Memory - weight 0
-
-	// Console Stats
-	var statTotalAvatarEV = statPunish.sort((a, b) => {
-		const sortmulti = b.multi - a.multi; if (sortmulti !== 0) { return sortmulti }
-		const sortweight = a.weight - b.weight; if (sortweight !== 0) { return sortweight }
-	})
-
-
-	if (statTotalAvatarEV.length > 0 && verboseAvatarStatLogging == true) {
-		console.log(statTotalAvatarEV.map(e => { return e.print }).toString().replace(/\n/, ''))
-	}
-	if (statPunished.length > 0 && statWarnings == true) {
-		// console.log('currentAccountInUse', currentAccountInUse['Agroup'])
-		if (currentAccountInUse['Agroup'] == true) {
-			if (InstanceHistory[0].groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && statPunishedEA != undefined) {
-				fs.appendFile('./datasets/over150mb.csv', `\n${res.data.ownerDisplayName}|${fitChars(res.data.name)}|${statPunishedEA.log.replace(/\v/, '').replace('Texture Mem ', '')}|${InstanceHistory[0].worldID}`, (err) => { if (err) { console.err(err) } })
-				oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunishedEA.log)}`, 15000, false, true, false, false, true)
-			} else if (InstanceHistory[0].groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
-				// if (statPunishedEA != undefined) { fs.appendFile('./datasets/over150mb.csv', `\n${res.data.ownerDisplayName}|${fitChars(res.data.name)}|${statPunishedEA.log.replace(/\v/, '').replace('Texture Mem ', '')}|${InstanceHistory[0].location}`, (err) => { if (err) { console.err(err) } }) }
-				oscChatBoxV2(`${fitChars(res.data.name)}${fitChars(statPunished[0].log)}${fitChars(statPunished[1]?.log)}${fitChars(statPunished[2]?.log)}`, 15000, false, true, false, false, true)
-			}
-		}
-	}
-
-	// Summary Chart Data
-	avatarStatSummary.totalAvatars++
-	avatarStatSummary[res.data.performanceRating]++
-	Object.keys(avatarStatSummary.stats).forEach((key, index, arr) => {
-		if (key == 'uncompressedSize') {
-			avatarStatSummary.stats['uncompressedSize'].values.push(res.data.uncompressedSize)
-		} else if (key == 'fileSize') {
-			avatarStatSummary.stats['fileSize'].values.push(res.data.fileSize)
-		} else if (key == 'boundsLongest') {
-			avatarStatSummary.stats['boundsLongest'].values.push(Math.round(Math.max(...res.data.avatarStats.bounds) * 100) / 100)
-		} else {
-			avatarStatSummary.stats[key].values.push(res.data.avatarStats[key] || 0)
-		}
-	})
-
-}
-
-async function scanAllAvatarStats() {
-	console.time('Full-Avatar-Scan')
-
-	var fsrddir = await fsp.readdir('./datasets/avatarStatCache/', 'utf8')
-	for (const findex in fsrddir) {
-		var res = {}
-		// console.log('Opening: ', findex)
-		var fd;
-		try {
-			fd = await fsp.open('./datasets/avatarStatCache/' + fsrddir[findex], 'r')
-			var fsrdfile = await fd.readFile('utf8')
-			// var fsrdfile = await fsp.readFile('./datasets/avatarStatCache/' + file, 'utf8')
-			console.log(`${loglv.info}${selflogA} [AvatarAnalysis] Cached: ${fsrddir[findex]}`)
-			if (fsrdfile == '') {
-				await fsp.unlink('./datasets/avatarStatCache/' + fsrddir[findex])
-			}
-			res.data = JSON.parse(fsrdfile)
-		} catch (error) {
-			console.log(`${loglv.warn}${selflogA} [AvatarAnalysis] `, error)
-			continue
-		} finally {
-			if (fd) {
-				await fd.close()
-				// console.log('Closed: ', findex)
-			}
-		}
-
-
-		let filesize = await formatBytes(res.data?.fileSize)
-		let uncompresssize = await formatBytes(res.data?.uncompressedSize)
-		let vramTexsize = await formatBytes(res.data.avatarStats.totalTextureUsage)
-		console.log(`${loglv.info}${selflogA} [AvatarAnalysis] ${res.data.performanceRating == 'VeryPoor' ? '❌ VeryPoor' : res.data.performanceRating == 'Poor' ? '🔴 Poor' : res.data.performanceRating == 'Medium' ? '🟡 Medium' : res.data.performanceRating == 'Good' ? '🟢 Good' : res.data.performanceRating == 'Excellent' ? '✅ Excellent' : ''} - ${res.data.name}
-             📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)}`)
-
-
-		Object.keys(res.data).forEach(async (key, index, arr) => {
-			if (key == 'uncompressedSize' || key == 'totalTextureUsage' || key == 'fileSize') {
-				if (worstAvatarStats[key].value < res.data[key]) {
-					let formatSize = await formatBytes(res.data[key], 2)
-					console.log(`${loglv.hey}${selflogA} New worst detected: ${formatSize} [${key}]`)
-					worstAvatarStatSaveTrigger = true
-					try {
-						worstAvatarStats[key] = {
-							'value': res.data[key],
-							'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-						}
-					} catch (err) { console.log(err) }
-				}
-			}
-		})
-		Object.keys(res.data.avatarStats).forEach((key, index, arr) => {
-			if (key == 'bounds') {
-				if (worstAvatarStats['boundsLongest'].value < Math.max(...res.data.avatarStats.bounds)) {
-					console.log(`${loglv.hey}${selflogA} New worst detected: ${Math.max(...res.data.avatarStats.bounds)} [boundsLongest]`)
-					worstAvatarStatSaveTrigger = true
-					worstAvatarStats['boundsLongest'] = {
-						'value': Math.max(...res.data.avatarStats.bounds),
-						'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-					}
-				}
-			} else {
-				if (worstAvatarStats[key]?.value < res.data.avatarStats[key]) {
-					console.log(`${loglv.hey}${selflogA} New worst detected: ${res.data.avatarStats[key]} [${key}]`)
-					worstAvatarStatSaveTrigger = true
-					worstAvatarStats[key] = {
-						'value': res.data.avatarStats[key],
-						'source': `${res.data.ownerDisplayName}'s avatar ${res.data.name}`
-					}
-				}
-			}
-		})
-
-		clearTimeout(worstAvatarStatsSaveTimer)
-		worstAvatarStatsSaveTimer = setTimeout(() => {
-			if (worstAvatarStatSaveTrigger == true) {
-				console.log(`${loglv.hey}${selflogA} [WorstStat] Updating Stats file`)
-				fs.writeFile('./datasets/worstAvatarStats.json', JSON.stringify(worstAvatarStats), (err) => { if (err) { console.error(err) } })
-				worstAvatarStatSaveTrigger = false
-			} else {
-				console.log(`${loglv.debug}${selflogA} [WorstStat] No Change needed`)
-			}
-		}, 10000)
-
-
-		// Summary Chart Data
-		avatarStatSummary.totalAvatars++
-		avatarStatSummary[res.data.performanceRating]++
-		Object.keys(avatarStatSummary.stats).forEach((key, index, arr) => {
-			if (key == 'uncompressedSize') {
-				avatarStatSummary.stats['uncompressedSize'].values.push(res.data.uncompressedSize)
-			} else if (key == 'fileSize') {
-				avatarStatSummary.stats['fileSize'].values.push(res.data.fileSize)
-			} else if (key == 'boundsLongest') {
-				avatarStatSummary.stats['boundsLongest'].values.push(Math.round(Math.max(...res.data.avatarStats.bounds)))
-			} else {
-				avatarStatSummary.stats[key].values.push(res.data.avatarStats[key])
-			}
-		})
-
-		// console.log('progress: ', findex, fsrddir.length-1)
-		if (findex == fsrddir.length - 1) {
-			console.timeEnd('Full-Avatar-Scan')
-			setTimeout(() => {
-				requestAvatarStatTable(false, 0.05, true, `All Avatar Stats in Cache`)
-			}, 2000)
-			setTimeout(() => {
-				avatarStatSummary = {
-					"totalAvatars": 0,
-					"checkedFileIDs": [],
-					"seenAuthors": [{
-						"id": "", "displayName": ""
-					}],
-					"seenAvatars": [{
-						"name": "", "author": null, "wearers": [], "lastAccessed": 0
-					}],
-					"Excellent": 0,
-					"Good": 0,
-					"Medium": 0,
-					"Poor": 0,
-					"VeryPoor": 0,
-					"stats": {
-						"totalPolygons": { "label": "Polygons", "values": [] },
-						"boundsLongest": { "label": "Bounds (Longest Edge)", "values": [] },
-						"skinnedMeshCount": { "label": "Skinned Meshes", "values": [] },
-						"meshCount": { "label": "Basic Meshes", "values": [] },
-						"materialSlotsUsed": { "label": "Material Slots", "values": [] },
-						"materialCount": { "label": "Material Count", "values": [] },
-						"physBoneColliderCount": { "label": "PhysBone Colliders", "values": [] },
-						"physBoneCollisionCheckCount": { "label": "PhysBone Collision Checks", "values": [] },
-						"physBoneComponentCount": { "label": "PhysBone Components", "values": [] },
-						"physBoneTransformCount": { "label": "PhysBone Transforms", "values": [] },
-						"contactCount": { "label": "Contacts", "values": [] },
-						"constraintCount": { "label": "Constraint Count", "values": [] },
-						"constraintDepth": { "label": "Constraint Depth", "values": [] },
-						"animatorCount": { "label": "Animators", "values": [] },
-						"boneCount": { "label": "Bones", "values": [] },
-						"lightCount": { "label": "Lights", "values": [] },
-						"particleSystemCount": { "label": "Particle Systems", "values": [] },
-						"totalMaxParticles": { "label": "Max Particles", "values": [] },
-						"meshParticleMaxPolygons": { "label": "Particle Max Polygons", "values": [] },
-						"trailRendererCount": { "label": "Trail Renderers", "values": [] },
-						"lineRendererCount": { "label": "Line Renderers", "values": [] },
-						"clothCount": { "label": "Cloth Count", "values": [] },
-						"totalClothVertices": { "label": "Cloth Vertices", "values": [] },
-						"physicsColliders": { "label": "Unity Colliders", "values": [] },
-						"physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
-						"audioSourceCount": { "label": "AudioSources", "values": [] },
-						"raycastCount": { "label": "Raycasts", "values": [] },
-						"blendShapeCount": { "label": "BlendShapes", "values": [] },
-						"cameraCount": { "label": "Cameras", "values": [] },
-						"totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
-						"fileSize": { "label": "Download Size", "values": [] },
-						"uncompressedSize": { "label": "Uncompressed Size (RAM)", "values": [] }
-					}
-				}
-			}, 10_000)
-		}
-
-	}
-}
-
-async function scanListAvatarStats(I_list = []) {
-
-	var fsrddir = I_list
-	fsrddir.forEach(async (file, index, arr) => {
-		var res = {}
-		var fsrdfile = await fsp.readFile('./datasets/avatarStatCache/' + file + '.json', 'utf8')
-		console.log(`${loglv.info}${selflogA} [AvatarAnalysis] Cached: ${file}`)
-		res.data = JSON.parse(fsrdfile)
-
-
-		let filesize = await formatBytes(res.data.fileSize)
-		let uncompresssize = await formatBytes(res.data.uncompressedSize)
-		let vramTexsize = await formatBytes(res.data.avatarStats.totalTextureUsage)
-		console.log(`${loglv.info}${selflogA} [AvatarAnalysis] ${res.data.performanceRating == 'VeryPoor' ? '❌ VeryPoor' : res.data.performanceRating == 'Poor' ? '🔴 Poor' : res.data.performanceRating == 'Medium' ? '🟡 Medium' : res.data.performanceRating == 'Good' ? '🟢 Good' : res.data.performanceRating == 'Excellent' ? '✅ Excellent' : ''} - ${res.data.name}
-             📦 ${filesize} , 🗃️ ${uncompresssize} , 🐏 ${vramTexsize} , 📐 ${res.data.avatarStats.totalPolygons} , 💡 ${res.data.avatarStats.lightCount} , 🥎 ${res.data.avatarStats.contactCount} , 🔊 ${res.data.avatarStats.audioSourceCount} , 🧲 ${res.data.avatarStats.blendShapeCount} , 🧊 ${res.data.avatarStats.bounds.map(Math.ceil)}`)
-
-		// Summary Chart Data
-		avatarStatSummary.totalAvatars++
-		avatarStatSummary[res.data.performanceRating]++
-		Object.keys(avatarStatSummary.stats).forEach((key, index, arr) => {
-			if (key == 'uncompressedSize') {
-				avatarStatSummary.stats['uncompressedSize'].values.push(res.data.uncompressedSize)
-			} else if (key == 'fileSize') {
-				avatarStatSummary.stats['fileSize'].values.push(res.data.fileSize)
-			} else if (key == 'boundsLongest') {
-				avatarStatSummary.stats['boundsLongest'].values.push(Math.round(Math.max(...res.data.avatarStats.bounds)))
-			} else {
-				avatarStatSummary.stats[key].values.push(res.data.avatarStats[key])
-			}
-		})
-
-		if (index == arr.length - 1) {
-			setTimeout(() => {
-				requestAvatarStatTable(false, 0.05, true, `Specific List of Avatar Stats from Cache`)
-			}, 2000)
-			setTimeout(() => {
-				avatarStatSummary = {
-					"totalAvatars": 0,
-					"checkedFileIDs": [],
-					"seenAuthors": [{
-						"id": "", "displayName": ""
-					}],
-					"seenAvatars": [{
-						"name": "", "author": null, "wearers": [], "lastAccessed": 0
-					}],
-					"Excellent": 0,
-					"Good": 0,
-					"Medium": 0,
-					"Poor": 0,
-					"VeryPoor": 0,
-					"stats": {
-						"totalPolygons": { "label": "Polygons", "values": [] },
-						"boundsLongest": { "label": "Bounds (Longest Edge)", "values": [] },
-						"skinnedMeshCount": { "label": "Skinned Meshes", "values": [] },
-						"meshCount": { "label": "Basic Meshes", "values": [] },
-						"materialSlotsUsed": { "label": "Material Slots", "values": [] },
-						"materialCount": { "label": "Material Count", "values": [] },
-						"physBoneColliderCount": { "label": "PhysBone Colliders", "values": [] },
-						"physBoneCollisionCheckCount": { "label": "PhysBone Collision Checks", "values": [] },
-						"physBoneComponentCount": { "label": "PhysBone Components", "values": [] },
-						"physBoneTransformCount": { "label": "PhysBone Transforms", "values": [] },
-						"contactCount": { "label": "Contacts", "values": [] },
-						"constraintCount": { "label": "Constraint Count", "values": [] },
-						"constraintDepth": { "label": "Constraint Depth", "values": [] },
-						"animatorCount": { "label": "Animators", "values": [] },
-						"boneCount": { "label": "Bones", "values": [] },
-						"lightCount": { "label": "Lights", "values": [] },
-						"particleSystemCount": { "label": "Particle Systems", "values": [] },
-						"totalMaxParticles": { "label": "Max Particles", "values": [] },
-						"meshParticleMaxPolygons": { "label": "Particle Max Polygons", "values": [] },
-						"trailRendererCount": { "label": "Trail Renderers", "values": [] },
-						"lineRendererCount": { "label": "Line Renderers", "values": [] },
-						"clothCount": { "label": "Cloth Count", "values": [] },
-						"totalClothVertices": { "label": "Cloth Vertices", "values": [] },
-						"physicsColliders": { "label": "Unity Colliders", "values": [] },
-						"physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
-						"audioSourceCount": { "label": "AudioSources", "values": [] },
-						"raycastCount": { "label": "Raycasts", "values": [] },
-						"blendShapeCount": { "label": "BlendShapes", "values": [] },
-						"cameraCount": { "label": "Cameras", "values": [] },
-						"totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
-						"fileSize": { "label": "Download Size", "values": [] },
-						"uncompressedSize": { "label": "Uncompressed Size (RAM)", "values": [] }
-					}
-				}
-			}, 10_000)
-		}
-
-	})
-}
-
-async function collectActiveInstanceStats(skipLaunch = false) {
-	// Active World List
-	var activeworlds = await limiter.req(vrchat.getActiveWorlds({ 'query': { 'n': 100, 'order': 'ascending' } }))
-	// Worlds Data
-	for (const wrld in activeworlds.data) {
-		console.log(`${loglv.info}${selflogA} [BulkStatCollection] World Target: ${activeworlds.data[wrld].name}`)
-		var maxPlayers = activeworlds.data[wrld].capacity
-		var gotworld = await limiter.req(vrchat.getWorld({ 'path': { 'worldId': activeworlds.data[wrld].id } }))
-
-		// Instances Data
-		for (const ints in gotworld.data.instances) {
-			// Within Player count range
-			if (gotworld.data.instances[ints][1] >= 5 && gotworld.data.instances[ints][1] < (maxPlayers - 2)) {
-				var location = `${activeworlds.data[wrld].id}:${gotworld.data.instances[ints][0]}`
-				// console.log(`${loglv.info}${selflog} [BulkStatCollection] ${wrld} ${ints}`)
-				await gotoInstance(location)
-			}
-		}
-	}
-	console.log(`${loglv.info}${selflogA} [BulkStatCollection] Finished Collecting Stats.. Going Home.`)
-	if (skipLaunch == false) {
-		startvrc('wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5:91151~private(usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752)~canRequestInvite~region(use)', true)
-	}
-
-	async function gotoInstance(I_instanceLocation) {
-		return new Promise(async (resolve, reject) => {
-			var gotinstance = await limiter.req(vrchat.getInstance({ 'path': { 'worldId': I_instanceLocation.split(':')[0], 'instanceId': I_instanceLocation.split(':')[1] } }))
-			// console.debug(gotinstance.data)
-			if (gotinstance.data.full == false && gotinstance.data.n_users >= 5 && gotinstance.data.userCount >= 5 && gotinstance.data.closedAt == null) {
-				console.log(`${loglv.info}${selflogA} [BulkStatCollection] Traveling to ${I_instanceLocation.split(':')[1].slice(0, 63)}`)
-				if (skipLaunch == false) {
-					startvrc(I_instanceLocation, true)
-					logEmitter.once('joinedworld', async () => {
-						// console.debug('JOINED WORLD');
-						// logEmitter.once('notAllowedToTravel', () => { console.debug('NOT ALLOWED TO TRAVEL'); resolve(true) })
-						await once(logEmitter, 'avatarQueueFinish')
-						resolve(true)
-					})
-				} else {
-					setTimeout(() => {
-						resolve(true)
-					}, 30_000);
-				}
-
-			} else if (gotinstance.data.closedAt != null) {
-				console.log(`${loglv.info}${selflogA} [BulkStatCollection] Instance Closed: - ${I_instanceLocation.split(':')[1].slice(0, 57)}`)
-				setTimeout(() => { resolve(true) }, 2_000)
-			} else if (gotinstance.data.n_users < 5 || gotinstance.data.userCount < 5) {
-				console.log(`${loglv.info}${selflogA} [BulkStatCollection] Not enough people: - ${I_instanceLocation.split(':')[1].slice(0, 55)}`)
-				setTimeout(() => { resolve(true) }, 2_000)
-			} else {
-				console.log(`${loglv.info}${selflogA} [BulkStatCollection] Instance Full: - ${I_instanceLocation.split(':')[1].slice(0, 59)}`)
-				setTimeout(() => { resolve(true) }, 2_000)
-			}
-		})
-	}
-
 }
 
 async function worldAutoPreloadQueue(worldList = []) {
@@ -1963,7 +1065,7 @@ function inviteLocalQueue(I_autoNext = false) {
 			oscChatBoxV2(`World fetch failed.\vTry another.`, 5000, true, true, false, false, false)
 			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
 				if (data.includes(world_id)) {
-					fs.writeFile(worldQueueTxt, data.replace(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
+					fs.writeFile(worldQueueTxt, data.replaceAll(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
 				}
 			})
 			return
@@ -2028,7 +1130,7 @@ function inviteLocalQueue(I_autoNext = false) {
 			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
 				// err ? console.log(err); return : ''
 				if (data.includes(world_id)) {
-					fs.writeFile(worldQueueTxt, data.replace(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
+					fs.writeFile(worldQueueTxt, data.replaceAll(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
 				}
 				if (I_autoNext == true) { setTimeout(() => { inviteLocalQueue(true) }, 5000) }
 			})
@@ -2390,7 +1492,6 @@ function eventGameClose() {
 	clearTimeout(worldHopTimeout)
 	clearTimeout(worldHopTimeoutHour)
 	clearTimeout(userTrustTableTimer)
-	requestAvatarStatTable(true, 0.05, true, InstanceHistory[0].location)
 
 	apiEmitter.emit('switch', 0, 'world')
 
@@ -2487,179 +1588,6 @@ function requestUserTrustTable() {
 	var c = table(Object.entries(playersInstanceStatus).sort((a, b) => b[1][0] - a[1][0]).map(([k, v]) => [k, ...v]))
 	var stringDebugTables = table([['Trust Ranks', 'Platform', 'Status'], [a, b, c]])
 	console.log(`${loglv.debug}\n${stringDebugTables}`)
-}
-
-async function requestAvatarStatTable(writeToFile = false, trAvgPercent = 0.05, resetData = false, sourceLocation) {
-	return new Promise((resolve, reject) => {
-		var avatarStatSummaryTable = [['Components - ' + avatarStatSummary.totalAvatars + ' Avatars', 'Min', 'Q1', 'Median', 'Q3', 'Max', trAvgPercent * 100 + '% Tr.Avg', 'Total']]
-		Object.keys(avatarStatSummary.stats).forEach(async (key, index, arr) => {
-			if (key == 'fileSize') {
-				var sort = avatarStatSummary.stats['fileSize'].values.sort((a, b) => { return a - b })
-				var vMin = await formatBytes(Math.min(...avatarStatSummary.stats['fileSize'].values))
-				var vQ1 = await formatBytes(sort[Math.floor((sort.length - 1) * 0.25)])
-				var vMedT = sort.length % 2 === 0 ? (sort[sort.length / 2] + sort[(sort.length / 2) - 1]) / 2 : sort[Math.floor(sort.length / 2)]
-				var vMed = await formatBytes(vMedT)
-				var vTrAvgT = sort.slice(Math.floor(sort.length * trAvgPercent), Math.floor(sort.length * -trAvgPercent))
-				var vTrAvg = await formatBytes(mathSumValues(vTrAvgT) / vTrAvgT.length)
-				var vQ3 = await formatBytes(sort[Math.floor((sort.length - 1) * 0.75)])
-				var vMax = await formatBytes(Math.max(...avatarStatSummary.stats['fileSize'].values))
-				var vSum = await formatBytes(mathSumValues(avatarStatSummary.stats['fileSize'].values))
-
-				avatarStatSummaryTable.push([avatarStatSummary.stats['fileSize'].label, vMin, vQ1, vMed, vQ3, vMax, vTrAvg, vSum])
-
-			} else if (key == 'uncompressedSize') {
-				var sort = avatarStatSummary.stats['uncompressedSize'].values.sort((a, b) => { return a - b })
-				var vMin = await formatBytes(Math.min(...avatarStatSummary.stats['uncompressedSize'].values))
-				var vQ1 = await formatBytes(sort[Math.floor((sort.length - 1) * 0.25)])
-				var vMedT = sort.length % 2 === 0 ? (sort[sort.length / 2] + sort[(sort.length / 2) - 1]) / 2 : sort[Math.floor(sort.length / 2)]
-				var vMed = await formatBytes(vMedT)
-				var vTrAvgT = sort.slice(Math.floor(sort.length * trAvgPercent), Math.floor(sort.length * -trAvgPercent))
-				var vTrAvg = await formatBytes(mathSumValues(vTrAvgT) / vTrAvgT.length)
-				var vQ3 = await formatBytes(sort[Math.floor((sort.length - 1) * 0.75)])
-				var vMax = await formatBytes(Math.max(...avatarStatSummary.stats['uncompressedSize'].values))
-				var vSum = await formatBytes(mathSumValues(avatarStatSummary.stats['uncompressedSize'].values))
-
-				avatarStatSummaryTable.push([avatarStatSummary.stats['uncompressedSize'].label, vMin, vQ1, vMed, vQ3, vMax, vTrAvg, vSum])
-
-			} else if (key == 'totalTextureUsage') {
-				var sort = avatarStatSummary.stats['totalTextureUsage'].values.sort((a, b) => { return a - b })
-				var vMin = await formatBytes(Math.min(...avatarStatSummary.stats['totalTextureUsage'].values))
-				var vQ1 = await formatBytes(sort[Math.floor((sort.length - 1) * 0.25)])
-				var vMedT = sort.length % 2 === 0 ? (sort[sort.length / 2] + sort[(sort.length / 2) - 1]) / 2 : sort[Math.floor(sort.length / 2)]
-				var vMed = await formatBytes(vMedT)
-				var vTrAvgT = sort.slice(Math.floor(sort.length * trAvgPercent), Math.floor(sort.length * -trAvgPercent))
-				var vTrAvg = await formatBytes(mathSumValues(vTrAvgT) / vTrAvgT.length)
-				var vQ3 = await formatBytes(sort[Math.floor((sort.length - 1) * 0.75)])
-				var vMax = await formatBytes(Math.max(...avatarStatSummary.stats['totalTextureUsage'].values))
-				var vSum = await formatBytes(mathSumValues(avatarStatSummary.stats['totalTextureUsage'].values))
-
-				avatarStatSummaryTable.push([avatarStatSummary.stats['totalTextureUsage'].label, vMin, vQ1, vMed, vQ3, vMax, vTrAvg, vSum])
-
-			} else {
-				var sort = avatarStatSummary.stats[key].values.sort((a, b) => { return a - b })
-				// console.log(sort)
-				var vMin = Math.min(...avatarStatSummary.stats[key].values)
-				var vQ1 = sort[Math.floor((sort.length - 1) * 0.25)]
-				var vMed = sort.length % 2 === 0 ? (sort[sort.length / 2] + sort[(sort.length / 2) - 1]) / 2 : sort[Math.floor(sort.length / 2)]
-				var vAvg = avatarStatSummary.stats[key].sum / avatarStatSummary.totalAvatars
-				var vMax = Math.max(...avatarStatSummary.stats[key].values)
-				var vQ3 = sort[Math.floor((sort.length - 1) * 0.75)]
-				var vTrAvgT = sort.slice(Math.floor(sort.length * trAvgPercent), Math.floor(sort.length * -trAvgPercent))
-				var vTrAvg = mathSumValues(vTrAvgT) / vTrAvgT.length
-
-				/* if (key == 'boundsLongest') {
-					avatarStatSummaryTable.push([
-						avatarStatSummary.stats[key].label,
-						(Math.ceil(vMin * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-						(Math.ceil(vQ1 * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-						(Math.ceil(vMed * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-						(Math.ceil(vQ3 * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-						(Math.ceil(vMax * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-						(Math.ceil(vTrAvg * 100) / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-						''
-					])
-				} else { */
-				avatarStatSummaryTable.push([
-					avatarStatSummary.stats[key].label,
-					Math.ceil(vMin).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-					Math.ceil(vQ1).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-					Math.ceil(vMed).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-					Math.ceil(vQ3).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-					Math.ceil(vMax).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-					Math.ceil(vTrAvg).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-					''
-				])
-				// }
-			}
-		})
-		setTimeout(() => {
-			var tableOptions = { 'drawHorizontalLine': (lineIndex, rowCount) => { return lineIndex === 0 || lineIndex === 1 || lineIndex === 30 || lineIndex === rowCount } }
-			if (avatarStatSummary.totalAvatars >= 4) {
-				console.log('=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + sourceLocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent ✅: ${avatarStatSummary.Excellent}\n         Good 🟢: ${avatarStatSummary.Good}\n       Medium 🟡: ${avatarStatSummary.Medium}\n         Poor 🔴: ${avatarStatSummary.Poor}\n     VeryPoor ❌: ${avatarStatSummary.VeryPoor}`)
-				if (writeToFile == true) {
-					fs.writeFile('./datasets/avatarStatSummarys/' + Date.now() + ' ' + sourceLocation + '.txt', '=== Avatar Performance Stat Summary ===\nCreation Date-Time\n   ' + new Date().toLocaleString() + '\nInstance Location\n    ' + sourceLocation + '\n' + table(avatarStatSummaryTable, tableOptions) + `    Excellent ✅: ${avatarStatSummary.Excellent}\n         Good 🟢: ${avatarStatSummary.Good}\n       Medium 🟡: ${avatarStatSummary.Medium}\n         Poor 🔴: ${avatarStatSummary.Poor}\n     VeryPoor ❌: ${avatarStatSummary.VeryPoor}\n` + '\n--Avatar Security Checks used--' + avatarStatSummary.checkedFileIDs.map((v) => { return '\n' + v }), 'utf8', (err) => {
-						if (err) { console.error(err) }
-					})
-				}
-			}
-			if (resetData == true) {
-				avatarStatSummary = {
-					"totalAvatars": 0,
-					"checkedFileIDs": [],
-					"seenAuthors": [{
-						"id": "", "displayName": ""
-					}],
-					"seenAvatars": [{
-						"name": "", "author": null, "wearers": [], "lastAccessed": 0
-					}],
-					"Excellent": 0,
-					"Good": 0,
-					"Medium": 0,
-					"Poor": 0,
-					"VeryPoor": 0,
-					"stats": {
-						"totalPolygons": { "label": "Polygons", "values": [] },
-						"boundsLongest": { "label": "Bounds (Longest Edge)", "values": [] },
-						"skinnedMeshCount": { "label": "Skinned Meshes", "values": [] },
-						"meshCount": { "label": "Basic Meshes", "values": [] },
-						"materialSlotsUsed": { "label": "Material Slots", "values": [] },
-						"materialCount": { "label": "Material Count", "values": [] },
-						"physBoneColliderCount": { "label": "PhysBone Colliders", "values": [] },
-						"physBoneCollisionCheckCount": { "label": "PhysBone Collision Checks", "values": [] },
-						"physBoneComponentCount": { "label": "PhysBone Components", "values": [] },
-						"physBoneTransformCount": { "label": "PhysBone Transforms", "values": [] },
-						"contactCount": { "label": "Contacts", "values": [] },
-						"constraintCount": { "label": "Constraint Count", "values": [] },
-						"constraintDepth": { "label": "Constraint Depth", "values": [] },
-						"animatorCount": { "label": "Animators", "values": [] },
-						"boneCount": { "label": "Bones", "values": [] },
-						"lightCount": { "label": "Lights", "values": [] },
-						"particleSystemCount": { "label": "Particle Systems", "values": [] },
-						"totalMaxParticles": { "label": "Max Particles", "values": [] },
-						"meshParticleMaxPolygons": { "label": "Particle Max Polygons", "values": [] },
-						"trailRendererCount": { "label": "Trail Renderers", "values": [] },
-						"lineRendererCount": { "label": "Line Renderers", "values": [] },
-						"clothCount": { "label": "Cloth Count", "values": [] },
-						"totalClothVertices": { "label": "Cloth Vertices", "values": [] },
-						"physicsColliders": { "label": "Unity Colliders", "values": [] },
-						"physicsRigidbodies": { "label": "Rigidbodies", "values": [] },
-						"audioSourceCount": { "label": "AudioSources", "values": [] },
-						"raycastCount": { "label": "Raycasts", "values": [] },
-						"blendShapeCount": { "label": "BlendShapes", "values": [] },
-						"cameraCount": { "label": "Cameras", "values": [] },
-						"totalTextureUsage": { "label": "Texture Memory (VRAM)", "values": [] },
-						"fileSize": { "label": "Download Size", "values": [] },
-						"uncompressedSize": { "label": "Uncompressed Size (RAM)", "values": [] }
-					}
-				}
-
-			}
-			resolve(true)
-		}, 2000)
-	})
-}
-
-async function requestWorstStatTable() {
-	return new Promise((resolve, reject) => {
-		var worstStatSummaryTable = [['Component', 'Value', 'Blame Source']]
-		Object.keys(worstAvatarStats).forEach(async (key, index, arr) => {
-			if (key == 'fileSize' || key == 'uncompressedSize' || key == 'totalTextureUsage') {
-				var vValue = await formatBytes(worstAvatarStats[key].value)
-				worstStatSummaryTable.push([avatarStatSummary.stats[key].label, vValue, worstAvatarStats[key].source])
-			} else {
-				worstStatSummaryTable.push([avatarStatSummary.stats[key].label, worstAvatarStats[key].value, worstAvatarStats[key].source])
-			}
-		})
-		setTimeout(() => {
-			var logString = ''
-			worstStatSummaryTable.map(([l, v, b]) => { return `${l}	${v}		${b}` }).forEach(line => {
-				logString += `${logString.length == 0 ? '' : '\n'}${line}`
-			})
-			fs.writeFile('./output.txt', logString, (err) => { if (err) { console.error(err) } })
-			console.log(logString, '\n\nWrote to output.txt file')
-			open('./output.txt')
-		}, 2000)
-	})
 }
 
 async function switchYearGroupsClosed() {
@@ -3158,10 +2086,6 @@ async function eventHeadingToWorld(logOutputLine) {
 		}
 	}
 
-	// Save avatar stats for the instance
-	if (InstanceHistory[0]) {
-		await requestAvatarStatTable(true, 0.05, true, `${InstanceHistory[0].worldID} - ${InstanceHistory[0].instanceType}${InstanceHistory[0].groupID != '' ? ' - ' + InstanceHistory[0].groupID : ''}`)
-	}
 
 	console.log(`${loglv.debug} [InstanceHistory] Marking instance as Leaving: ${InstanceHistory[0].location}`)
 	InstanceHistory[0].leave_timestamp = Date.now()
@@ -3218,14 +2142,7 @@ function eventJoiningWorld() {
 	playersInInstance = []
 	membersInInstance = []
 	playersInstanceObject = []
-	fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
-		if (data.includes(InstanceHistory[0].worldID) && InstanceHistory[0].worldID != '') {
-			fs.writeFile(worldQueueTxt, data.replace(`${InstanceHistory[0].worldID}\r\n`, ''), (err) => {
-				if (err) { console.log(err) }
-				console.log(`${loglv.debug}${selflogL} ${InstanceHistory[0].worldID} was successfully purged from queue`)
-			})
-		}
-	})
+
 
 	if (vrcUserStatusText == 'Watching ' + popcornPalaceMovieTitle.slice(0, 23) && InstanceHistory[0].worldID != 'wrld_266523e8-9161-40da-acd0-6bd82e075833') {
 		setUserStatus(``)
@@ -3316,11 +2233,23 @@ async function eventPlayerJoin(logOutputLine) {
 			InstanceHistory[0].join_timestamp = Date.now()
 			console.log(`${loglv.debug} [InstanceHistory] Loaded into world, appending join Timestamp ${InstanceHistory[0].join_timestamp}`)
 
+			// Remove world from Explore Queue
+			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
+				if (data.includes(InstanceHistory[0].worldID) && InstanceHistory[0].worldID != '') {
+					fs.writeFile(worldQueueTxt, data.replaceAll(`${InstanceHistory[0].worldID}\r\n`, ''), (err) => {
+						if (err) { console.log(err) }
+						console.log(`${loglv.debug}${selflogL} ${InstanceHistory[0].worldID} was successfully purged from queue`)
+					})
+				}
+			})
+
+			// Remove joined instance from Joinable Queue
 			let isinstanceInJoinableQueue = G_instanceJoinQueue.find(i => i.location == InstanceHistory[0].location)
 			if (isinstanceInJoinableQueue != undefined) {
 				G_instanceJoinQueue.splice(G_instanceJoinQueue.findIndex(isinstanceInJoinableQueue), 1)
 			}
 
+			// Instance History Cleanup
 			if (InstanceHistory.length > 2) {
 				let ihl = InstanceHistory.length
 				InstanceHistory = InstanceHistory.filter((ih, index) => ih.leave_timestamp + 3600_000 > Date.now() || index <= 1)
@@ -3452,14 +2381,6 @@ function eventPlayerLeft(logOutputLine) {
 
 		if (Date.now() > (InstanceHistory[0].join_timestamp + 30000) && worldHopTimeout != null) { queueInstanceDataBurst() }
 
-		try {
-			avatarStatSummary.seenAvatars
-				.filter(a => a.wearers.includes(playerDisplayName))
-				.map(b => b.wearers.splice(b.wearers.indexOf(playerDisplayName)))
-		} catch (error) {
-			console.debug('no wearer to remove')
-		}
-
 
 		if ([`groupPlus`, `groupPublic`].includes(InstanceHistory[0].instanceType)) {
 			membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
@@ -3496,11 +2417,9 @@ function eventPlayerLeft(logOutputLine) {
 			loadingAvatarTimer = null
 			worldHopTimeout = null
 			cooldownUrl = true
-			if (G_InstanceClosed == true) {
-				if (vrcUserStatusText != `Exploring World Queue`) {
-					vrcUserStatusText = ``
-					setUserStatus('')
-				}
+			if (G_InstanceClosed == true && vrcUserStatusText != `Exploring World Queue`) {
+				vrcUserStatusText = ``
+				setUserStatus('')
 				G_InstanceClosed = false
 			}
 
@@ -3525,8 +2444,10 @@ function eventPlayerLeft(logOutputLine) {
 
 function eventInstanceClosed() {
 	if (InstanceHistory[0].worldID != 'wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5' && InstanceHistory[0].groupID != 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+
 		vrcUserStatusText = 'Instance is closed'
 		setUserStatus('Instance is closed')
+
 	} else if (InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 		if (vrcUserStatusText != `Exploring World Queue`) {
 			vrcUserStatusText = `Exploring World Queue`
@@ -3535,6 +2456,7 @@ function eventInstanceClosed() {
 		inviteLocalQueue(G_autoNextWorldHop)
 
 	}
+
 	G_InstanceClosed = true
 	oscSend('/avatar/parameters/log/instance_closed', true)
 
@@ -3592,20 +2514,6 @@ function eventPlayerAvatarSwitch(logOutputLine) {
 
 	console.log(`${loglv.info}${selflogL} [AvatarChange]: ${playerswitching} switching to (${avatarswitchedto})`)
 
-	var pruneCheckLength = avatarStatSummary.seenAvatars.filter(a => Date.now() > a.lastAccessed + 60000 && a.wearers.length == 0)
-	var pruneLeftover = avatarStatSummary.seenAvatars.filter(a => Date.now() < a.lastAccessed + 60000 || a.wearers.length != 0)
-	if (pruneCheckLength.length > 0) {
-		avatarStatSummary.seenAvatars = pruneLeftover
-		console.log(`${loglv.info}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarCache]: Pruning ${pruneCheckLength.length} avatars from memory.`)
-	}
-
-	try {
-		avatarStatSummary.seenAvatars.filter(a => a.wearers.includes(playerswitching)).map(b => b.wearers.splice(b.wearers.indexOf(playerswitching)))
-		avatarStatSummary.seenAvatars.filter(a => a.name == avatarswitchedto)[0].wearers.push(playerswitching)
-	} catch (err) {
-		avatarStatSummary.seenAvatars.push({ "name": avatarswitchedto, "author": null, "wearers": [playerswitching], "lastAccessed": Date.now() })
-	}
-
 	clearTimeout(loadingAvatarTimer)
 	loadingAvatarTimer = setTimeout(() => {
 		logEmitter.emit('avatarQueueFinish', true)
@@ -3622,15 +2530,6 @@ function eventAssetDownload(logOutputLine) {
 		// [AssetBundle]: [593] Unpacking Avatar (Alula v3․48 Basic by 14anthony7095)
 		let avatarswitchedto = assetbundlelog.split('Unpacking Avatar (')[1].split(' by ')[0]
 		let avatarauthor = assetbundlelog.split('Unpacking Avatar (')[1].split(' by ')[1].slice(0, -1)
-
-		try {
-			var assSa = avatarStatSummary.seenAvatars.filter(a => a.name == avatarswitchedto)[0]
-			assSa.author = avatarauthor
-			console.log(`${loglv.info}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarChange]: ${assSa.wearers.toString()} in avatar (${assSa.name} by ${assSa.author})`)
-		} catch (err) {
-			console.log(`${loglv.info}\x1b[0m[\x1b[32mVRC_Log\x1b[0m] [AvatarFallback]: No Wearer for (${avatarswitchedto} by ${avatarauthor})`)
-			avatarStatSummary.seenAvatars.push({ "name": avatarswitchedto, "author": avatarauthor, "wearers": [], "lastAccessed": Date.now() })
-		}
 
 		clearTimeout(loadingAvatarTimer)
 		loadingAvatarTimer = setTimeout(() => {
