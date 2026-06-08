@@ -86,13 +86,13 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	}
 	if (cmd == 'osc' && args[0] == 'chat') {
 		if (args[1] == 'tall') {
-			oscChatBox(`0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0`)
+			oscChatBoxV2(`0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0`)
 		}
 		if (args[1] == 'fat') {
-			oscChatBox(`0 0 0 0 0 0 0 0 0 0 0 0 0 0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0 0 0 0 0 0 0 0 0 0 0 0 0 0`)
+			oscChatBoxV2(`0 0 0 0 0 0 0 0 0 0 0 0 0 0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0 0 0 0 0 0 0 0 0 0 0 0 0 0`)
 		}
 		if (args[1] == 'bottom') {
-			oscChatBox(`😳\v👉👈`)
+			oscChatBoxV2(`😳\v👉👈`)
 		}
 	}
 })

@@ -92,6 +92,7 @@ var G_InstanceClosed = false
 var G_groupMembersVisible = false
 var G_instanceJoinQueue = []
 var vrcUserStatusText = ''
+var vrcUserHasVRCplus = false
 var cooldownPortalVanish = false
 var vrchatRunning = false
 var loadingAvatarTimer;
@@ -159,14 +160,8 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 		console.log(`
 -   api requestall
 -   years [open/close]
+-   hypetrain
 -   forceaudit
--   avatars
--   collectavatars
--   collectavatars2
--   allavatars
--   listavatars [file_UUID...]
--   wearers
--   statwarn [True/False]
 -   preload [wrld_UUID...]
 -   addworlds [<string>]
 -   explore
@@ -188,6 +183,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	}
 	if (cmd == 'api' && args[0] == 'requestall') { requestAllOnlineFriends(currentUser) }
 	if (cmd == 'years' && args[0] == 'close') { switchYearGroupsClosed() }
+	if (cmd == 'hypetrain') { hypeTrainLocater() }
 	if (cmd == 'years' && args[0] == 'open') { switchYearGroupsReOpen() }
 	if (cmd == 'forceaudit') { scanGroupAuditLogs() }
 	if (cmd == 'findjoinable') {
@@ -230,16 +226,51 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 
 async function main() {
 	console.log(`${loglv.debug}${selflogA} Started main function`)
-	try {
-		currentUser = await limiter.req(vrchat.getCurrentUser({ throwOnError: true }))
-		console.log(`${loglv.info}${selflogA} Logged in as: ${currentUser.data.displayName}`);
-		const { data: auth } = await limiter.req(vrchat.verifyAuthToken())
-		if (auth.ok == true) {
-			authToken = auth.token
-			socket_VRC_API_Connect()
+	updateCurrentUserInfo(true)
+}
+
+async function manualCall(vrcapiEndpoint, methodType = 'GET', bodyJson) {
+	return new Promise(async (resolve, reject) => {
+		const vrcapihttp = `https://api.vrchat.cloud/api/1/`
+
+		var apiRequest = {
+			method: methodType,
+			headers: { 'User-Agent': `${process.env['VRC_USER_AGENT']} (${process.env['CONTACT_EMAIL']})`, 'Cookie': 'auth=' + authToken },
+		}
+		if (bodyJson != undefined) {
+			apiRequest['body'] = JSON.stringify(bodyJson)
+			apiRequest['headers']['Content-Type'] = 'application/json'
 		}
 
-		vrcUserStatusText = currentUser.data.statusDescription
+		var request = await fetch(vrcapihttp + '' + vrcapiEndpoint, apiRequest)
+		// console.log(request)
+		var jsonResponse = await request.json()
+		if (jsonResponse.error) {
+			reject(jsonResponse.error)
+		} else {
+			resolve(jsonResponse)
+		}
+	})
+}
+
+
+async function updateCurrentUserInfo(isFirstLaunch = false) {
+	try {
+		currentUser = await limiter.req(vrchat.getCurrentUser({ throwOnError: true }))
+		if (isFirstLaunch) {
+			console.log(`${loglv.info}${selflogA} Logged in as: ${currentUser.data.displayName}`);
+			const { data: auth } = await limiter.req(vrchat.verifyAuthToken())
+			if (auth.ok == true) {
+				authToken = auth.token
+				socket_VRC_API_Connect()
+			}
+
+			vrcUserStatusText = currentUser.data.statusDescription
+			console.log(`${loglv.info}${selflogA} User status: ${vrcUserStatusText}`)
+
+			vrcUserHasVRCplus = currentUser.data.badges.find(b => b.badgeName == "Supporter") == undefined ? false : true
+			console.log(`${loglv.info}${selflogA} User has VRC+ ${vrcUserHasVRCplus}`)
+		}
 
 		if (currentUser.data.presence.world != 'offline') {
 			var instanceType = 'public'
@@ -279,9 +310,7 @@ async function main() {
 				'worldID': currentUser.data.presence.world,
 				'timeSpent': 0
 			}
-			console.log(`${loglv.debug} [InstanceHistory] Adding User Presence instance to history: `, InstanceHistory[0])
-
-			// cacheWS
+			console.log(`${loglv.info}${selflogA} Adding User Presence instance to history: `, InstanceHistory[0])
 
 		}
 
@@ -290,31 +319,6 @@ async function main() {
 		isApiErrorSkip = true
 	}
 }
-
-async function manualCall(vrcapiEndpoint, methodType = 'GET', bodyJson) {
-	return new Promise(async (resolve, reject) => {
-		const vrcapihttp = `https://api.vrchat.cloud/api/1/`
-
-		var apiRequest = {
-			method: methodType,
-			headers: { 'User-Agent': `${process.env['VRC_USER_AGENT']} (${process.env['CONTACT_EMAIL']})`, 'Cookie': 'auth=' + authToken },
-		}
-		if (bodyJson != undefined) {
-			apiRequest['body'] = JSON.stringify(bodyJson)
-			apiRequest['headers']['Content-Type'] = 'application/json'
-		}
-
-		var request = await fetch(vrcapihttp + '' + vrcapiEndpoint, apiRequest)
-		// console.log(request)
-		var jsonResponse = await request.json()
-		if (jsonResponse.error) {
-			reject(jsonResponse.error)
-		} else {
-			resolve(jsonResponse)
-		}
-	})
-}
-
 
 function socket_VRC_API_Connect() {
 	if (authToken == null) { console.log('No AuthToken stored'); return }
@@ -646,6 +650,7 @@ function startWatching() {
 			}
 			if (eventType == 'rename' && filename.includes('output_log_')) {
 				console.log(`${loglv.hey}${selflogL} A newer log file might of just been created`)
+				if (vrchatRunning == false) { updateCurrentUserInfo() }
 				updateWatcher()
 			}
 		})
@@ -668,7 +673,13 @@ function average(array) {
 	return Math.floor(array.reduce((a, b) => a + b) / array.length)
 }
 
-
+const videoPlayerURLmasks = [
+	/\[Video Playback\] .+\x27([^\x27]+)\x27/,
+	/\[USharpVideo\] Started video: (.+)/,
+	/\[USharpVideo\] Started video (.+?),/,
+	/\[AVProHQ\] loading URL: (.+)/,
+	/User .+ added URL (.+)/
+]
 function processLogLine(line) {
 
 	if (vrchatRunning == false) { vrchatRunning = true }
@@ -676,7 +687,7 @@ function processLogLine(line) {
 	logEmitter.emit('log', line)
 	// log without TimeStamp and LogLevel
 	// no expanded details
-	// line.slice(34)
+	const lineC = line.slice(34)
 
 	if (line.includes('[Behaviour] Destination set: wrld_')) { eventHeadingToWorld(line) }
 	if (line.includes('[Behaviour] Joining wrld_')) { eventJoiningWorld() }
@@ -718,7 +729,7 @@ function processLogLine(line) {
 			say.speak('Impostor is ' + tonSusPlayer, 'Microsoft Zira Desktop', 1.0)
 			console.log(`${loglv.info}${selflogL} [TON] Impostor is ${tonSusPlayer}`)
 		}
-		if (line.slice(34) == `Verified Round End`) {
+		if (lineC == `Verified Round End`) {
 			tonRoundReadyTime = Date.now()
 			let avgStartDisplay = new Date(average(tonAvgStartWait)).toISOString()
 			let avgRoundsPerHour = Math.floor(3600000 / (192000 + average(tonAvgStartWait)))
@@ -728,13 +739,13 @@ function processLogLine(line) {
 				tonAvgStartWait.length > 1 ? oscChatBoxV2(`~Round ready to start\vAvg. wait time: ${avgStartDisplay.substring(11, 19)}\vRounds Per Hour: ${avgRoundsPerHour}`, 5000, false, true) : oscChatBoxV2(`~Round ready to start`, 5000, false, true)
 			}
 		}
-		if (line.slice(34).includes(`Everything recieved, looks good`)) {
+		if (lineC.includes(`Everything recieved, looks good`)) {
 			console.log(`${loglv.info}${selflogL} [TON] Round Starting.`)
 			if (tonRoundReadyTime != 0) {
 				tonAvgStartWait.push(Date.now() - (tonRoundReadyTime + 12000))
 			}
 		}
-		if (line.slice(34) == 'RoundOver' || line.slice(34) == 'You died.') {
+		if (lineC == 'RoundOver' || lineC == 'You died.') {
 			oscSend('/avatar/parameters/osc/doAutoJump', false)
 		}
 	}
@@ -815,21 +826,9 @@ function processLogLine(line) {
 	}
 
 	// Fetch Video Player URL
-	if (line.includes('[Video Playback] Attempting to resolve URL ')) {
-		videourl = line.split('URL \'')[1].split('\'')[0]
-		videoUrlResolver(videourl)
-	} else if (line.includes('[USharpVideo] Started video load for URL: ')) {
-		videourl = line.split('[USharpVideo] Started video load for URL: ')[1].split(', requested by')[0]
-		videoUrlResolver(videourl)
-	} else if (line.includes('[USharpVideo] Started video: ')) {
-		videourl = line.split('[USharpVideo] Started video: ')[1]
-		videoUrlResolver(videourl)
-	} else if (line.includes('[AVProHQ] loading URL: ')) {
-		videourl = line.split('[AVProHQ] loading URL: ')[1]
-		videoUrlResolver(videourl)
-	} else if (line.includes('User ') && line.includes('added URL ')) {
-		videourl = line.split('added URL ')[1]
-		videoUrlResolver(videourl)
+	for (const regex of videoPlayerURLmasks) {
+		var match = lineC.match(regex)
+		if (match) { videoUrlResolver(match[1].trim()); return }
 	}
 }
 
@@ -1018,12 +1017,12 @@ function inviteHubQueue() {
 		'worldId': 'wrld_112c5336-0329-4293-83ac-96f37f8a6405',
 		'type': 'group',
 		'region': 'use',
-		// 'displayName': 'World Hop',
 		'minimumAvatarPerformance': 'Poor',
 		'ownerId': 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
 		'groupAccessType': 'plus',
 		'queueEnabled': true
 	}
+	if (vrcUserHasVRCplus == true) { instanceBody['displayName'] = 'World Hop' }
 
 	console.log(`${loglv.hey}${selflogA} Creating group instance for wrld_112c5336-0329-4293-83ac-96f37f8a6405`)
 
@@ -1089,9 +1088,9 @@ function inviteLocalQueue(I_autoNext = false) {
 		var instanceBody = {
 			'worldId': world_id,
 			'region': 'use',
-			// 'displayName': 'World Hop',
 			'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
 		}
+		if (vrcUserHasVRCplus == true) { instanceBody['displayName'] = 'World Hop' }
 		switch (explorePrivacyLevel) {
 			case 0:
 				instanceBody['type'] = 'group'
@@ -1153,6 +1152,43 @@ function setUserStatus(I_statusText = '', I_status) {
 		console.log(`${loglv.hey}${selflogA} Status Updated: ${I_statusText.slice(0, 32)}`)
 		vrcUserStatusText = I_statusText.slice(0, 32)
 	}
+}
+
+
+async function hypeTrainLocater() {
+	console.log(`${loglv.info}${selflogA} [HypeTrainLocater] Searching for active HypeTrain..`)
+	// Active World List
+	var activeworlds = await limiter.req(vrchat.getActiveWorlds({ 'query': { 'offset': 0, 'n': 100, 'order': 'ascending' } }))
+	// Worlds Data
+	var count = 0
+	var highestPercent = [0, 0] // Percent , Gift Count, Gift Goal
+	for (const wrld in activeworlds.data) {
+		// console.log(`${loglv.info}${selflogA} [HypeTrainLocater] World Target: ${activeworlds.data[wrld].name}`)
+
+		var gotworld = await limiter.req(vrchat.getWorld({ 'path': { 'worldId': activeworlds.data[wrld].id } }))
+		// Instances Data
+		for (const ints in gotworld.data.instances) {
+			if (gotworld.data.instances[ints][1] <= 2) { continue }
+
+			var gotInstance = await limiter.req(vrchat.getInstance({ 'path': { 'worldId': activeworlds.data[wrld].id, 'instanceId': gotworld.data.instances[ints][0] } }))
+			// Has Hypetrain data
+			if (gotInstance.data.hypeTrain?.current != null) {
+				count++
+				require('open').default('vrcx://world/' + activeworlds.data[wrld].id + ':' + gotworld.data.instances[ints][0])
+				G_instanceJoinQueue.unshift(activeworlds.data[wrld].id + ':' + gotworld.data.instances[ints][0])
+
+				var goalPercent = Math.floor(gotInstance.data.hypeTrain.current.currentGiftCount / gotInstance.data.hypeTrain.current.totalGiftGoal * 100)
+				highestPercent = goalPercent > highestPercent[0] ? [goalPercent, gotInstance.data.hypeTrain.current.currentGiftCount] : highestPercent
+				console.log(`${loglv.info}${selflogA} [HypeTrainLocater] Active: [ ${goalPercent}% ]  ${activeworlds.data[wrld].name}\n${activeworlds.data[wrld].id}:${gotworld.data.instances[ints][0]}`)
+
+			} else if (gotInstance.data.hypeTrain?.potentialTrain != null) {
+				console.log(`${loglv.info}${selflogA} [HypeTrainLocater] Warm: ${gotworld.data.instances[ints][0]}`)
+			}
+
+		}
+	}
+	console.log(`${loglv.info}${selflogA} [HypeTrainLocater] Finished search..`)
+	oscChatBoxV2(`~Found ${count} instance${count != 1 ? 's' : ''} with active HypeTrain.${count >= 1 ? '\v' : ''}${count >= 2 ? 'Highest ' : ''}${count >= 1 ? 'Goal: ' + highestPercent[0] + '%  (' + highestPercent[1] + ' of 50)' : ''}`, 5000, false, true)
 }
 
 
@@ -1285,21 +1321,34 @@ async function requestAllOnlineFriends() {
 			if (['active', 'join me', 'ask me'].includes(friend.status)) {
 				console.log(`${loglv.info}${selflogA} [BulkFrendRequestInviter] (${index + 1}/${friendArr.length}) ${friend.displayName} is in Private`)
 
-				// - No Not Request blacklist -
-				if ([`usr_39a91182-0df7-476e-bc4a-e5d709cca692`, // ghost
+				const reqBlacklist = new Set([
+					`usr_39a91182-0df7-476e-bc4a-e5d709cca692`, // ghost
 					`usr_49590946-943b-4835-ba7e-2e370b596b4d`, // Samoi
 					`usr_060e1976-dfda-44b0-8f71-fa911d8bf580`, // luna-the-bunny
 					`usr_bba4ca7a-5447-4672-828d-0a09d85f854e`, // melting
 					`usr_ee815921-8067-4486-a3e2-ded009457cf3` // turtlesnack
-				].includes(friend.id)) {
-					console.log(`${loglv.info}${selflogA} [BulkFrendRequestInviter] (${index + 1}/${friendArr.length}) ${friend.displayName} is on Do-Not-Request Blacklist`)
-				} else if (friend.statusDescription.toLowerCase().includes('busy')) {
-					console.log(`${loglv.info}${selflogA} [BulkFrendRequestInviter] (${index + 1}/${friendArr.length}) ${friend.displayName} has "Busy" in status`)
-				} else {
-					vrchat.requestInvite({ path: { userId: friend.id }, body: { requestSlot: 1 } }).then((send_invite) => {
-						console.log(`${loglv.info}${selflogA} [BulkFrendRequestInviter] (${index + 1}/${friendArr.length}) Request Sent to ${friend.displayName} - "${send_invite.data.message}"`)
-					}).catch((err) => console.log(err))
+				])
+				var logPrefix = `${loglv.info}${selflogA} [BulkFrendRequestInviter] (${index + 1}/${friendArr.length}) ${friend.displayName}`
+				var friendStatusLower = friend.statusDescription.toLowerCase()
+
+				if (reqBlacklist.has(friend.id)) {
+					console.log(`${logPrefix} is on Do-Not-Request Blacklist`)
+					return
+				} else if (friendStatusLower.includes('busy')) {
+					console.log(`${logPrefix} has "Busy" in status`)
+					return
+				} else if (friendStatusLower.includes('zzz') || friendStatusLower.includes('sleep')) {
+					console.log(`${logPrefix} has "Sleeping" status`)
+					return
+				} else if (friendStatusLower.includes('furality') && !friendStatusLower.includes('no')) {
+					console.log(`${logPrefix} has "Furality" status, check the FOX Portal`)
+					return
 				}
+
+				vrchat.requestInvite({ path: { userId: friend.id }, body: { requestSlot: 1 } }).then((send_invite) => {
+					console.log(`${loglv.info}${selflogA} [BulkFrendRequestInviter] (${index + 1}/${friendArr.length}) Request Sent to ${friend.displayName} - "${send_invite.data.message}"`)
+				}).catch((err) => console.log(err))
+
 			} else if (friend.status == 'busy') {
 				console.log(`${loglv.info}${selflogA} [BulkFrendRequestInviter] (${index + 1}/${friendArr.length}) ${friend.displayName} is Busy`)
 			}
@@ -1325,7 +1374,8 @@ function eventPopcornPalace(json) {
 	//     "is3D": false,
 	//     "looping": false
 	// }
-	var movieShowName = JSON.parse(json).videoName
+	var movieShowName = ''
+	try { movieShowName = JSON.parse(json).videoName } catch (error) { movieShowName = 'Youtube' }
 
 	// Reformat title for One Piece watch sessions
 	if (movieShowName.includes('One Piece')) { movieShowName = movieShowName.replace('- S1E', 'ep.').split(' -')[0] }
@@ -1495,9 +1545,12 @@ function eventGameClose() {
 
 	apiEmitter.emit('switch', 0, 'world')
 
-	if (vrcUserStatusText == 'Instance is closed' || vrcUserStatusText == `Exploring World Queue`) {
-		vrcUserStatusText = ''
-		setUserStatus('')
+	const resetOnTheseStats = ['Instance is closed', `Exploring World Queue`, 'At Furality']
+	for (const status in resetOnTheseStats) {
+		if (vrcUserStatusText.includes(resetOnTheseStats[status])) {
+			vrcUserStatusText = ''
+			setUserStatus('')
+		}
 	}
 
 	console.log(`${loglv.info}${selflogL}${ttvFetchFrom == 1 && urlType == 'twitch' ? ` Resetting Twitch target channel${lastVideoURL != '' ? ` &` : ''}` : ''}${lastVideoURL != '' ? ` Clearing Video-URL history` : ''}`)
@@ -1515,6 +1568,17 @@ function eventGameClose() {
 
 	process.title = `14anthony7095 OSC Multi-Interface`
 
+	console.log(`${loglv.debug} [InstanceHistory] Post-Game Closer: Setting location to Offline`)
+	InstanceHistory[0] = {
+		'groupID': '',
+		'instanceType': 'offline',
+		'ownerID': '',
+		'join_timestamp': Date.now(),
+		'leave_timestamp': 0,
+		'location': 'offline',
+		'worldID': 'offline',
+		'timeSpent': 0
+	}
 	setTimeout(() => {
 		console.log(`${loglv.debug} [InstanceHistory] Post-Game Closer: Clearing "gone an hour" instances past index 2`)
 		InstanceHistory = InstanceHistory.filter((ih, index) => ih.leave_timestamp + 3600_000 > Date.now() || index <= 1)
@@ -2118,6 +2182,32 @@ async function eventHeadingToWorld(logOutputLine) {
 	if (groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && worldID == 'wrld_f6445b27-037d-4926-b51f-d79ada716b31') { worldHoppers = [] }
 	if (groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && InstanceHistory[1]?.groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && groupID != '') { worldHoppers = [] }
 
+
+	// Furality World Auto-Status
+	const furalityLocations = {
+		'wrld_8583ffb2-35b8-4ef6-adfc-7ccfc4c5449f': `Dealer's Den`,
+		'wrld_43917d5e-c6ff-46c8-87e8-c31fd6d9ce3e': `Meetup`,
+		'wrld_6cc9b560-4ea2-4677-a401-c8f657c6f871': `Event Stage`,
+		'wrld_211f195e-2a56-4e14-bde5-ad0dbce64b1e': `Club F.Y.N.N.`,
+		'wrld_ee4143f7-e5b8-496d-9760-7875432258c6': `Lobby`,
+		'FIRE': `Fireworks Show`
+	}
+	if (InstanceHistory[0].worldID != InstanceHistory[1].worldID) {
+		if (furalityLocations[InstanceHistory[0].worldID]) {
+			setUserStatus('At Furality: ' + furalityLocations[InstanceHistory[0].worldID])
+		} else if (!furalityLocations[InstanceHistory[0].worldID] && furalityLocations[InstanceHistory[1].worldID]) {
+			setUserStatus('')
+		} else if (InstanceHistory[0].groupID == 'grp_210dbc09-c3da-4ebb-b641-73c99ce2619b') {
+			if (gotWorld.data.authorName == 'Furality') {
+				setUserStatus('At Furality: unknown world')
+			} else {
+				setUserStatus('At Furality: Gaming')
+			}
+		}
+	}
+
+
+
 	console.log(`${loglv.info}${selflogL} Instance Type ${instanceType}`)
 
 }
@@ -2340,13 +2430,13 @@ async function eventPlayerJoin(logOutputLine) {
 			// console.log(`${loglv.info}${selflogA} [User] ${loglv.true}${playerDisplayName.replace(/[^\x00-\x7F]/g, "?").padEnd(20,' ').slice(0,20)}${loglv.reset} is a ${userCacheTrust[0]} on ${userCachePlatformLog} set to ${userCacheStatusLog}`)
 
 			try {
-				playersInstanceObject[pioIndex].platform = userCachePlatform
+				playersInstanceObject[pioIndex].platform = userCachePlatform || 'standalonewindows'
 				playersInstanceObject[pioIndex].status = userCacheStatus
 				playersInstanceObject[pioIndex].trust = userCacheTrust[1]
 			} catch (err) {
-				console.log(`${loglv.hey}${selflogL} playerTracker Object got Profile Data before PlayerName - ${err}`)
+				console.log(`${loglv.hey}${selflogL} playerTrackerObject - ${err}`)
 				playersInstanceObject.push({
-					'name': playerDisplayName, 'id': playerID, 'platform': userCachePlatform, 'status': userCacheStatus, 'trust': userCacheTrust[1]
+					'name': playerDisplayName, 'id': playerID, 'platform': userCachePlatform || 'standalonewindows', 'status': userCacheStatus, 'trust': userCacheTrust[1]
 				})
 			}
 

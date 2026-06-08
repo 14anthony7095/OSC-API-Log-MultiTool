@@ -38,7 +38,7 @@ oscEmitter.on('osc', (address, value) => {
 			let targetTimeStamp = Math.floor(Date.now() / 1000) + (oscQ.bed_min * 60) + (oscQ.bed_hr * 3600); console.log(`${loglv.debug}${selflog} ${targetTimeStamp}`)
 
 			logSay = `Auto-Closing VRChat in ${oscQ.bed_hr} Hr and ${oscQ.bed_min} Min`
-			console.log(`${loglv.hey}${selflog} ${logSay}`); oscChatBox(`~${logSay}`, 5)
+			console.log(`${loglv.hey}${selflog} ${logSay}`); oscChatBoxV2(`~${logSay}`, 5000)
 
 			let lastHour = oscQ.bed_hr
 			let lastMinute = oscQ.bed_min
@@ -61,7 +61,7 @@ oscEmitter.on('osc', (address, value) => {
 
 					logSay = `Auto-Closing VRChat in ${secs2hours} hours`
 					console.log(`${loglv.hey}${selflog} ${logSay}`);
-					oscChatBox(`~${logSay}`, 5)
+					oscChatBoxV2(`~${logSay}`, 5000)
 				}
 
 				secs2mins = Math.ceil((secsRemaining - (secs2hours * 3600)) / 60)
@@ -75,26 +75,26 @@ oscEmitter.on('osc', (address, value) => {
 					if (secs2mins == 30) {
 						logSay = `Auto-Closing VRChat in 30 minutes`
 						console.log(`${loglv.hey}${selflog} ${logSay}`);
-						oscChatBox(`~${logSay}`, 5)
+						oscChatBoxV2(`~${logSay}`, 5000)
 					}
 					// every 5 mins under half-hour
 					else if (secs2mins >= 5 && secs2mins < 30) {
 						if (secs2mins % 5 == 0) {
 							logSay = `Auto-Closing VRChat in ${secs2mins} minutes`
 							console.log(`${loglv.hey}${selflog} ${logSay}`);
-							oscChatBox(`~${logSay}`, 5)
+							oscChatBoxV2(`~${logSay}`, 5000)
 						}
 					}
 					// last 5 mins
 					else if (secs2mins <= 5 && secs2mins > 1) {
 						logSay = `Auto-Closing VRChat in ${secs2mins} minutes`
 						console.log(`${loglv.hey}${selflog} ${logSay}`);
-						oscChatBox(`~${logSay}`, 5)
+						oscChatBoxV2(`~${logSay}`, 5000)
 					}
 					else if (secs2mins == 1) {
 						logSay = `Auto-Closing VRChat in ${secs2mins} minute`
 						console.log(`${loglv.hey}${selflog} ${logSay}`);
-						oscChatBox(`~${logSay}`, 5)
+						oscChatBoxV2(`~${logSay}`, 5000)
 					}
 				}
 
@@ -102,7 +102,7 @@ oscEmitter.on('osc', (address, value) => {
 				if (secsRemaining <= 0) {
 					logSay = `Auto-Closing VRChat, Goodnight.`
 					console.log(`${loglv.hey}${selflog} ${logSay}`);
-					oscChatBox(`~${logSay}`, 10)
+					oscChatBoxV2(`~${logSay}`, 10000)
 					killvrc(10)
 					clearInterval(timer)
 					timer = null
@@ -116,7 +116,7 @@ oscEmitter.on('osc', (address, value) => {
 			timer = null
 			logSay = `Canceled Auto-Close`
 			console.log(`${loglv.hey}${selflog} ${logSay}`);
-			oscChatBox(`~${logSay}`, 5)
+			oscChatBoxV2(`~${logSay}`, 5000)
 		}
 	}
 });
