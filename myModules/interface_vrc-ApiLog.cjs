@@ -95,6 +95,7 @@ var vrcUserStatusText = ''
 var vrcUserHasVRCplus = false
 var cooldownPortalVanish = false
 var vrchatRunning = false
+var vrchatFoundThisSession = false
 var loadingAvatarTimer;
 var watcher;
 var lastChecked = 0
@@ -226,7 +227,20 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 
 async function main() {
 	console.log(`${loglv.debug}${selflogA} Started main function`)
-	updateCurrentUserInfo(true)
+
+	currentUser = await limiter.req(vrchat.getCurrentUser({ throwOnError: true }))
+	console.log(`${loglv.info}${selflogA} Logged in as: ${currentUser.data.displayName}`);
+	const { data: auth } = await limiter.req(vrchat.verifyAuthToken())
+	if (auth.ok == true) {
+		authToken = auth.token
+		socket_VRC_API_Connect()
+	}
+
+	vrcUserStatusText = currentUser.data.statusDescription
+	console.log(`${loglv.info}${selflogA} User status: ${vrcUserStatusText}`)
+
+	vrcUserHasVRCplus = currentUser.data.badges.find(b => b.badgeName == "Supporter") == undefined ? false : true
+	console.log(`${loglv.info}${selflogA} User has VRC+ ${vrcUserHasVRCplus}`)
 }
 
 async function manualCall(vrcapiEndpoint, methodType = 'GET', bodyJson) {
@@ -257,20 +271,6 @@ async function manualCall(vrcapiEndpoint, methodType = 'GET', bodyJson) {
 async function updateCurrentUserInfo(isFirstLaunch = false) {
 	try {
 		currentUser = await limiter.req(vrchat.getCurrentUser({ throwOnError: true }))
-		if (isFirstLaunch) {
-			console.log(`${loglv.info}${selflogA} Logged in as: ${currentUser.data.displayName}`);
-			const { data: auth } = await limiter.req(vrchat.verifyAuthToken())
-			if (auth.ok == true) {
-				authToken = auth.token
-				socket_VRC_API_Connect()
-			}
-
-			vrcUserStatusText = currentUser.data.statusDescription
-			console.log(`${loglv.info}${selflogA} User status: ${vrcUserStatusText}`)
-
-			vrcUserHasVRCplus = currentUser.data.badges.find(b => b.badgeName == "Supporter") == undefined ? false : true
-			console.log(`${loglv.info}${selflogA} User has VRC+ ${vrcUserHasVRCplus}`)
-		}
 
 		if (currentUser.data.presence.world != 'offline') {
 			var instanceType = 'public'
@@ -311,6 +311,13 @@ async function updateCurrentUserInfo(isFirstLaunch = false) {
 				'timeSpent': 0
 			}
 			console.log(`${loglv.info}${selflogA} Adding User Presence instance to history: `, InstanceHistory[0])
+
+			if (vrchatRunning == false) {
+				vrchatRunning = true
+				if (vrchatFoundThisSession == false) {
+					vrchatFoundThisSession = true
+				}
+			}
 
 		}
 
@@ -592,39 +599,6 @@ function mathSumValues(values_Arr) {
 	return sum
 }
 
-function fetchLogFile() {
-	console.log(`${loglv.info}${selflogL} Finding latest log file`)
-	fs.readdir(path, function (err, files) {
-		files = files.map(function (fileName) {
-			return {
-				name: fileName,
-				time: fs.statSync(path + '/' + fileName).mtime.getTime()
-			}
-		})
-			.sort(function (a, b) {
-				return a.time - b.time
-			})
-			.map(function (v) {
-				return v.name
-			})
-			.filter(function (a) {
-				return a.includes('output_log_')
-			})
-		tarFile = files[files.length - 1]
-		tarFilePath = path + '' + files[files.length - 1]
-		try {
-			tarFileSize = fs.statSync(tarFilePath).size || 0
-			console.log(`${loglv.info}${selflogL} Found newest log file: ${files[files.length - 1]}`)
-		} catch (err) {
-			console.log(`${loglv.error}${selflogL} tarFileSize Failed: ${err}`)
-		} finally {
-			startWatching()
-		}
-	})
-}
-exports.fetchLogFile = fetchLogFile;
-fetchLogFile()
-
 
 
 const readline = require('readline')
@@ -650,7 +624,7 @@ function startWatching() {
 			}
 			if (eventType == 'rename' && filename.includes('output_log_')) {
 				console.log(`${loglv.hey}${selflogL} A newer log file might of just been created`)
-				if (vrchatRunning == false) { updateCurrentUserInfo() }
+				// if (vrchatRunning == false) { updateCurrentUserInfo() }
 				updateWatcher()
 			}
 		})
@@ -661,6 +635,41 @@ function updateWatcher() {
 	watcher?.close()
 	fetchLogFile()
 }
+function fetchLogFile() {
+	console.log(`${loglv.info}${selflogL} Finding latest log file`)
+	fs.readdir(path, function (err, files) {
+		files = files.map(function (fileName) {
+			return {
+				name: fileName,
+				time: fs.statSync(path + '/' + fileName).mtime.getTime()
+			}
+		})
+			.sort(function (a, b) {
+				return a.time - b.time
+			})
+			.map(function (v) {
+				return v.name
+			})
+			.filter(function (a) {
+				return a.includes('output_log_')
+			})
+		tarFile = files[files.length - 1]
+		tarFilePath = path + '' + files[files.length - 1]
+		try {
+			tarFileSize = fs.statSync(tarFilePath).size || 0
+			console.log(`${loglv.info}${selflogL} Found newest log file: ${files[files.length - 1]}`)
+			if (vrchatRunning == false /* && vrchatFoundThisSession == true */) { updateCurrentUserInfo() }
+
+		} catch (err) {
+			console.log(`${loglv.error}${selflogL} tarFileSize Failed: ${err}`)
+		} finally {
+			startWatching()
+		}
+	})
+}
+exports.fetchLogFile = fetchLogFile;
+fetchLogFile()
+
 
 
 oscSend('/avatar/parameters/log/instance_closed', false)
@@ -682,7 +691,12 @@ const videoPlayerURLmasks = [
 ]
 function processLogLine(line) {
 
-	if (vrchatRunning == false) { vrchatRunning = true }
+	if (vrchatRunning == false) {
+		vrchatRunning = true
+		if (vrchatFoundThisSession == false) {
+			vrchatFoundThisSession = true
+		}
+	}
 
 	logEmitter.emit('log', line)
 	// log without TimeStamp and LogLevel
@@ -1557,7 +1571,6 @@ function eventGameClose() {
 	switchChannel(process.env["VRC_ACC_NAME_1"])
 
 	G_InstanceClosed = false
-	vrchatRunning = false
 	worldHopTimeout = null
 	worldHopTimeoutHour = null
 	userTrustTableTimer = null
@@ -1579,10 +1592,14 @@ function eventGameClose() {
 		'worldID': 'offline',
 		'timeSpent': 0
 	}
+
 	setTimeout(() => {
-		console.log(`${loglv.debug} [InstanceHistory] Post-Game Closer: Clearing "gone an hour" instances past index 2`)
-		InstanceHistory = InstanceHistory.filter((ih, index) => ih.leave_timestamp + 3600_000 > Date.now() || index <= 1)
-	}, 3610_000)
+		vrchatRunning = false
+		setTimeout(() => {
+			console.log(`${loglv.debug} [InstanceHistory] Post-Game Closer: Clearing "gone an hour" instances past index 2`)
+			InstanceHistory = InstanceHistory.filter((ih, index) => ih.leave_timestamp + 3600_000 > Date.now() || index <= 1)
+		}, 3605_000)
+	}, 5_000)
 
 }
 exports.eventGameClose = eventGameClose;
@@ -2190,7 +2207,7 @@ async function eventHeadingToWorld(logOutputLine) {
 		'wrld_6cc9b560-4ea2-4677-a401-c8f657c6f871': `Event Stage`,
 		'wrld_211f195e-2a56-4e14-bde5-ad0dbce64b1e': `Club F.Y.N.N.`,
 		'wrld_ee4143f7-e5b8-496d-9760-7875432258c6': `Lobby`,
-		'FIRE': `Fireworks Show`
+		'wrld_2a495d02-6da6-4d3a-be2a-aa3f1a70544a': `Fireworks Show`
 	}
 	if (InstanceHistory[0].worldID != InstanceHistory[1].worldID) {
 		if (furalityLocations[InstanceHistory[0].worldID]) {
@@ -2199,7 +2216,7 @@ async function eventHeadingToWorld(logOutputLine) {
 			setUserStatus('')
 		} else if (InstanceHistory[0].groupID == 'grp_210dbc09-c3da-4ebb-b641-73c99ce2619b') {
 			if (gotWorld.data.authorName == 'Furality') {
-				setUserStatus('At Furality: unknown world')
+				setUserStatus('At Furality: ' + gotWorld.data.name)
 			} else {
 				setUserStatus('At Furality: Gaming')
 			}
@@ -2507,10 +2524,13 @@ function eventPlayerLeft(logOutputLine) {
 			loadingAvatarTimer = null
 			worldHopTimeout = null
 			cooldownUrl = true
-			if (G_InstanceClosed == true && vrcUserStatusText != `Exploring World Queue`) {
-				vrcUserStatusText = ``
-				setUserStatus('')
+
+			if (G_InstanceClosed == true) {
 				G_InstanceClosed = false
+				if (vrcUserStatusText != `Exploring World Queue`) {
+					vrcUserStatusText = ``
+					setUserStatus('')
+				}
 			}
 
 

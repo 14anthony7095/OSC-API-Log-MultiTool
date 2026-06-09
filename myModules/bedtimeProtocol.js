@@ -7,7 +7,7 @@
 */
 //	--	Libraries	--
 const { loglv } = require('./config.js')
-const { oscChatBox, oscEmitter } = require('./Interface_osc_v1.js');
+const { oscChatBoxV2, oscEmitter } = require('./Interface_osc_v1.js');
 const { killvrc } = require('./sys_taskKill.js');
 
 // Global Vars
@@ -38,7 +38,7 @@ oscEmitter.on('osc', (address, value) => {
 			let targetTimeStamp = Math.floor(Date.now() / 1000) + (oscQ.bed_min * 60) + (oscQ.bed_hr * 3600); console.log(`${loglv.debug}${selflog} ${targetTimeStamp}`)
 
 			logSay = `Auto-Closing VRChat in ${oscQ.bed_hr} Hr and ${oscQ.bed_min} Min`
-			console.log(`${loglv.hey}${selflog} ${logSay}`); oscChatBoxV2(`~${logSay}`, 5000)
+			console.log(`${loglv.hey}${selflog} ${logSay}`); oscChatBoxV2(`~${logSay}`, 5000,false,true)
 
 			let lastHour = oscQ.bed_hr
 			let lastMinute = oscQ.bed_min
