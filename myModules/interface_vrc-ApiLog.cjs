@@ -562,7 +562,7 @@ async function isWorldUnlisted(I_worldID = '', I_userDisplayName = '') {
 			if (!fileRead.includes(gotWorld.data.id)) {
 				console.log(`${loglv.hey}${selflogA} Saving Unlisted world.\nSource: ${I_userDisplayName}\n${gotWorld.data.id} ${gotWorld.data.name} by ${gotWorld.data.authorName}`)
 				// console.log(`${loglv.debug}${selflogA} World not saved, Saving..`)
-				var appendText = `\r\n${gotWorld.data.id}|${gotWorld.data.name}|${gotWorld.data.authorName}|${gotWorld.data.authorId}`
+				var appendText = `\r\n${gotWorld.data.name}|${gotWorld.data.authorName}|${gotWorld.data.id}|${gotWorld.data.authorId}`
 				fs.appendFile('./datasets/private-worlds.txt', appendText, (err) => { if (err) { console.error(err) } })
 				// open(`vrcx://world/${gotWorld.data.id}`)
 			} else {
@@ -930,7 +930,7 @@ oscEmitter.on('osc', (addr, value) => {
 	if (addr == `/avatar/parameters/api/explore/next` && value == true) { inviteLocalQueue() }
 	// if (address == `/avatar/parameters/api/explore/hub` && value == true) { }
 	if (addr == `/avatar/parameters/api/explore/stop` && value == true) {
-		apiEmitter.emit('switch', 0, 'world')
+		apiEmitter.emit('exploreQueue', undefined, 'world')
 	}
 	if (addr == `/avatar/parameters/api/explore/prefill` && value == true) { addLabWorldsToLocalQueue() }
 	if (addr == `/avatar/parameters/api/explore/privacy` && value == 0) { explorePrivacyLevel = 0 }
@@ -1068,7 +1068,7 @@ function inviteLocalQueue(I_autoNext = false) {
 		let extimelow = Math.floor((localQueueList.length * 2) / 60)
 		let extimehig = Math.floor((localQueueList.length * 10) / 60)
 		console.log(`${loglv.info}${selflogA} ${localQueueList.length} worlds to explore. [${extimelow} to ${extimehig} Hours]`)
-		apiEmitter.emit('switch', localQueueList.length, 'world')
+		apiEmitter.emit('exploreQueue', localQueueList.length, 'world')
 
 		let gotWorld = await limiter.reqCached('world', world_id).catch(async () => {
 			return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': world_id } }), 'world')
@@ -1135,7 +1135,7 @@ function inviteLocalQueue(I_autoNext = false) {
 		var created_instance = await vrchat.createInstance({ 'body': instanceBody })
 		if (created_instance.data != undefined) {
 			startvrc(created_instance.data.location, I_autoNext)
-			apiEmitter.emit('switch', localQueueList.length, 'world')
+			apiEmitter.emit('exploreQueue', localQueueList.length, 'world')
 			console.log(`${loglv.info}${selflogA} Auto-Close set for ${created_instance.data.closedAt}.`)
 		} else {
 			oscChatBoxV2(`instance create failed.\v[${created_instance.error.response.status}] ${created_instance.error.response.statusText}\v${created_instance.error.message}`, 5000, true, true)
@@ -1557,7 +1557,7 @@ function eventGameClose() {
 	clearTimeout(worldHopTimeoutHour)
 	clearTimeout(userTrustTableTimer)
 
-	apiEmitter.emit('switch', 0, 'world')
+	apiEmitter.emit('exploreQueue', undefined, 'world')
 
 	const resetOnTheseStats = ['Instance is closed', `Exploring World Queue`, 'At Furality']
 	for (const status in resetOnTheseStats) {
@@ -2200,6 +2200,7 @@ async function eventHeadingToWorld(logOutputLine) {
 	if (groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && InstanceHistory[1]?.groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && groupID != '') { worldHoppers = [] }
 
 
+	/*
 	// Furality World Auto-Status
 	const furalityLocations = {
 		'wrld_8583ffb2-35b8-4ef6-adfc-7ccfc4c5449f': `Dealer's Den`,
@@ -2222,6 +2223,7 @@ async function eventHeadingToWorld(logOutputLine) {
 			}
 		}
 	}
+	*/
 
 
 
