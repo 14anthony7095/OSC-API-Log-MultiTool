@@ -14,24 +14,24 @@ class ratelimitHandler {
 	pause_exp = 1
 	isLimiting = false
 	endpointLimits = {
-		'auth': { 'pause_exp': 1, 'isLimited': false },
-		'worlds': { 'pause_exp': 1, 'isLimited': false },
-		'avatars': { 'pause_exp': 1, 'isLimited': false },
-		'users': { 'pause_exp': 1, 'isLimited': false },
-		'user': { 'pause_exp': 1, 'isLimited': false },
-		'calendar': { 'pause_exp': 1, 'isLimited': false },
-		'economy': { 'pause_exp': 1, 'isLimited': false },
-		'favorite': { 'pause_exp': 1, 'isLimited': false },
-		'file': { 'pause_exp': 1, 'isLimited': false },
-		'groups': { 'pause_exp': 1, 'isLimited': false },
-		'instances': { 'pause_exp': 1, 'isLimited': false },
-		'inventory': { 'pause_exp': 1, 'isLimited': false },
-		'message': { 'pause_exp': 1, 'isLimited': false },
-		'invite': { 'pause_exp': 1, 'isLimited': false },
-		'jams': { 'pause_exp': 1, 'isLimited': false },
-		'notifications': { 'pause_exp': 1, 'isLimited': false },
-		'prints': { 'pause_exp': 1, 'isLimited': false },
-		'props': { 'pause_exp': 1, 'isLimited': false }
+		'auth': { 'pause_exp': 1, 'isLimiting': false },
+		'worlds': { 'pause_exp': 1, 'isLimiting': false },
+		'avatars': { 'pause_exp': 1, 'isLimiting': false },
+		'users': { 'pause_exp': 1, 'isLimiting': false },
+		'user': { 'pause_exp': 1, 'isLimiting': false },
+		'calendar': { 'pause_exp': 1, 'isLimiting': false },
+		'economy': { 'pause_exp': 1, 'isLimiting': false },
+		'favorite': { 'pause_exp': 1, 'isLimiting': false },
+		'file': { 'pause_exp': 1, 'isLimiting': false },
+		'groups': { 'pause_exp': 1, 'isLimiting': false },
+		'instances': { 'pause_exp': 1, 'isLimiting': false },
+		'inventory': { 'pause_exp': 1, 'isLimiting': false },
+		'message': { 'pause_exp': 1, 'isLimiting': false },
+		'invite': { 'pause_exp': 1, 'isLimiting': false },
+		'jams': { 'pause_exp': 1, 'isLimiting': false },
+		'notifications': { 'pause_exp': 1, 'isLimiting': false },
+		'prints': { 'pause_exp': 1, 'isLimiting': false },
+		'props': { 'pause_exp': 1, 'isLimiting': false }
 	}
 	limiterCache = { 'user': [], 'group': [] }
 	#cachedTime = 1800_000
@@ -102,6 +102,10 @@ class ratelimitHandler {
 			}
 			async function attemptRequest() {
 				var res = await I_request
+				var endpoint = res.request.url.slice(31).split('/')[0]
+				// endpointLimits[endpoint]
+				// console.log(`[Endpoint] ${endpoint}`)
+
 				if (res.error?.statusCode == 429 || res.error?.response.status == 429) {
 					self.isLimiting = true
 					// console.error('429')

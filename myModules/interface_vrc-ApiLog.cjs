@@ -54,7 +54,7 @@ var lastFetchGroupLogs;
 var currentUser;
 var userAutoAcceptWhiteList = []
 var worldQueueTxt = './datasets/worldQueue.txt'
-var explorePrivacyLevel = 0
+var explorePrivacyLevel = 1
 var authToken = null
 var isApiErrorSkip = false
 var socket_VRC_API
@@ -338,7 +338,7 @@ function socket_VRC_API_Connect() {
 		console.log(`${loglv.warn}${selflogWS} ${code} ${Buffer.from(reason, 'utf8')}`)
 		setTimeout(() => {
 			socket_VRC_API_Connect()
-		}, 120_000)
+		}, 120_000 * limiter.delayMulti)
 	})
 
 	socket_VRC_API.on('message', async (data) => {
@@ -557,13 +557,13 @@ async function isWorldUnlisted(I_worldID = '', I_userDisplayName = '') {
 	if (gotWorld.data != undefined && gotWorld.data?.releaseStatus == 'private') {
 		var fileHandler;
 		try {
-			fileHandler = await fsp.open('./datasets/private-worlds.txt')
+			fileHandler = await fsp.open('./datasets/private-worlds.csv')
 			var fileRead = await fileHandler.readFile('utf8')
 			if (!fileRead.includes(gotWorld.data.id)) {
 				console.log(`${loglv.hey}${selflogA} Saving Unlisted world.\nSource: ${I_userDisplayName}\n${gotWorld.data.id} ${gotWorld.data.name} by ${gotWorld.data.authorName}`)
 				// console.log(`${loglv.debug}${selflogA} World not saved, Saving..`)
 				var appendText = `\r\n${gotWorld.data.name}|${gotWorld.data.authorName}|${gotWorld.data.id}|${gotWorld.data.authorId}`
-				fs.appendFile('./datasets/private-worlds.txt', appendText, (err) => { if (err) { console.error(err) } })
+				fs.appendFile('./datasets/private-worlds.csv', appendText, (err) => { if (err) { console.error(err) } })
 				// open(`vrcx://world/${gotWorld.data.id}`)
 			} else {
 				// console.log(`${loglv.debug}${selflogA} World already saved.`)
@@ -682,8 +682,9 @@ function average(array) {
 	return Math.floor(array.reduce((a, b) => a + b) / array.length)
 }
 
+
 const videoPlayerURLmasks = [
-	/\[Video Playback\] .+\x27([^\x27]+)\x27/,
+	/\[Video Playback\] Attempting to resolve URL '([^']+)'/,
 	/\[USharpVideo\] Started video: (.+)/,
 	/\[USharpVideo\] Started video (.+?),/,
 	/\[AVProHQ\] loading URL: (.+)/,
@@ -1150,7 +1151,6 @@ function inviteLocalQueue(I_autoNext = false) {
 		}
 	})
 }
-
 
 
 

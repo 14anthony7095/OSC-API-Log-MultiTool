@@ -157,4 +157,4 @@ vite.config.ts.timestamp-*
 /assets/obs-world-author.txt
 /assets/obs-world-name.txt
 /assets/obs-worldImage.html
-/datasets/private-worlds.txt
+/datasets/private-worlds.csv

@@ -442,9 +442,10 @@ udpPort.on("message", function (msg, rinfo) {
 		if (value == `avtr_21cbf284-0c09-423c-9973-5cd41dccd308`) { oscSend(vrcap + `LL/Menu/IsUnlocked`, 1 == 1) } // LL Male Redux
 		if (value == `avtr_2a9a9021-2b82-4564-bb63-2d96deb6a6d7`) { oscSend(vrcap + `Patreon-NDA`, 1 == 1) } // LL Lambie
 
-		oscSend(vrcap + `VF100_SecurityLockSync`, 1 == 1)
+		oscSend(vrcap + `VF100_SecurityLockSync`, true)
 		oscSend(vrcap + "   locked", false)
 		oscSend(vrcap + `14a/osc/14anthony7095`, true)
+		oscSend(vrcap + `Unlock`, true)
 	}
 
 
