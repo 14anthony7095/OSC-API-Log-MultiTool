@@ -17,6 +17,7 @@
             "created_at": "2025-06-11T01:01:31.258Z",
             "defaultAttributes": {},
             "description": "Show your Pride by waving this ribbon!",
+            "dropStatus": "scheduled",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -34,7 +35,7 @@
             },
             "name": "Rainbow Ribbon",
             "productId": "prod_7ac20d0b-7e00-41b9-b525-677b38fe8de9",
-            "status": "live",
+            "publishedListings": [],
             "tags": [
                 "Pride 2025"
             ],
@@ -69,6 +70,7 @@
             "created_at": "2025-06-09T16:31:40.785Z",
             "defaultAttributes": {},
             "description": "IT KNOWS",
+            "dropStatus": "scheduled",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -85,7 +87,6 @@
                 "propId": "prop_829ba6f6-b837-49d9-b9a9-056b82103b58"
             },
             "name": "THE REFERENCE CUBE",
-            "status": "live",
             "tags": [],
             "updated_at": "2025-09-23T23:20:18.379Z",
             "validateUserAttributes": false
@@ -120,6 +121,7 @@
             "created_at": "2025-07-21T23:45:43.392Z",
             "defaultAttributes": {},
             "description": "Bubbles. BUBBLES!!",
+            "dropStatus": "scheduled",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -136,7 +138,6 @@
                 "propId": "prop_5c54ccdb-cafb-461b-b07f-91d189fc7b72"
             },
             "name": "Bubble Blaster",
-            "status": "live",
             "tags": [
                 "Summer 2025"
             ],
@@ -171,6 +172,7 @@
             "created_at": "2025-09-12T00:05:16.012Z",
             "defaultAttributes": {},
             "description": "The Story Thus Far\r",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -187,7 +189,6 @@
                 "propId": "prop_79789b58-e020-4b2e-aa25-ba21a1938eec"
             },
             "name": "Mori Calliope Penlight",
-            "status": "live",
             "tags": [
                 "Promo"
             ],
@@ -222,6 +223,7 @@
             "created_at": "2025-09-15T18:15:23.074Z",
             "defaultAttributes": {},
             "description": "Get toasty.",
+            "dropStatus": "scheduled",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -238,7 +240,6 @@
                 "propId": "prop_49fec698-f0cb-475c-9bc3-8f24e1bcc4eb"
             },
             "name": "Campfire",
-            "status": "live",
             "tags": [
                 "August 2025"
             ],
@@ -273,6 +274,7 @@
             "created_at": "2025-09-15T18:26:38.156Z",
             "defaultAttributes": {},
             "description": "Don't burn it!",
+            "dropStatus": "scheduled",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -289,7 +291,6 @@
                 "propId": "prop_fb4e6b9e-ddd2-464c-8e44-cdba7f77eb5d"
             },
             "name": "Marshmallow on a Stick",
-            "status": "live",
             "tags": [
                 "August 2025"
             ],
@@ -379,6 +380,7 @@
                 }
             },
             "description": "The Candy Codex for Spookality 2025. Complete it by collecting candies from the Treats and Kath Companions before Spookality ends to unlock a badge!",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "archivable",
@@ -396,7 +398,7 @@
             },
             "name": "Candy Codex",
             "productId": "prod_ebacd727-7d13-4e41-a1d3-beb88f826ac8",
-            "status": "live",
+            "publishedListings": [],
             "tags": [
                 "prop",
                 "candy_hunt_2025_tracker",
@@ -433,6 +435,7 @@
             "created_at": "2025-10-03T23:16:45.324Z",
             "defaultAttributes": {},
             "description": "Treats, a Spookality Companion. …wait, where does the candy come from?",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -451,7 +454,7 @@
             },
             "name": "Treats",
             "productId": "prod_564f8e69-ba64-4665-a7a6-43b60b64bc32",
-            "status": "live",
+            "publishedListings": [],
             "tags": [
                 "prop",
                 "candy_hunt_2025_cozy",
@@ -495,6 +498,7 @@
                 }
             },
             "description": "Kath, a Spookality Companion. A relic, from a more civilized age.",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -513,7 +517,7 @@
             },
             "name": "Kath",
             "productId": "prod_f231075e-b9e1-441c-b00a-5db88d6a1ed9",
-            "status": "live",
+            "publishedListings": [],
             "tags": [
                 "prop",
                 "candy_hunt_2025_spooky",
@@ -550,6 +554,7 @@
             "created_at": "2025-07-24T20:22:09.556Z",
             "defaultAttributes": {},
             "description": "woah is that a bigscreen beyond",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -566,12 +571,11 @@
                 "propId": "prop_dae2be6b-9c3b-4783-948b-4ff46d3a14e5"
             },
             "name": "Bigscreen Beyond 2e: VRChat Edition",
-            "status": "live",
             "tags": [
                 "Bigscreen Beyond 2",
                 "Promo"
             ],
-            "updated_at": "2025-09-04T18:59:15.782Z",
+            "updated_at": "2026-06-12T19:37:13.212Z",
             "validateUserAttributes": false
         },
         "kind": 0,
@@ -610,6 +614,7 @@
                 }
             },
             "description": "A Groan Tube. Flip it around.",
+            "dropStatus": "scheduled",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -627,7 +632,6 @@
                 "propId": "prop_0fd9deb0-6ca8-4c69-acbe-17035f93792b"
             },
             "name": "Groan Tube",
-            "status": "live",
             "tags": [],
             "updated_at": "2025-11-06T20:09:05.137Z",
             "validateUserAttributes": false
@@ -660,6 +664,7 @@
             "created_at": "2025-10-22T15:37:32.082Z",
             "defaultAttributes": {},
             "description": "A swirling, magical concoction contained in an ornate bottle. The colors keep changing…",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -678,7 +683,7 @@
             },
             "name": "Flask of Effervescence",
             "productId": "prod_44ec43f4-9909-40ca-9a29-cf854647aa7e",
-            "status": "live",
+            "publishedListings": [],
             "tags": [
                 "prop"
             ],
@@ -713,6 +718,7 @@
             "created_at": "2025-10-21T15:30:46.257Z",
             "defaultAttributes": {},
             "description": "A color-changing penlight. Cycle through multiple colors.",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -731,7 +737,7 @@
             },
             "name": "VRChat Penlight",
             "productId": "prod_7f8e0d21-a60c-4378-ab12-90010a45d1cd",
-            "status": "live",
+            "publishedListings": [],
             "tags": [],
             "updated_at": "2025-11-05T17:51:14.559Z",
             "validateUserAttributes": false
@@ -764,6 +770,7 @@
             "created_at": "2025-10-29T21:59:09.993Z",
             "defaultAttributes": {},
             "description": "Unstable Reference Cube. When placed in a world and activated, it is permanently destroyed.",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -786,7 +793,7 @@
             },
             "name": "Unstable Reference Cube",
             "productId": "prod_885c362b-a8a2-4e88-9e1a-48b3043ed724",
-            "status": "live",
+            "publishedListings": [],
             "tags": [
                 "prop"
             ],
@@ -821,6 +828,7 @@
             "created_at": "2025-08-15T16:26:32.801Z",
             "defaultAttributes": {},
             "description": "",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -837,7 +845,6 @@
                 "propId": "prop_afbc0df4-da97-4036-bb84-b4513350fd2a"
             },
             "name": "Open Flight Prop Port Test",
-            "status": "live",
             "tags": [
                 "internal"
             ],
@@ -893,6 +900,7 @@
             "created_at": "2025-11-17T20:55:03.510Z",
             "defaultAttributes": {},
             "description": "An icicle! It leaves a trail of snow when used.\n",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -913,7 +921,7 @@
             },
             "name": "Frosted Scribe",
             "productId": "prod_b64dffd2-8447-4c69-8934-8e18e682819d",
-            "status": "live",
+            "publishedListings": [],
             "tags": [
                 "prop",
                 "autogenerated"
@@ -963,36 +971,7 @@
         "description": "",
         "id": "prop_16531e5b-9f97-4bc3-b0c6-f6446c8563c6",
         "imageUrl": "https://api.vrchat.cloud/api/1/file/file_64e52eb7-8cbd-4680-97e4-4bb321083d97/1/file",
-        "itemTemplate": {
-            "attribution": null,
-            "authorId": "usr_7490e8b1-a41d-4b22-b2de-b1e0d2938e39",
-            "collections": [],
-            "created_at": "2025-07-19T03:11:44.329Z",
-            "defaultAttributes": {},
-            "description": "",
-            "equipSlots": [],
-            "flags": [
-                "instantiatable",
-                "archivable",
-                "unique"
-            ],
-            "id": "invt_b1da34ce-f0e0-4c31-9374-0f66b9b3e9f4",
-            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_64e52eb7-8cbd-4680-97e4-4bb321083d97/1/256",
-            "itemType": "prop",
-            "itemTypeLabel": "Item",
-            "metadata": {
-                "animated": false,
-                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_64e52eb7-8cbd-4680-97e4-4bb321083d97/1/file",
-                "propId": "prop_16531e5b-9f97-4bc3-b0c6-f6446c8563c6"
-            },
-            "name": "PropGlider Test",
-            "status": "live",
-            "tags": [
-                "internal"
-            ],
-            "updated_at": "2025-07-22T23:36:04.682Z",
-            "validateUserAttributes": false
-        },
+        "itemTemplate": null,
         "maxCountPerUser": 1,
         "name": "PropGlider Test",
         "releaseStatus": "private",
@@ -1021,6 +1000,7 @@
             "created_at": "2025-07-26T01:58:08.933Z",
             "defaultAttributes": {},
             "description": "",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -1036,7 +1016,6 @@
                 "propId": "prop_8ac42f15-14fa-4438-97df-9c10b654e75e"
             },
             "name": "Throw-n-Go",
-            "status": "live",
             "tags": [
                 "internal"
             ],
@@ -1498,6 +1477,7 @@
             "created_at": "2026-03-31T20:22:28.976Z",
             "defaultAttributes": {},
             "description": "Inflict bees upon your opponent.",
+            "dropStatus": "scheduled",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -1515,7 +1495,6 @@
                 "propId": "prop_f7f48957-06e6-4fed-9e4f-25f71f68ae8b"
             },
             "name": "Bee Blaster",
-            "status": "live",
             "tags": [
                 "prop"
             ],
@@ -1558,6 +1537,7 @@
             "created_at": "2026-03-30T21:43:49.187Z",
             "defaultAttributes": {},
             "description": "Hanami Dango! Eat it!",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -1576,7 +1556,7 @@
             },
             "name": "Hanami Dango",
             "productId": "prod_7445da92-f6ff-4fed-806b-3bead79ea4d6",
-            "status": "live",
+            "publishedListings": [],
             "tags": [
                 "prop",
                 "included_in_product"
@@ -1619,6 +1599,7 @@
             "created_at": "2026-03-31T20:30:13.045Z",
             "defaultAttributes": {},
             "description": "An Oil-paper Umbrella.",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -1635,7 +1616,7 @@
             },
             "name": "Wagasa",
             "productId": "prod_857a9809-7c28-4537-a597-259b79f3a4f2",
-            "status": "live",
+            "publishedListings": [],
             "tags": [
                 "prop",
                 "included_in_product"
@@ -1679,6 +1660,7 @@
             "created_at": "2026-03-30T17:57:29.663Z",
             "defaultAttributes": {},
             "description": "A portable cherry tree in bloom!",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -1697,7 +1679,7 @@
             },
             "name": "Portable Cherry Tree",
             "productId": "prod_edd3d03b-20b2-4e1b-8702-446e07f06295",
-            "status": "live",
+            "publishedListings": [],
             "tags": [
                 "prop",
                 "included_in_product"
@@ -1740,6 +1722,7 @@
             "created_at": "2025-10-10T23:12:46.361Z",
             "defaultAttributes": {},
             "description": "A commemorative coin for attending TwitchCon 2025 in San Diego",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -1757,7 +1740,6 @@
                 "propId": "prop_f63b77ac-977a-40dc-8410-453e937a627d"
             },
             "name": "TwitchCon25 Coin",
-            "status": "live",
             "tags": [
                 "prop"
             ],
@@ -1821,6 +1803,7 @@
             "created_at": "2026-05-01T00:10:40.911Z",
             "defaultAttributes": {},
             "description": "What does the scanner say?",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -1830,7 +1813,7 @@
             "id": "invt_2722d967-e011-4913-b1fa-9d2cc8262c4f",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_f3d8f0e5-e7a3-4fd5-a024-05b3c2348e36/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_f3d8f0e5-e7a3-4fd5-a024-05b3c2348e36",
@@ -1840,7 +1823,7 @@
             },
             "name": "SC-4N Reader",
             "productId": "prod_b366d01d-dbf0-4f06-9f75-a66814bd42ee",
-            "status": "live",
+            "publishedListings": [],
             "tags": [
                 "prop",
                 "included_in_product"
@@ -1897,6 +1880,7 @@
                 }
             },
             "description": "Remember: a falling slicer has no handle.",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -1906,7 +1890,7 @@
             "id": "invt_d49fcb2a-3283-478a-8501-ca3e9c333d4d",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_27705d2e-690d-44aa-b533-8acd6a58c181/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_27705d2e-690d-44aa-b533-8acd6a58c181",
@@ -1916,7 +1900,7 @@
             },
             "name": "Photonic Slicer",
             "productId": "prod_5cddd474-b0c8-4973-9373-adfc804eac81",
-            "status": "live",
+            "publishedListings": [],
             "tags": [
                 "prop",
                 "included_in_product"
@@ -1967,6 +1951,7 @@
                 }
             },
             "description": "Behind every cloud is a lining of… rainbow?",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -1976,7 +1961,7 @@
             "id": "invt_30222765-203c-4ea5-8f15-021c9eb556d7",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_4d6b9c02-6e13-4fe8-a11b-cd836d06ed49/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_36ad75af-4c97-4288-84dd-d7a08f990e08",
@@ -1984,7 +1969,6 @@
                 "propKind": 0
             },
             "name": "Christopher Cloud",
-            "status": "live",
             "tags": [
                 "prop"
             ],
@@ -2034,6 +2018,7 @@
                 }
             },
             "description": "Fan your colors out, no matter what.",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -2043,7 +2028,7 @@
             "id": "invt_9375b891-c39f-4df0-8185-fb581e349cc1",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_bc571320-9b10-4edd-85ab-848a4bf26aaa/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_bc571320-9b10-4edd-85ab-848a4bf26aaa",
@@ -2052,7 +2037,6 @@
                 "propKind": 0
             },
             "name": "Extravagant Pride Fan",
-            "status": "live",
             "tags": [
                 "prop"
             ],
@@ -2074,7 +2058,7 @@
     },
     {
         "_created_at": "2026-05-14T22:22:51.333Z",
-        "_updated_at": "2026-06-05T19:20:25.331Z",
+        "_updated_at": "2026-06-10T20:59:40.595Z",
         "abilities": [],
         "authorId": "8JoV9XEdpo",
         "authorName": "VRChat",
@@ -2091,7 +2075,7 @@
         "tags": [],
         "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_42ff2980-7e20-4345-ba8f-c36c2bcb8e1e/2/256",
         "unityPackages": [],
-        "version": 491,
+        "version": 509,
         "visibilityType": "everyone",
         "worldPlacementMask": 0
     },
@@ -2118,6 +2102,7 @@
             "created_at": "2026-05-26T19:18:18.284Z",
             "defaultAttributes": {},
             "description": "Who wants to go for a swim?",
+            "dropStatus": "draft",
             "equipSlots": [],
             "flags": [
                 "instantiatable",
@@ -2127,7 +2112,7 @@
             "id": "invt_c51a4854-b437-447b-8d61-b2ccb1ccfdeb",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_f8c61658-88bc-498d-8f5d-8c572cdcf12b/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_f8c61658-88bc-498d-8f5d-8c572cdcf12b",
@@ -2137,7 +2122,7 @@
             },
             "name": "Inflatable Pool",
             "productId": "prod_11653d0d-ef5a-4d85-a0cf-7271541c2835",
-            "status": "live",
+            "publishedListings": [],
             "tags": [
                 "prop",
                 "included_in_product"
@@ -2157,5 +2142,66 @@
         "version": 21,
         "visibilityType": "everyone",
         "worldPlacementMask": 1
+    },
+    {
+        "_created_at": "2026-05-14T19:48:28.151Z",
+        "_updated_at": "2026-05-19T16:44:07.654Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "A commemorative coin for attending TwitchConEU 2026 in Rotterdam",
+        "id": "prop_4b3b61d3-6ed1-41bc-83d9-345f2b705927",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_415b672f-10dd-47aa-87f2-d87fb7994292/2/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                },
+                "publisher": null
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-05-14T19:48:28.094Z",
+            "defaultAttributes": {},
+            "description": "A commemorative coin for attending TwitchConEU 2026 in Rotterdam",
+            "dropStatus": "draft",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_8b33dd0f-0d69-4905-b84d-50d3e51a50cd",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_02b5298e-ef70-4245-a274-9f3ec16b5abc/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Prop",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_401fc3f9-1d05-41c2-abd8-4419e0ec9aa7",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_401fc3f9-1d05-41c2-abd8-4419e0ec9aa7/1/file",
+                "propId": "prop_4b3b61d3-6ed1-41bc-83d9-345f2b705927",
+                "propKind": 0
+            },
+            "name": "TwitchConEU26 Coin",
+            "tags": [
+                "prop"
+            ],
+            "updated_at": "2026-06-12T19:18:46.535Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "TwitchConEU26 Coin",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_415b672f-10dd-47aa-87f2-d87fb7994292/2/256",
+        "unityPackages": [],
+        "version": 13,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
     }
 ]

@@ -1479,16 +1479,17 @@ function inviteJoinableInstanceQueue() {
 
 function applyGroupLogo(gID) {
 	/*
-0111 - El Alba
-0110 - VRDance
+	0000 - CORE Default
+	0001 - Community Events
+	0010 - Nanachi's hollow inn
 
-0101 - Furry Argentina VR
-0100 - The Lunar Howl
-0011 - Nanachis of VRChat
+	0011 - Nanachis of VRChat
+	0100 - 
+	0101 - Furry Argentina VR
 
-0010 - Nanachi's hollow inn
-0001 - Community Events
-0000 - CORE Default
+	0110 - VRDance
+	0111 - El Alba
+	1000 - 
 	*/
 	switch (gID) {
 		case 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad':
@@ -1509,13 +1510,6 @@ function applyGroupLogo(gID) {
 			// Furry Argentina VR
 			// 0101 - 5
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 1)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 0)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 1)
-			break;
-		case 'grp_f018a0ac-2ec6-4176-aa47-a0fd2b7ea817':
-			// The Lunar Howl
-			// 0100 - 4
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 0)
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 0)
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 1)
 			break;
@@ -2166,7 +2160,6 @@ async function eventHeadingToWorld(logOutputLine) {
 			instanceType = `public`
 		}
 	}
-
 
 	console.log(`${loglv.debug} [InstanceHistory] Marking instance as Leaving: ${InstanceHistory[0].location}`)
 	InstanceHistory[0].leave_timestamp = Date.now()

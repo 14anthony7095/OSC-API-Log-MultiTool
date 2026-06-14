@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@octokit/core": "^7.0.6",
     "archipelago.js": "^2.1.0",
     "axios": "^0.27.2",
     "chokidar": "^3.5.3",
