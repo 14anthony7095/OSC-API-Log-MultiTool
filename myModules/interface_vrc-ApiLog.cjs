@@ -53,11 +53,13 @@ var vrchatDiscord; fs.readFile('datasets/vrc-X-dis.json', 'utf8', (err, data) =>
 var lastFetchGroupLogs;
 var currentUser;
 var userAutoAcceptWhiteList = []
+var worldsSeenDB = new Set()
 var worldQueueTxt = './datasets/worldQueue.txt'
 var explorePrivacyLevel = 1
 var authToken = null
 var isApiErrorSkip = false
 var socket_VRC_API
+const vrcap = '/avatar/parameters/'
 var cacheWS = {}
 var lastVideoURL = ``
 var seenVideoURLs = [] // For current instance only
@@ -89,6 +91,7 @@ var InstanceHistory = [
 	}
 ]
 var G_InstanceClosed = false
+var G_Instance10min = false
 var G_groupMembersVisible = false
 var G_instanceJoinQueue = []
 var vrcUserStatusText = ''
@@ -122,6 +125,22 @@ fs.readFile('./datasets/autoAcceptWhitelist.txt', 'utf8', (err, data) => {
 	if (err) { console.log(err); return }
 	userAutoAcceptWhiteList = data.split('\r\n')
 })
+
+async function fsReadandClose() {
+	var fileHandler;
+	var output = []
+	try {
+		fileHandler = await fsp.open('./datasets/worldSeen.txt')
+		var fileRead = await fileHandler.readFile('utf8')
+		var arrayByLine = fileRead.split('\r\n')
+		console.log(`${loglv.info}${selflogL} Worlds-Visited contains ${arrayByLine.length} entries.`)
+		output = new Set(arrayByLine)
+	} catch (error) {
+		console.log(`${loglv.warn}${selflogL}`, error)
+	} finally { if (fileHandler) { await fileHandler.close(); worldsSeenDB = output } }
+}
+fsReadandClose()
+
 
 //	--	On Load	--
 console.log(`${loglv.info}${selflogL} Loaded -> ${loglv.bool(printAllLogs)}printAllLogs${loglv.reset} , ${loglv.bool(ChatVideoURL)}ChatVideoURL${loglv.reset} , ${loglv.bool(ChatVideoTitle)}ChatVideoTitle${loglv.reset}`)
@@ -690,6 +709,35 @@ const videoPlayerURLmasks = [
 	/\[AVProHQ\] loading URL: (.+)/,
 	/User .+ added URL (.+)/
 ]
+var tonbrRoundData = {
+	roundactive: false,
+	roundtype: '',
+	wave: 0,
+	terrorlist: [],
+	alive: true,
+	perk: '',
+	item: '',
+	location: ''
+}
+const tonbrConsts = {
+	tonmasks: [
+		{ context: 'RoundStart', regex: /Round Generated, participants Locked\./, regexIndex: 0 },
+		{ context: 'RoundType', regex: /Round is (.+)/, regexIndex: 1 },
+		{ context: 'RoundEnd', regex: /Round ended\./, regexIndex: 0 },
+		{ context: 'Wave', regex: /WAVE (\d) HAS BEGUN!/, regexIndex: 1 },
+		{ context: 'TerrorStart', regex: /(?:.+ \(\d+\),){0,5} .+ \(\d+\) have joined the fray!/, regexIndex: 0 },
+		{ context: 'TerrorAdded', regex: /(.+) \(\d+\) has joined the fray!/, regexIndex: 1 },
+		{ context: 'Perk', regex: /Player playing as (\d+)/, regexIndex: 1 },
+		{ context: 'Perk', regex: /Applied Perk - (\d+)/, regexIndex: 1 },
+		{ context: 'Location', regex: /Entering (.+)/, regexIndex: 1 },
+		{ context: 'Death', regex: /You died at Wave/, regexIndex: 0 },
+		{ context: 'FoundItem', regex: /Found \d+ \((.+)\)!/, regexIndex: 1 },
+		{ context: 'DeleteItem', regex: /Item destroyed\./, regexIndex: 0 }],
+	ToNPerks: ['None', 'Sinner', 'Runner', 'Electrician', 'Chef',
+		'Prophet', 'Goblin', 'Trapper', 'Vampire', 'Apostle',
+		'Mafia', 'Angel', 'Scavenger', 'Brian', 'Trickster',
+		'Gambit', 'Stringman', 'Passenger', 'Gunslinger', 'Chaos', 'Instruct']
+}
 function processLogLine(line) {
 
 	if (vrchatRunning == false) {
@@ -729,6 +777,108 @@ function processLogLine(line) {
 	// [Behaviour] Could not enter room because: If the instance exists‚ you're not allowed to access it․ (You are not allowed to travel to that location. If the instance exists‚ you're not allowed to access it․ (Code: 403))
 	if (line.includes(`[Behaviour] Could not enter room because: ` && line.includes('You are not allowed to travel to that location'))) {
 		logEmitter.emit('notAllowedToTravel')
+	}
+
+
+	// ToN: Star of the Show
+	// [ToNBR] 
+	if (InstanceHistory[0].worldID == 'wrld_af78055a-60f2-4ed6-a1d1-6e486e1e53bf' && lineC.startsWith('[ToNBR]')) {
+		var ToNBRLog = lineC.slice(8)
+
+		for (const item in tonbrConsts.tonmasks) {
+			var match = ToNBRLog.match(tonbrConsts.tonmasks[item].regex)
+			if (match) {
+				var toncontext = tonbrConsts.tonmasks[item].context
+				switch (toncontext) {
+					case 'Perk':
+						/*
+						// Possible Perks:
+							'None', 'Sinner', 'Runner', 'Electrician', 'Chef',
+							'Prophet', 'Goblin', 'Trapper', 'Vampire', 'Apostle',
+							'Mafia', 'Angel', 'Scavenger', 'Brian', 'Trickster',
+							'Gambit', 'Stringman', 'Passenger', 'Gunslinger', 'Chaos',
+							'Instruct'
+						 */
+						tonbrRoundData['perk'] = tonbrConsts.ToNPerks[match[1]];
+
+						console.log(`${loglv.info}${selflogL} [ToNBR] Perk: ${tonbrRoundData['perk']}`);
+						break;
+
+					case 'RoundStart':
+						tonbrRoundData['roundactive'] = true;
+						tonbrRoundData['alive'] = true;
+
+						console.log(`${loglv.info}${selflogL} [ToNBR] Round-Active: ${tonbrRoundData['roundactive']}`);
+						break;
+
+					case 'RoundType':
+						// Classic , Chaos , Custom
+						tonbrRoundData['roundtype'] = match[1];
+
+						console.log(`${loglv.info}${selflogL} [ToNBR] Round-Type: ${tonbrRoundData['roundtype']}`);
+						break;
+
+					case 'RoundEnd':
+						tonbrRoundData['roundactive'] = false;
+						tonbrRoundData['terrorlist'] = [];
+						tonbrRoundData['alive'] = true;
+						tonbrRoundData['location'] = '';
+						oscSend('/avatar/parameters/osc/doAutoJump', false);
+
+						console.log(`${loglv.info}${selflogL} [ToNBR] Round-Active: ${tonbrRoundData['roundactive']}`);
+						break;
+
+					case 'Wave':
+						// 0 - 10
+						tonbrRoundData['wave'] = parseInt(match[1]);
+
+						console.log(`${loglv.info}${selflogL} [ToNBR] Wave: ${tonbrRoundData['wave']}`);
+						break;
+
+					case 'FoundItem':
+						tonbrRoundData['item'] = match[1];
+
+						console.log(`${loglv.info}${selflogL} [ToNBR] Item-Found: ${tonbrRoundData['item']}`);
+						break;
+
+					case 'DeleteItem':
+						tonbrRoundData['item'] = '';
+
+						console.log(`${loglv.info}${selflogL} [ToNBR] Item-Removed`);
+						break;
+
+					case 'Death':
+						tonbrRoundData['alive'] = false;
+						oscSend('/avatar/parameters/osc/doAutoJump', false);
+
+						console.log(`${loglv.info}${selflogL} [ToNBR] Player-Death`);
+						break;
+
+					case 'Location':
+						tonbrRoundData['location'] = match[1];
+
+						console.log(`${loglv.info}${selflogL} [ToNBR] Location: ${tonbrRoundData['location']}`);
+						break;
+
+					case 'TerrorStart':
+						tonbrRoundData['terrorlist'] = ToNBRLog.match(/[^,]+?(?=\s*\(\d+\))/g).filter((f, index) => index % 2 == 0).map(name => name.replace(/ \{\d+\}/, '').trim());
+
+						console.log(`${loglv.info}${selflogL} [ToNBR] Terror-Start: `, tonbrRoundData['terrorlist']);
+						break;
+
+					case 'TerrorAdded':
+						tonbrRoundData['terrorlist'].push(match[1]);
+
+						console.log(`${loglv.info}${selflogL} [ToNBR] Terror-Spawn: ${match[1]}`);
+						break;
+
+					default: console.log(`${loglv.info}${selflogL} [ToNBR] ? ${toncontext} ?: ${match.slice(1, tonbrConsts.tonmasks[item].regexIndex + 1)}`);
+						break;
+				}
+				// console.log(`${loglv.info}${selflogL} [ToNBR]`, tonbrRoundData)
+				return
+			}
+		}
 	}
 
 	// Terrors of Nowhere
@@ -963,6 +1113,7 @@ oscEmitter.on('avatar', (avtrID) => {
 	].includes(avtrID)) {
 		queueInstanceDataBurst()
 		oscSend('/avatar/parameters/log/instance_closed', G_InstanceClosed)
+		oscSend('/avatar/parameters/log/instance_10min', G_Instance10min)
 		applyGroupLogo(InstanceHistory[0]?.groupID)
 	}
 });
@@ -1056,15 +1207,31 @@ function inviteLocalQueue(I_autoNext = false) {
 			return
 		}
 
+		var playersInQueue = 0
 		if (playersInInstance.length >= 2 && currentAccountInUse.id == process.env['VRC_ACC_ID_1'] && InstanceHistory[0].worldHopNoticeSent != true && InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
-			console.log(`${loglv.debug} [InstanceHistory] Appending WorldHop Notice Sent`)
+			console.log(`${loglv.debug}[InstanceHistory] Appending WorldHop Notice Sent`)
 			InstanceHistory[0].worldHopNoticeSent = true
 			manualCall(`instances/${InstanceHistory[0].location}/announce`, 'POST', { "title": 'Explorer Notice', "message": 'Genarating portal to the next world.\nRespawn if you are lost.', "imageId": 'file_072c4481-1642-4226-91b8-01bbb61444d9', "imageVersion": 1 }).catch(c => { console.error(c) })
-		}
 
+			let gotCurrentInstance = await limiter.req(vrchat.getInstance({ 'path': { 'worldId': InstanceHistory[0].worldID, 'instanceId': InstanceHistory[0].location.split(':')[1] } }))
+			if (gotCurrentInstance.data?.queueSize >= 1) {
+				playersInQueue = gotCurrentInstance.data.queueSize + Math.ceil(gotCurrentInstance.data.queueSize * 0.2)
+			}
+		}
 
 		let randnum = Math.round(Math.random() * (localQueueList.length - 1))
 		let world_id = localQueueList[randnum]
+
+		if (worldsSeenDB.has(world_id)) {
+			console.log(`${loglv.hey}${selflogL} World has already been visited before, Try again..`);
+			oscChatBoxV2(`~World has been visited before.\vRemoved from Queue.\vTry another.`, 5000, true, true, false, false, false)
+			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
+				if (data.includes(world_id)) {
+					fs.writeFile(worldQueueTxt, data.replaceAll(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
+				}
+			})
+			return
+		}
 
 		let extimelow = Math.floor((localQueueList.length * 2) / 60)
 		let extimehig = Math.floor((localQueueList.length * 10) / 60)
@@ -1076,7 +1243,7 @@ function inviteLocalQueue(I_autoNext = false) {
 		})
 		if (gotWorld.data == undefined) {
 			console.log(`${loglv.hey}${selflogA} World failed to fetch. Try again..`);
-			oscChatBoxV2(`World fetch failed.\vTry another.`, 5000, true, true, false, false, false)
+			oscChatBoxV2(`World fetch failed.\vRemoved from Queue.\vTry another.`, 5000, true, true, false, false, false)
 			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
 				if (data.includes(world_id)) {
 					fs.writeFile(worldQueueTxt, data.replaceAll(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
@@ -1089,14 +1256,14 @@ function inviteLocalQueue(I_autoNext = false) {
 		var filter_UserAndroid = playersInstanceObject.find(u => u.platform == 'android')
 		var filter_PlatformAdnroid = gotWorld.data.unityPackages.find(p => p.platform == 'android')
 		// if (gotWorld.data.capacity < playersInInstance.length && G_InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
-		if (gotWorld.data.capacity < playersInInstance.length) {
+		if (gotWorld.data.capacity != 80 && gotWorld.data.capacity < Math.min(playersInInstance.length + playersInQueue, 80)) {
 			console.log(`${loglv.hey}${selflogA} World can not fit everyone. Retry..`);
-			oscChatBoxV2(`World can not fit everyone.\vTry another.`, 5000, true, true, false, false, false)
+			oscChatBoxV2(`~World can not fit everyone.\vTry another.\v${playersInQueue.length + playersInQueue} >>> ${gotWorld.data.capacity}`, 5000, true, true, false, false, false)
 			return
 			// } else if (filter_UserAndroid != undefined && filter_PlatformAdnroid == undefined && G_InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 		} else if (filter_UserAndroid != undefined && filter_PlatformAdnroid == undefined) {
 			console.log(`${loglv.hey}${selflogA} World is not Quest compatible. Retry..`);
-			oscChatBoxV2(`World is not Quest compatible.\vTry another.`, 5000, true, true, false, false, false)
+			oscChatBoxV2(`~World is not Quest compatible.\vTry another.\v${filter_UserAndroid.name} wouldn't beable to join.`, 5000, true, true, false, false, false)
 			return
 		}
 
@@ -1142,7 +1309,6 @@ function inviteLocalQueue(I_autoNext = false) {
 			oscChatBoxV2(`instance create failed.\v[${created_instance.error.response.status}] ${created_instance.error.response.statusText}\v${created_instance.error.message}`, 5000, true, true)
 			console.log(`${loglv.warn}${selflogA} `, created_instance.error.cause)
 			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
-				// err ? console.log(err); return : ''
 				if (data.includes(world_id)) {
 					fs.writeFile(worldQueueTxt, data.replaceAll(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
 				}
@@ -1175,7 +1341,7 @@ async function hypeTrainLocater() {
 	var activeworlds = await limiter.req(vrchat.getActiveWorlds({ 'query': { 'offset': 0, 'n': 100, 'order': 'ascending' } }))
 	// Worlds Data
 	var count = 0
-	var highestPercent = [0, 0] // Percent , Gift Count, Gift Goal
+	var highestPercent = [0, 0] // Percent , Gift Count
 	for (const wrld in activeworlds.data) {
 		// console.log(`${loglv.info}${selflogA} [HypeTrainLocater] World Target: ${activeworlds.data[wrld].name}`)
 
@@ -1415,7 +1581,7 @@ async function findJoinableInstances() {
 	return new Promise(async (resolve, reject) => {
 		// Creating instance array to return later
 		var joinableInstances = []
-		console.log(`${loglv.debug}${selflogL} [InstanceHistory]`, InstanceHistory)
+		console.log(`${loglv.debug}${selflogL}[InstanceHistory]`, InstanceHistory)
 
 		// Fetching 100 online friends from api
 		var gotOnlineFriends = await limiter.req(vrchat.getFriends({ 'query': { 'n': 100, 'offline': false, 'offset': 0 } }))
@@ -1565,6 +1731,7 @@ function eventGameClose() {
 	switchChannel(process.env["VRC_ACC_NAME_1"])
 
 	G_InstanceClosed = false
+	G_Instance10min = false
 	worldHopTimeout = null
 	worldHopTimeoutHour = null
 	userTrustTableTimer = null
@@ -1572,10 +1739,13 @@ function eventGameClose() {
 	tarFile = 'nothing'
 	tonAvgStartWait = []
 	seenVideoURLs = []
+	playersInInstance = []
+	membersInInstance = []
+	playersInstanceObject = []
 
 	process.title = `14anthony7095 OSC Multi-Interface`
 
-	console.log(`${loglv.debug} [InstanceHistory] Post-Game Closer: Setting location to Offline`)
+	console.log(`${loglv.debug}[InstanceHistory] Post-Game Closer: Setting location to Offline`)
 	InstanceHistory[0] = {
 		'groupID': '',
 		'instanceType': 'offline',
@@ -1590,7 +1760,7 @@ function eventGameClose() {
 	setTimeout(() => {
 		vrchatRunning = false
 		setTimeout(() => {
-			console.log(`${loglv.debug} [InstanceHistory] Post-Game Closer: Clearing "gone an hour" instances past index 2`)
+			console.log(`${loglv.debug}[InstanceHistory] Post-Game Closer: Clearing "gone an hour" instances past index 2`)
 			InstanceHistory = InstanceHistory.filter((ih, index) => ih.leave_timestamp + 3600_000 > Date.now() || index <= 1)
 		}, 3605_000)
 	}, 5_000)
@@ -1739,6 +1909,7 @@ async function updateBioWorldQueue() {
 						setTimeout(() => { resolve(true) }, 2000)
 					}
 				}
+
 			} else {
 				console.log(`${loglv.info}${selflogA} world queue empty, Skiping`)
 				setTimeout(() => { resolve(true) }, 2000)
@@ -2161,7 +2332,7 @@ async function eventHeadingToWorld(logOutputLine) {
 		}
 	}
 
-	console.log(`${loglv.debug} [InstanceHistory] Marking instance as Leaving: ${InstanceHistory[0].location}`)
+	console.log(`${loglv.debug}[InstanceHistory] Marking instance as Leaving: ${InstanceHistory[0].location}`)
 	InstanceHistory[0].leave_timestamp = Date.now()
 	InstanceHistory[0].timespentDisplay = new Date(InstanceHistory[1].leave_timestamp - InstanceHistory[1].join_timestamp).toISOString().substring(11, 19)
 	InstanceHistory[0].timeSpent = InstanceHistory[1].leave_timestamp - InstanceHistory[1].join_timestamp
@@ -2177,7 +2348,7 @@ async function eventHeadingToWorld(logOutputLine) {
 		'timespentDisplay': 0,
 		'timeSpent': 0
 	});
-	console.log(`${loglv.debug} [InstanceHistory] Adding upcoming instance to history: `, InstanceHistory[0])
+	console.log(`${loglv.debug}[InstanceHistory] Adding upcoming instance to history: `, InstanceHistory[0])
 
 
 	// Get world info for OBS Stream
@@ -2190,7 +2361,8 @@ async function eventHeadingToWorld(logOutputLine) {
 
 	// El Alba starting world
 	if (groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && worldID == 'wrld_f6445b27-037d-4926-b51f-d79ada716b31') { worldHoppers = [] }
-	if (groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && InstanceHistory[1]?.groupID != 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && groupID != '') { worldHoppers = [] }
+	// 14aHop starting world
+	if (groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce' && worldID == 'wrld_112c5336-0329-4293-83ac-96f37f8a6405') { worldHoppers = [] }
 
 
 	/*
@@ -2230,6 +2402,7 @@ function eventJoiningWorld() {
 		say.speak(`Been in world for too long. Proceed to next in queue`, 'Microsoft David Desktop', 1.0, (err) => {
 			if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) }
 		})
+		oscSend('/avatar/parameters/log/instance_10min', true); G_Instance10min = true
 	}, 600_000)
 	worldHopTimeoutHour = setTimeout(() => {
 		say.speak(`Been in world for over an hour. Find a new world`, 'Microsoft David Desktop', 1.0, (err) => {
@@ -2333,7 +2506,7 @@ async function eventPlayerJoin(logOutputLine) {
 			logEmitter.emit('joinedworld', InstanceHistory[0].worldID)
 
 			InstanceHistory[0].join_timestamp = Date.now()
-			console.log(`${loglv.debug} [InstanceHistory] Loaded into world, appending join Timestamp ${InstanceHistory[0].join_timestamp}`)
+			console.log(`${loglv.debug}[InstanceHistory] Loaded into world, appending join Timestamp ${InstanceHistory[0].join_timestamp}`)
 
 			// Remove world from Explore Queue
 			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
@@ -2345,6 +2518,13 @@ async function eventPlayerJoin(logOutputLine) {
 				}
 			})
 
+			// Add world to Visited Database
+			if (!worldsSeenDB.has(InstanceHistory[0].worldID) && vrcUserStatusText != 'Preloading worlds') {
+				fs.appendFile('./datasets/worldSeen.txt', `\r\n${InstanceHistory[0].worldID}`, (err) => { if (err) { console.error(err) } })
+				worldsSeenDB.add(InstanceHistory[0].worldID)
+				console.log(`${loglv.debug}${selflogL} ${InstanceHistory[0].worldID} had not been visited before. Adding to Database.`)
+			}
+
 			// Remove joined instance from Joinable Queue
 			let isinstanceInJoinableQueue = G_instanceJoinQueue.find(i => i.location == InstanceHistory[0].location)
 			if (isinstanceInJoinableQueue != undefined) {
@@ -2355,7 +2535,7 @@ async function eventPlayerJoin(logOutputLine) {
 			if (InstanceHistory.length > 2) {
 				let ihl = InstanceHistory.length
 				InstanceHistory = InstanceHistory.filter((ih, index) => ih.leave_timestamp + 3600_000 > Date.now() || index <= 1)
-				console.log(`${loglv.debug} [InstanceHistory] Clearing "gone an hour" instances past index 2 - ${ihl} -> ${InstanceHistory.length}`)
+				console.log(`${loglv.debug}[InstanceHistory] Clearing "gone an hour" instances past index 2 - ${ihl} -> ${InstanceHistory.length}`)
 			}
 
 		}
@@ -2364,12 +2544,20 @@ async function eventPlayerJoin(logOutputLine) {
 		function markUserAsMember(I_memberStatus, I_groupName = 'GroupMember', I_addToWorldHop = false) {
 			console.log(`${loglv.info}${selflogA} [${I_groupName}] ${I_memberStatus == true ? '💜' : '👻'} ${playerDisplayName} ${I_memberStatus == true ? 'is' : 'NOT a'} member`)
 
-			try { playersInstanceObject[pioIndex].isGroupMember = I_memberStatus } catch (error) {
+			try {
+				playersInstanceObject[pioIndex].isGroupMember = I_memberStatus
+
+			} catch (error) {
 				console.log(`${loglv.hey}${selflogL} playerTracker Object got Member before PlayerName - ${error}`)
 				playersInstanceObject.push({ 'name': playerDisplayName, 'id': playerID, 'isGroupMember': I_memberStatus })
 			} finally {
 				if (I_addToWorldHop) {
-					worldHoppers.push({ "name": playerDisplayName, "id": playerID, "playtime": 0, "joinTime": Date.now(), "groupMember": I_memberStatus })
+					try {
+						var whindex = worldHoppers.findIndex(f => f.name == playerDisplayName)
+						worldHoppers[whindex]["joinTime"] = Date.now()
+					} catch (error) {
+						worldHoppers.push({ "name": playerDisplayName, "id": playerID, "playtime": 0, "joinTime": Date.now(), "groupMember": I_memberStatus })
+					}
 				}
 			}
 
@@ -2400,6 +2588,16 @@ async function eventPlayerJoin(logOutputLine) {
 			if (gotUserGroups.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
 				markUserAsMember(false, 'CommunityMeetup', true)
 			} else { markUserAsMember(true, 'CommunityMeetup', true) }
+
+		} else if (InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+
+			var gotUserGroups = await limiter.reqCached('userGroups', playerID).catch(async () => {
+				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
+			})
+
+			if (gotUserGroups.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
+				markUserAsMember(false, '14aWorldHop', true)
+			} else { markUserAsMember(true, '14aWorldHop', true) }
 
 		} else if (InstanceHistory[0].groupID != '' && G_groupMembersVisible == true) {
 
@@ -2495,8 +2693,8 @@ function eventPlayerLeft(logOutputLine) {
 		}
 		// logEmitter.emit('playerLeft', playerDisplayName, playerID, playersInInstance)
 
-		// El Alba starting world
-		if (InstanceHistory[0].groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad') {
+		// worldhop Tracker
+		if (['grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad', 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce'].includes(InstanceHistory[0].groupID)) {
 			var filteredhoppers = worldHoppers.find(a => a.name == playerDisplayName)
 			if (filteredhoppers != undefined) {
 				var foundindex = worldHoppers.findIndex(a => a.name == playerDisplayName)
@@ -2519,6 +2717,7 @@ function eventPlayerLeft(logOutputLine) {
 			loadingAvatarTimer = null
 			worldHopTimeout = null
 			cooldownUrl = true
+			G_Instance10min = false
 
 			if (G_InstanceClosed == true) {
 				G_InstanceClosed = false
@@ -2530,6 +2729,7 @@ function eventPlayerLeft(logOutputLine) {
 
 
 			oscSend('/avatar/parameters/log/instance_closed', false)
+			oscSend('/avatar/parameters/log/instance_10min', false) // G_Instance10min
 			tonAvgStartWait = []
 			let buildLog = `${loglv.info}${selflogL}`
 			if (ttvFetchFrom == 1 && urlType == 'twitch') {
