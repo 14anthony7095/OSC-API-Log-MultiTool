@@ -721,22 +721,41 @@ var tonbrRoundData = {
 }
 const tonbrConsts = {
 	tonmasks: [
-		{ context: 'RoundStart', regex: /Round Generated, participants Locked\./, regexIndex: 0 },
+		{ context: 'RoundStart', regex: /Everything recieved, looks good to meee~!/, regexIndex: 0 },
 		{ context: 'RoundType', regex: /Round is (.+)/, regexIndex: 1 },
-		{ context: 'RoundEnd', regex: /Round ended\./, regexIndex: 0 },
+		{ context: 'RoundEnd', regex: /The round has ended\./, regexIndex: 0 },
 		{ context: 'Wave', regex: /WAVE (\d) HAS BEGUN!/, regexIndex: 1 },
-		{ context: 'TerrorStart', regex: /(?:.+ \(\d+\),){0,5} .+ \(\d+\) have joined the fray!/, regexIndex: 0 },
-		{ context: 'TerrorAdded', regex: /(.+) \(\d+\) has joined the fray!/, regexIndex: 1 },
+		{ context: 'TerrorStart', regex: /(?:.+ (?:\{\d\} )?\(\d+\),)+ .+ \(\d+\) have joined the fray!/, regexIndex: 0 },
+		{ context: 'TerrorAdded', regex: /(.+) (?:\{\d\}\s)?\(\d+\) has joined the fray!/, regexIndex: 1 },
 		{ context: 'Perk', regex: /Player playing as (\d+)/, regexIndex: 1 },
 		{ context: 'Perk', regex: /Applied Perk - (\d+)/, regexIndex: 1 },
 		{ context: 'Location', regex: /Entering (.+)/, regexIndex: 1 },
 		{ context: 'Death', regex: /You died at Wave/, regexIndex: 0 },
 		{ context: 'FoundItem', regex: /Found \d+ \((.+)\)!/, regexIndex: 1 },
 		{ context: 'DeleteItem', regex: /Item destroyed\./, regexIndex: 0 }],
-	ToNPerks: ['None', 'Sinner', 'Runner', 'Electrician', 'Chef',
-		'Prophet', 'Goblin', 'Trapper', 'Vampire', 'Apostle',
-		'Mafia', 'Angel', 'Scavenger', 'Brian', 'Trickster',
-		'Gambit', 'Stringman', 'Passenger', 'Gunslinger', 'Chaos', 'Instruct']
+	ToNPerks: [
+		{ label: 'None', hexColorR: 118, hexColorG: 131, hexColorB: 151 },
+		{ label: 'Sinner', hexColorR: 198, hexColorG: 96, hexColorB: 100 },
+		{ label: 'Runner', hexColorR: 63, hexColorG: 209, hexColorB: 235 },
+		{ label: 'Electrician', hexColorR: 190, hexColorG: 187, hexColorB: 120 },
+		{ label: 'Chef', hexColorR: 65, hexColorG: 210, hexColorB: 129 },
+		{ label: 'Prophet', hexColorR: 162, hexColorG: 125, hexColorB: 237 },
+		{ label: 'Goblin', hexColorR: 137, hexColorG: 124, hexColorB: 107 },
+		{ label: 'Trapper', hexColorR: 192, hexColorG: 60, hexColorB: 126 },
+		{ label: 'Vampire', hexColorR: 129, hexColorG: 71, hexColorB: 89 },
+		{ label: 'Apostle', hexColorR: 48, hexColorG: 223, hexColorB: 215 },
+		{ label: 'Mafia', hexColorR: 58, hexColorG: 82, hexColorB: 219 },
+		{ label: 'Angel', hexColorR: 231, hexColorG: 162, hexColorB: 255 },
+		{ label: 'Scavenger', hexColorR: 195, hexColorG: 215, hexColorB: 246 },
+		{ label: 'Brian', hexColorR: 15, hexColorG: 12, hexColorB: 25 },
+		{ label: 'Trickster', hexColorR: 209, hexColorG: 144, hexColorB: 65 },
+		{ label: 'Gambit', hexColorR: 123, hexColorG: 199, hexColorB: 87 },
+		{ label: 'Stringman', hexColorR: 69, hexColorG: 59, hexColorB: 69 },
+		{ label: 'Passenger', hexColorR: 44, hexColorG: 209, hexColorB: 218 },
+		{ label: 'Gunslinger', hexColorR: 214, hexColorG: 174, hexColorB: 136 },
+		{ label: 'Chaos', hexColorR: 235, hexColorG: 34, hexColorB: 239 },
+		{ label: 'Instruct', hexColorR: 53, hexColorG: 232, hexColorB: 255 }
+	]
 }
 function processLogLine(line) {
 
@@ -799,7 +818,10 @@ function processLogLine(line) {
 							'Gambit', 'Stringman', 'Passenger', 'Gunslinger', 'Chaos',
 							'Instruct'
 						 */
-						tonbrRoundData['perk'] = tonbrConsts.ToNPerks[match[1]];
+						tonbrRoundData['perk'] = tonbrConsts.ToNPerks[match[1]].label;
+						oscSend(vrcap + 'ToN_ColorR', parseFloat(tonbrConsts.ToNPerks[match[1]].hexColorR / 255))
+						oscSend(vrcap + 'ToN_ColorG', parseFloat(tonbrConsts.ToNPerks[match[1]].hexColorG / 255))
+						oscSend(vrcap + 'ToN_ColorB', parseFloat(tonbrConsts.ToNPerks[match[1]].hexColorB / 255))
 
 						console.log(`${loglv.info}${selflogL} [ToNBR] Perk: ${tonbrRoundData['perk']}`);
 						break;
@@ -807,6 +829,7 @@ function processLogLine(line) {
 					case 'RoundStart':
 						tonbrRoundData['roundactive'] = true;
 						tonbrRoundData['alive'] = true;
+						oscSend('/avatar/parameters/ToN_IsStarted', true)
 
 						console.log(`${loglv.info}${selflogL} [ToNBR] Round-Active: ${tonbrRoundData['roundactive']}`);
 						break;
@@ -824,6 +847,7 @@ function processLogLine(line) {
 						tonbrRoundData['alive'] = true;
 						tonbrRoundData['location'] = '';
 						oscSend('/avatar/parameters/osc/doAutoJump', false);
+						oscSend('/avatar/parameters/ToN_IsStarted', false)
 
 						console.log(`${loglv.info}${selflogL} [ToNBR] Round-Active: ${tonbrRoundData['roundactive']}`);
 						break;
@@ -1178,9 +1202,11 @@ async function addSearchToLocalQueue(i_searchString) {
 		fs.appendFile(worldQueueTxt, `\r\n` + worldlist, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
 	})
 }
-function inviteHubQueue() {
+function inviteHubQueue(returnHubID = false) {
+	const exploreHubWorld = 'wrld_bd33cefd-84e0-40d9-9904-cf42b3a8e103'
+	if (returnHubID) { return exploreHubWorld }
 	var instanceBody = {
-		'worldId': 'wrld_112c5336-0329-4293-83ac-96f37f8a6405',
+		'worldId': exploreHubWorld,
 		'type': 'group',
 		'region': 'use',
 		'minimumAvatarPerformance': 'Poor',
@@ -1190,7 +1216,7 @@ function inviteHubQueue() {
 	}
 	if (vrcUserHasVRCplus == true) { instanceBody['displayName'] = 'World Hop' }
 
-	console.log(`${loglv.hey}${selflogA} Creating group instance for wrld_112c5336-0329-4293-83ac-96f37f8a6405`)
+	console.log(`${loglv.hey}${selflogA} Creating group instance for ` + exploreHubWorld)
 
 	vrchat.createInstance({ body: instanceBody })
 		.then(created_instance => { startvrc(created_instance.data.location, false) })
@@ -1254,17 +1280,24 @@ function inviteLocalQueue(I_autoNext = false) {
 		isWorldUnlisted(world_id, '14anthony7095')
 
 		var filter_UserAndroid = playersInstanceObject.find(u => u.platform == 'android')
-		var filter_PlatformAdnroid = gotWorld.data.unityPackages.find(p => p.platform == 'android')
-		// if (gotWorld.data.capacity < playersInInstance.length && G_InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
-		if (gotWorld.data.capacity != 80 && gotWorld.data.capacity < Math.min(playersInInstance.length + playersInQueue, 80)) {
-			console.log(`${loglv.hey}${selflogA} World can not fit everyone. Retry..`);
-			oscChatBoxV2(`~World can not fit everyone.\vTry another.\v${playersInQueue.length + playersInQueue} >>> ${gotWorld.data.capacity}`, 5000, true, true, false, false, false)
-			return
-			// } else if (filter_UserAndroid != undefined && filter_PlatformAdnroid == undefined && G_InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
-		} else if (filter_UserAndroid != undefined && filter_PlatformAdnroid == undefined) {
-			console.log(`${loglv.hey}${selflogA} World is not Quest compatible. Retry..`);
-			oscChatBoxV2(`~World is not Quest compatible.\vTry another.\v${filter_UserAndroid.name} wouldn't beable to join.`, 5000, true, true, false, false, false)
-			return
+		var filter_worldAndroid = gotWorld.data.unityPackages.find(p => p.platform == 'android')
+		var filter_UserIOS = playersInstanceObject.find(u => u.platform == 'iso')
+		var filter_worldIOS = gotWorld.data.unityPackages.find(p => p.platform == 'iso')
+
+		if (InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+			if (gotWorld.data.capacity < Math.min(playersInInstance.length + playersInQueue, 80)) {
+				console.log(`${loglv.hey}${selflogA} World can not fit everyone. Retry..`);
+				oscChatBoxV2(`~World can not fit everyone.\vTry another.\v${playersInInstance.length + playersInQueue} > ${gotWorld.data.capacity}`, 5000, true, true, false, false, false)
+				return
+			} else if (filter_UserAndroid != undefined && filter_worldAndroid == undefined) {
+				console.log(`${loglv.hey}${selflogA} World is not Quest compatible. Retry..`);
+				oscChatBoxV2(`~World is not Quest compatible.\vTry another.\v${filter_UserAndroid.name} wouldn't beable to join.`, 5000, true, true, false, false, false)
+				return
+			} else if (filter_UserIOS != undefined && filter_worldIOS == undefined) {
+				console.log(`${loglv.hey}${selflogA} World is not iOS compatible. Retry..`);
+				oscChatBoxV2(`~World is not iOS compatible.\vTry another.\v${filter_UserIOS.name} wouldn't beable to join.`, 5000, true, true, false, false, false)
+				return
+			}
 		}
 
 		var instanceBody = {
@@ -1343,7 +1376,7 @@ async function hypeTrainLocater() {
 	var count = 0
 	var highestPercent = [0, 0] // Percent , Gift Count
 	for (const wrld in activeworlds.data) {
-		// console.log(`${loglv.info}${selflogA} [HypeTrainLocater] World Target: ${activeworlds.data[wrld].name}`)
+		console.log(`${loglv.info}${selflogA} [HypeTrainLocater] World Target: ${activeworlds.data[wrld].name}`)
 
 		var gotworld = await limiter.req(vrchat.getWorld({ 'path': { 'worldId': activeworlds.data[wrld].id } }))
 		// Instances Data
@@ -1359,7 +1392,7 @@ async function hypeTrainLocater() {
 
 				var goalPercent = Math.floor(gotInstance.data.hypeTrain.current.currentGiftCount / gotInstance.data.hypeTrain.current.totalGiftGoal * 100)
 				highestPercent = goalPercent > highestPercent[0] ? [goalPercent, gotInstance.data.hypeTrain.current.currentGiftCount] : highestPercent
-				console.log(`${loglv.info}${selflogA} [HypeTrainLocater] Active: [ ${goalPercent}% ]  ${activeworlds.data[wrld].name}\n${activeworlds.data[wrld].id}:${gotworld.data.instances[ints][0]}`)
+				console.log(`${loglv.info}${selflogA} [HypeTrainLocater] Active: [ ${goalPercent}% (${gotInstance.data.hypeTrain.current.currentGiftCount}/${gotInstance.data.hypeTrain.current.totalGiftGoal}) ]  ${activeworlds.data[wrld].name}\n${activeworlds.data[wrld].id}:${gotworld.data.instances[ints][0]}`)
 
 			} else if (gotInstance.data.hypeTrain?.potentialTrain != null) {
 				console.log(`${loglv.info}${selflogA} [HypeTrainLocater] Warm: ${gotworld.data.instances[ints][0]}`)
@@ -2362,7 +2395,7 @@ async function eventHeadingToWorld(logOutputLine) {
 	// El Alba starting world
 	if (groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && worldID == 'wrld_f6445b27-037d-4926-b51f-d79ada716b31') { worldHoppers = [] }
 	// 14aHop starting world
-	if (groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce' && worldID == 'wrld_112c5336-0329-4293-83ac-96f37f8a6405') { worldHoppers = [] }
+	if (groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce' && worldID == inviteHubQueue(true)) { worldHoppers = [] }
 
 
 	/*
@@ -2506,14 +2539,14 @@ async function eventPlayerJoin(logOutputLine) {
 			logEmitter.emit('joinedworld', InstanceHistory[0].worldID)
 
 			InstanceHistory[0].join_timestamp = Date.now()
-			console.log(`${loglv.debug}[InstanceHistory] Loaded into world, appending join Timestamp ${InstanceHistory[0].join_timestamp}`)
+			// console.log(`${loglv.debug}[InstanceHistory] Loaded into world, appending join Timestamp ${InstanceHistory[0].join_timestamp}`)
 
 			// Remove world from Explore Queue
 			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
 				if (data.includes(InstanceHistory[0].worldID) && InstanceHistory[0].worldID != '') {
 					fs.writeFile(worldQueueTxt, data.replaceAll(`${InstanceHistory[0].worldID}\r\n`, ''), (err) => {
 						if (err) { console.log(err) }
-						console.log(`${loglv.debug}${selflogL} ${InstanceHistory[0].worldID} was successfully purged from queue`)
+						console.log(`${loglv.debug}${selflogL} Purged world from Queue: ${InstanceHistory[0].worldID}`)
 					})
 				}
 			})
@@ -2522,7 +2555,7 @@ async function eventPlayerJoin(logOutputLine) {
 			if (!worldsSeenDB.has(InstanceHistory[0].worldID) && vrcUserStatusText != 'Preloading worlds') {
 				fs.appendFile('./datasets/worldSeen.txt', `\r\n${InstanceHistory[0].worldID}`, (err) => { if (err) { console.error(err) } })
 				worldsSeenDB.add(InstanceHistory[0].worldID)
-				console.log(`${loglv.debug}${selflogL} ${InstanceHistory[0].worldID} had not been visited before. Adding to Database.`)
+				console.log(`${loglv.debug}${selflogL} Adding unvisited world to Database: ${InstanceHistory[0].worldID}`)
 			}
 
 			// Remove joined instance from Joinable Queue
@@ -2535,7 +2568,6 @@ async function eventPlayerJoin(logOutputLine) {
 			if (InstanceHistory.length > 2) {
 				let ihl = InstanceHistory.length
 				InstanceHistory = InstanceHistory.filter((ih, index) => ih.leave_timestamp + 3600_000 > Date.now() || index <= 1)
-				console.log(`${loglv.debug}[InstanceHistory] Clearing "gone an hour" instances past index 2 - ${ihl} -> ${InstanceHistory.length}`)
 			}
 
 		}
