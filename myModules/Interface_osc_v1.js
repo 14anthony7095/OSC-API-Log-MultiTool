@@ -48,8 +48,9 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'osc' && args[0] == 'db') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2])) }
 	if (cmd == 'osc' && args[0] == 'db2') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2]), parseFloat(args[3])) }
 	if (cmd == 'osc' && args[0] == 'db3') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2]), parseFloat(args[3]), parseFloat(args[4])) }
+	if (cmd == 'osc' && args[0] == 'saystop') { chatboxQueue = []; oscChatBoxV2('~', 200, false, true) }
 	if (cmd == 'osc' && args[0] == 'say') {
-		oscChatBoxV2(raw.slice(8).toString(), undefined, false, false, false, true)
+		oscChatBoxV2(raw.slice(8).toString().replace(/\\v/g, '\v'), undefined, false, false, false, true)
 	}
 	if (cmd == 'osc' && args[0] == 'send') { oscSend('/avatar/parameters/' + args[1], JSON.parse(args[2])) }
 	// if( cmd == 'cctv' ){

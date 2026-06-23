@@ -56,6 +56,8 @@ var userAutoAcceptWhiteList = []
 var worldsSeenDB = new Set()
 var worldQueueTxt = './datasets/worldQueue.txt'
 var explorePrivacyLevel = 1
+var G_exploreInviteMode = false // Self: false - Friends: true
+var G_exploreAutoClose = true
 var authToken = null
 var isApiErrorSkip = false
 var socket_VRC_API
@@ -184,6 +186,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 -   forceaudit
 -   preload [wrld_UUID...]
 -   addworlds [<string>]
+-	pruneseen
 -   explore
         > prefill
         > autonext [True/False]
@@ -206,12 +209,11 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'hypetrain') { hypeTrainLocater() }
 	if (cmd == 'years' && args[0] == 'open') { switchYearGroupsReOpen() }
 	if (cmd == 'forceaudit') { scanGroupAuditLogs() }
-	if (cmd == 'findjoinable') {
-		findJoinableInstances().then(d => { G_instanceJoinQueue = d })
-	}
+	if (cmd == 'findjoinable') { findJoinableInstances().then(d => { G_instanceJoinQueue = d }) }
 
+	if (cmd == 'pruneseen') { pruneLocalQueue() }
 	if (cmd == 'preload') { worldAutoPreloadQueue(args[0].split(',')) }
-	if (cmd == 'addworlds') { addSearchToLocalQueue(raw.slice(10)) }
+	if (cmd == 'addworlds') { addSearchToLocalQueue(raw.slice(10)).then(() => { console.log('✅') }) }
 	if (cmd == 'explore' && args[0] == 'prefill') { addLabWorldsToLocalQueue() }
 	if (cmd == 'explore' && args[0] == 'autonext') { G_autoNextWorldHop = JSON.parse(args[1]) }
 
@@ -262,22 +264,25 @@ async function main() {
 	console.log(`${loglv.info}${selflogA} User has VRC+ ${vrcUserHasVRCplus}`)
 }
 
-async function manualCall(vrcapiEndpoint, methodType = 'GET', bodyJson) {
+async function manualCall(vrcapiEndpoint, methodType = 'GET', bodyJson = undefined) {
 	return new Promise(async (resolve, reject) => {
 		const vrcapihttp = `https://api.vrchat.cloud/api/1/`
 
-		var apiRequest = {
+		let uriJson;
+		let apiRequest = {
 			method: methodType,
 			headers: { 'User-Agent': `${process.env['VRC_USER_AGENT']} (${process.env['CONTACT_EMAIL']})`, 'Cookie': 'auth=' + authToken },
 		}
 		if (bodyJson != undefined) {
-			apiRequest['body'] = JSON.stringify(bodyJson)
-			apiRequest['headers']['Content-Type'] = 'application/json'
+			if (methodType == 'GET') { uriJson = bodyJson } else {
+				apiRequest['body'] = JSON.stringify(bodyJson)
+				apiRequest['headers']['Content-Type'] = 'application/json'
+			}
 		}
 
-		var request = await fetch(vrcapihttp + '' + vrcapiEndpoint, apiRequest)
+		let request = await fetch(vrcapihttp + '' + vrcapiEndpoint + `${uriJson != undefined ? '?' + encodeURIComponent(uriJson).replaceAll('%3D', '=') : ''}`, apiRequest)
 		// console.log(request)
-		var jsonResponse = await request.json()
+		let jsonResponse = await request.json()
 		if (jsonResponse.error) {
 			reject(jsonResponse.error)
 		} else {
@@ -1101,19 +1106,20 @@ function queueInstanceDataBurst() {
 }
 
 oscEmitter.on('osc', (addr, value) => {
-	if (addr == `/avatar/parameters/api/explore/start` && value == true) { inviteHubQueue() }
-	if (addr == `/avatar/parameters/api/explore/next` && value == true) { inviteLocalQueue() }
-	// if (address == `/avatar/parameters/api/explore/hub` && value == true) { }
-	if (addr == `/avatar/parameters/api/explore/stop` && value == true) {
+	if (addr == vrcap + `api/explore/start` && value == true) { inviteHubQueue() }
+	if (addr == vrcap + `api/explore/next` && value == true) { inviteLocalQueue(false, G_exploreInviteMode) }
+	if (addr == vrcap + `api/explore/stop` && value == true) {
 		apiEmitter.emit('exploreQueue', undefined, 'world')
 	}
-	if (addr == `/avatar/parameters/api/explore/prefill` && value == true) { addLabWorldsToLocalQueue() }
-	if (addr == `/avatar/parameters/api/explore/privacy` && value == 0) { explorePrivacyLevel = 0 }
-	if (addr == `/avatar/parameters/api/explore/privacy` && value == 1) { explorePrivacyLevel = 1 }
-	if (addr == `/avatar/parameters/api/explore/privacy` && value == 2) { explorePrivacyLevel = 2 }
-	if (addr == `/avatar/parameters/api/explore/privacy` && value == 3) { explorePrivacyLevel = 3 }
-	if (addr == `/avatar/parameters/api/requestall` && value == true) { requestAllOnlineFriends(currentUser) }
-	if (addr == '/avatar/parameters/api/favWorld' && value != 0) {
+	if (addr == vrcap + `api/explore/prefill` && value == true) { addLabWorldsToLocalQueue() }
+	if (addr == vrcap + `api/explore/privacy` && value == 0) { explorePrivacyLevel = 0 }
+	if (addr == vrcap + `api/explore/privacy` && value == 1) { explorePrivacyLevel = 1 }
+	if (addr == vrcap + `api/explore/privacy` && value == 2) { explorePrivacyLevel = 2 }
+	if (addr == vrcap + `api/explore/privacy` && value == 3) { explorePrivacyLevel = 3 }
+	if (addr == vrcap + `api/explore/inviteMode`) { G_exploreInviteMode = value }
+	if (addr == vrcap + `api/explore/autoClose`) { G_exploreAutoClose = value }
+	if (addr == vrcap + `api/requestall` && value == true) { requestAllOnlineFriends(currentUser) }
+	if (addr == vrcap + 'api/favWorld' && value != 0) {
 		switch (value) {
 			case 1:
 				findJoinableInstances().then(d => {
@@ -1133,11 +1139,14 @@ oscEmitter.on('avatar', (avtrID) => {
 	if (['avtr_305ddd5d-d1f9-4adb-a025-50c2f1a9d219',
 		`avtr_5c866609-f49a-4867-ac74-5dab03d5d713`,
 		`avtr_75c670ca-4614-4db2-a687-e27994acb0ac`,
-		'avtr_6b25124e-e141-4df4-ad27-22766608e5dc',
+		'avtr_6b25124e-e141-4df4-ad27-22766608e5dc'
 	].includes(avtrID)) {
 		queueInstanceDataBurst()
-		oscSend('/avatar/parameters/log/instance_closed', G_InstanceClosed)
-		oscSend('/avatar/parameters/log/instance_10min', G_Instance10min)
+		oscSend(vrcap + 'log/instance_closed', G_InstanceClosed)
+		oscSend(vrcap + 'log/instance_10min', G_Instance10min)
+		// oscSend(vrcap + 'api/explore/privacy', parseInt(explorePrivacyLevel))
+		// oscSend(vrcap + 'api/explore/inviteMode', G_exploreInviteMode == true)
+		// oscSend(vrcap + 'api/explore/autoClose', G_exploreAutoClose == true)
 		applyGroupLogo(InstanceHistory[0]?.groupID)
 	}
 });
@@ -1153,20 +1162,30 @@ async function addLabWorldsToLocalQueue() {
 		// console.log(lastInQueue)
 
 		let worldlist = ''
+		var worldlist_addcount = 0
 		let skipAdd = false
 		worldData.forEach((w, index, arr) => {
-			console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
-			// console.log(`${loglv.info}${selflog} (${index + 1}/${arr.length}) ${w.id}`)
-			lastInQueue == w.id ? skipAdd = true : ''
-			index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
+			if (!worldsSeenDB.has(w.id)) {
+				console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
+				worldlist_addcount++
+				lastInQueue == w.id ? skipAdd = true : ''
+				index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
+			} else {
+				console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Skipped ${w.name}`)
+			}
 		})
 		newAndNote.forEach((w, index, arr) => {
-			console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
-			// console.log(`${loglv.info}${selflog} (${index + 1}/${arr.length}) ${w.id}`)
-			lastInQueue == w.id ? skipAdd = true : ''
-			index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
+			if (!worldsSeenDB.has(w.id)) {
+				console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
+				worldlist_addcount++
+				lastInQueue == w.id ? skipAdd = true : ''
+				index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
+			} else {
+				console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Skipped ${w.name}`)
+			}
 		})
 
+		console.log(`${loglv.info}${selflogA} Added ${worldlist_addcount}`)
 		if (worldlist.includes(lastInQueue) || skipAdd == true) {
 			console.log(`${loglv.hey}${selflogA} Cancelled list appendage, Queue already contains part of latest batch`)
 			oscChatBoxV2(`Cancelled queue append:\v Queue already contains latest labs batch`, 5000, true, true, false, false, false)
@@ -1176,32 +1195,158 @@ async function addLabWorldsToLocalQueue() {
 		}
 	})
 }
-async function addSearchToLocalQueue(i_searchString) {
-	console.log(`${loglv.info}${selflogA} Adding searched worlds to queue`)
-	let { data: worldData } = await limiter.req(vrchat.searchWorlds({ query: { n: 100, search: i_searchString, sort: 'labsPublicationDate', order: 'descending', offset: 0, tag: 'system_labs' } }))
-	let { data: worldData2 } = await limiter.req(vrchat.searchWorlds({ query: { n: 100, search: i_searchString, order: 'descending', offset: 0, notag: 'system_labs' } }))
-	fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
-		let localQueueList = data.split(`\r\n`)
-		let lastInQueue = localQueueList[localQueueList.length - 2]
-		// console.log(lastInQueue)
 
-		let worldlist = ''
-		let skipAdd = false
-		worldData.forEach((w, index, arr) => {
-			console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
-			// console.log(`${loglv.info}${selflog} (${index + 1}/${arr.length}) ${w.id}`)
-			lastInQueue == w.id ? skipAdd = true : ''
-			index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
-		})
-		worldData2.forEach((w, index, arr) => {
-			console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
-			// console.log(`${loglv.info}${selflog} (${index + 1}/${arr.length}) ${w.id}`)
-			lastInQueue == w.id ? skipAdd = true : ''
-			index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
-		})
-		fs.appendFile(worldQueueTxt, `\r\n` + worldlist, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
+async function addFavWorlds(I_friendID) {
+	return new Promise(async (resolve, reject) => {
+		console.log(`${loglv.debug}${selflogA} Fetching ${I_friendID}'s fav worlds`)
+		var userFavList_adding = []
+		var gotUserFavList1 = await manualCall('favorites/groups/world/worlds1', 'GET', 'ownerId=' + I_friendID).catch((err) => { return { 'favorites': [] } })
+		if (gotUserFavList1.favorites.length > 0) {
+			for (const w in gotUserFavList1.favorites) {
+				if (!userFavList_adding.includes(gotUserFavList1.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavList1.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavList1.favorites.length}) Added ${gotUserFavList1.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavList1.favorites[w].world.id)
+				} else {
+					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList1.favorites.length}) Skipped ${gotUserFavList1.favorites[w].world.name} to queue`)
+				}
+			}
+		}
+		var gotUserFavList2 = await manualCall('favorites/groups/world/worlds2', 'GET', 'ownerId=' + I_friendID).catch((err) => { return { 'favorites': [] } })
+		if (gotUserFavList2.favorites.length > 0) {
+			for (const w in gotUserFavList2.favorites) {
+				if (!userFavList_adding.includes(gotUserFavList2.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavList2.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavList2.favorites.length}) Added ${gotUserFavList2.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavList2.favorites[w].world.id)
+				} else {
+					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList2.favorites.length}) Skipped ${gotUserFavList2.favorites[w].world.name} to queue`)
+				}
+			}
+		}
+		var gotUserFavList3 = await manualCall('favorites/groups/world/worlds3', 'GET', 'ownerId=' + I_friendID).catch((err) => { return { 'favorites': [] } })
+		if (gotUserFavList3.favorites.length > 0) {
+			for (const w in gotUserFavList3.favorites) {
+				if (!userFavList_adding.includes(gotUserFavList3.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavList3.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavList3.favorites.length}) Added ${gotUserFavList3.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavList3.favorites[w].world.id)
+				} else {
+					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList3.favorites.length}) Skipped ${gotUserFavList3.favorites[w].world.name} to queue`)
+				}
+			}
+		}
+		var gotUserFavList4 = await manualCall('favorites/groups/world/worlds4', 'GET', 'ownerId=' + I_friendID).catch((err) => { return { 'favorites': [] } })
+		if (gotUserFavList4.favorites.length > 0) {
+			for (const w in gotUserFavList4.favorites) {
+				if (!userFavList_adding.includes(gotUserFavList4.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavList4.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavList4.favorites.length}) Added ${gotUserFavList4.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavList4.favorites[w].world.id)
+				} else {
+					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList4.favorites.length}) Skipped ${gotUserFavList4.favorites[w].world.name} to queue`)
+				}
+			}
+		}
+
+		if (userFavList_adding.length > 0) {
+			fs.appendFile(worldQueueTxt, `\r\n` + userFavList_adding.toString().replace(/,/g, '\r\n'), { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) }; resolve(true) })
+		}
+		console.log(`${loglv.info}${selflogA} Added ${userFavList_adding.length}`)
+		resolve(true)
 	})
 }
+async function addSearchToLocalQueue(i_searchString) {
+	return new Promise(async (resolve, reject) => {
+		var query1Body = { 'n': 100, 'order': 'descending', 'tag': 'system_labs', 'sort': 'labsPublicationDate' }
+		var query2Body = { 'n': 100, 'order': 'descending', 'notag': 'system_labs' }
+
+		if (i_searchString.match(/usr_[0-z]{8}(?:-[0-z]{4}){3}-[0-z]{12}/) != null) {
+			console.log(`${loglv.info}${selflogA} Adding User ${i_searchString}'s Favorite Worlds to queue`)
+			await addFavWorlds(i_searchString)
+			console.log(`${loglv.info}${selflogA} Adding User ${i_searchString}'s Uploaded Worlds to queue`)
+			query1Body['userId'] = i_searchString
+			query2Body['userId'] = i_searchString
+		} else if (i_searchString.match(/usr_[0-z]{10}/) != null) {
+			console.log(`${loglv.info}${selflogA} Adding Legacy User ${i_searchString.slice(4)}'s Favorite Worlds to queue`)
+			await addFavWorlds(i_searchString.slice(4))
+			console.log(`${loglv.info}${selflogA} Adding Legacy User ${i_searchString.slice(4)}'s Uploaded Worlds to queue`)
+			query1Body['userId'] = i_searchString.slice(4)
+			query2Body['userId'] = i_searchString.slice(4)
+		} else {
+			console.log(`${loglv.info}${selflogA} Adding Searched worlds to queue`)
+			query1Body['search'] = i_searchString
+			query2Body['search'] = i_searchString
+		}
+
+		let worldData = await limiter.req(vrchat.searchWorlds({ query: query1Body }))
+		let worldData2 = await limiter.req(vrchat.searchWorlds({ query: query2Body }))
+		fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
+			let localQueueList = data.split(`\r\n`)
+			let lastInQueue = localQueueList[localQueueList.length - 2]
+			// console.log(lastInQueue)
+
+			let worldlist = ''
+			var worldlist_addcount = 0
+			let skipAdd = false
+			if (worldData.data != undefined) {
+				worldData.data.forEach((w, index, arr) => {
+					if (!worldsSeenDB.has(w.id)) {
+						console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
+						worldlist_addcount++
+						lastInQueue == w.id ? skipAdd = true : ''
+						index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
+					} else {
+						console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Skipped ${w.name}`)
+					}
+				})
+			}
+			if (worldData2.data != undefined) {
+				worldData2.data.forEach((w, index, arr) => {
+					if (!worldsSeenDB.has(w.id)) {
+						console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
+						worldlist_addcount++
+						lastInQueue == w.id ? skipAdd = true : ''
+						index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
+					} else {
+						console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Skipped ${w.name}`)
+					}
+				})
+			}
+			console.log(`${loglv.info}${selflogA} Added ${worldlist_addcount}`)
+			if (worldlist_addcount > 0) {
+				fs.appendFile(worldQueueTxt, `\r\n` + worldlist, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) }; resolve(true) })
+			} else {
+				resolve(false)
+			}
+		})
+	})
+}
+
+async function pruneLocalQueue() {
+	return new Promise(async (resolve, reject) => {
+		var fileHandler;
+		var localQueueList = []
+		try {
+			fileHandler = await fsp.open(worldQueueTxt)
+			var fileRead = await fileHandler.readFile('utf8')
+			localQueueList = fileRead.split('\r\n')
+		} catch (error) {
+			console.log(`${loglv.warn}${selflogL}`, error)
+		} finally { if (fileHandler) { await fileHandler.close() } }
+
+		var rebuild = ''
+		for (const w in localQueueList) {
+			rebuild += !worldsSeenDB.has(localQueueList[w]) ? `${rebuild == '' ? '' : '\r\n'}${localQueueList[w]}` : ''
+		}
+
+		fs.writeFile(worldQueueTxt, rebuild, (err) => {
+			if (err) { console.log(err) }
+			resolve(true)
+		})
+	})
+}
+
 function inviteHubQueue(returnHubID = false) {
 	const exploreHubWorld = 'wrld_bd33cefd-84e0-40d9-9904-cf42b3a8e103'
 	if (returnHubID) { return exploreHubWorld }
@@ -1223,11 +1368,11 @@ function inviteHubQueue(returnHubID = false) {
 		.catch(err => { console.log(`${loglv.warn}${selflogA}` + err) })
 }
 
-function inviteLocalQueue(I_autoNext = false) {
+function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 	fs.readFile(worldQueueTxt, 'utf8', async (err, data) => {
 		// err ? console.log(err); return : ''
 		let localQueueList = data.split('\r\n===')[0].split(`\r\n`)
-		if (localQueueList.length == 0) {
+		if (localQueueList == ['']) {
 			console.log(`${loglv.hey}${selflogA} Explore queue is empty${data.includes('===') ? `: Remove bookmark` : ``}`);
 			oscChatBoxV2(`~Explore Queue is empty${data.includes('===') ? `\vRemove bookmark.` : ``}`, 5000, true, true, false, false, false);
 			return
@@ -1249,13 +1394,14 @@ function inviteLocalQueue(I_autoNext = false) {
 		let world_id = localQueueList[randnum]
 
 		if (worldsSeenDB.has(world_id)) {
-			console.log(`${loglv.hey}${selflogL} World has already been visited before, Try again..`);
-			oscChatBoxV2(`~World has been visited before.\vRemoved from Queue.\vTry another.`, 5000, true, true, false, false, false)
+			console.log(`${loglv.hey}${selflogL} World has already been visited before, Retrying..`);
+			// oscChatBoxV2(`~World has been visited before.\vRemoved from Queue.\vTry another.`, 5000, true, true, false, false, false)
 			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
 				if (data.includes(world_id)) {
 					fs.writeFile(worldQueueTxt, data.replaceAll(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
 				}
 			})
+			setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
 			return
 		}
 
@@ -1268,13 +1414,14 @@ function inviteLocalQueue(I_autoNext = false) {
 			return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': world_id } }), 'world')
 		})
 		if (gotWorld.data == undefined) {
-			console.log(`${loglv.hey}${selflogA} World failed to fetch. Try again..`);
-			oscChatBoxV2(`World fetch failed.\vRemoved from Queue.\vTry another.`, 5000, true, true, false, false, false)
+			console.log(`${loglv.hey}${selflogA} World failed to fetch. Retrying..`);
+			// oscChatBoxV2(`World fetch failed.\vRemoved from Queue.\vTry another.`, 5000, true, true, false, false, false)
 			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
 				if (data.includes(world_id)) {
 					fs.writeFile(worldQueueTxt, data.replaceAll(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
 				}
 			})
+			setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
 			return
 		}
 		isWorldUnlisted(world_id, '14anthony7095')
@@ -1286,25 +1433,30 @@ function inviteLocalQueue(I_autoNext = false) {
 
 		if (InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 			if (gotWorld.data.capacity < Math.min(playersInInstance.length + playersInQueue, 80)) {
-				console.log(`${loglv.hey}${selflogA} World can not fit everyone. Retry..`);
-				oscChatBoxV2(`~World can not fit everyone.\vTry another.\v${playersInInstance.length + playersInQueue} > ${gotWorld.data.capacity}`, 5000, true, true, false, false, false)
+				console.log(`${loglv.hey}${selflogA} World can not fit everyone. Retrying..`);
+				oscChatBoxV2(`~World can not fit everyone.\vRetrying.\v${playersInInstance.length + playersInQueue} > ${gotWorld.data.capacity}`, 5000, true, true, false, false, false)
+				setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
 				return
 			} else if (filter_UserAndroid != undefined && filter_worldAndroid == undefined) {
-				console.log(`${loglv.hey}${selflogA} World is not Quest compatible. Retry..`);
+				oscSend(vrcap + `api/explore/next`, false)
+				console.log(`${loglv.hey}${selflogA} World is not Quest compatible. Try another..`);
 				oscChatBoxV2(`~World is not Quest compatible.\vTry another.\v${filter_UserAndroid.name} wouldn't beable to join.`, 5000, true, true, false, false, false)
+				// setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
 				return
 			} else if (filter_UserIOS != undefined && filter_worldIOS == undefined) {
-				console.log(`${loglv.hey}${selflogA} World is not iOS compatible. Retry..`);
+				oscSend(vrcap + `api/explore/next`, false)
+				console.log(`${loglv.hey}${selflogA} World is not iOS compatible. Try another..`);
 				oscChatBoxV2(`~World is not iOS compatible.\vTry another.\v${filter_UserIOS.name} wouldn't beable to join.`, 5000, true, true, false, false, false)
+				// setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
 				return
 			}
 		}
 
 		var instanceBody = {
 			'worldId': world_id,
-			'region': 'use',
-			'closedAt': new Date(new Date().getTime() + 600_000).toISOString()
+			'region': 'use'
 		}
+		if (G_exploreAutoClose == true) { instanceBody['closedAt'] = new Date(new Date().getTime() + 3600_000).toISOString() }
 		if (vrcUserHasVRCplus == true) { instanceBody['displayName'] = 'World Hop' }
 		switch (explorePrivacyLevel) {
 			case 0:
@@ -1334,10 +1486,24 @@ function inviteLocalQueue(I_autoNext = false) {
 
 		console.log(`${loglv.hey}${selflogA} Creating group instance for ${world_id}`)
 		var created_instance = await vrchat.createInstance({ 'body': instanceBody })
+		oscSend(vrcap + `api/explore/next`, false)
 		if (created_instance.data != undefined) {
 			startvrc(created_instance.data.location, I_autoNext)
+
+			if (I_InviteEveryoneToNext == true || G_exploreInviteMode == true) {
+				for (const ply in playersInstanceObject) {
+					if (playersInstanceObject[ply].isFriend == true) {
+						limiter.req(vrchat.inviteUser(
+							{
+								'body': { 'instanceId': created_instance.data.location, 'messageSlot': 1 },
+								'path': { 'userId': playersInstanceObject[ply].id }
+							}))
+					}
+				}
+			}
+
 			apiEmitter.emit('exploreQueue', localQueueList.length, 'world')
-			console.log(`${loglv.info}${selflogA} Auto-Close set for ${created_instance.data.closedAt}.`)
+			if (G_exploreAutoClose == true) { console.log(`${loglv.info}${selflogA} Auto-Close set for ${created_instance.data.closedAt}.`) }
 		} else {
 			oscChatBoxV2(`instance create failed.\v[${created_instance.error.response.status}] ${created_instance.error.response.statusText}\v${created_instance.error.message}`, 5000, true, true)
 			console.log(`${loglv.warn}${selflogA} `, created_instance.error.cause)
@@ -1345,7 +1511,7 @@ function inviteLocalQueue(I_autoNext = false) {
 				if (data.includes(world_id)) {
 					fs.writeFile(worldQueueTxt, data.replaceAll(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
 				}
-				if (I_autoNext == true) { setTimeout(() => { inviteLocalQueue(true) }, 5000) }
+				if (I_autoNext == true) { setTimeout(() => { inviteLocalQueue(true, G_exploreInviteMode) }, 5000) }
 			})
 		}
 	})
@@ -1749,6 +1915,7 @@ function eventGameClose() {
 	clearTimeout(worldHopTimeout)
 	clearTimeout(worldHopTimeoutHour)
 	clearTimeout(userTrustTableTimer)
+	clearInterval(playerRetention['timer'])
 
 	apiEmitter.emit('exploreQueue', undefined, 'world')
 
@@ -1775,6 +1942,7 @@ function eventGameClose() {
 	playersInInstance = []
 	membersInInstance = []
 	playersInstanceObject = []
+	playerRetention = { 'last': 80, 'added': 0, 'timer': null, 'rate': 0, 'seenNames': [] }
 
 	process.title = `14anthony7095 OSC Multi-Interface`
 
@@ -2316,6 +2484,8 @@ async function eventHeadingToWorld(logOutputLine) {
 	worldHopTimeout = null
 	clearTimeout(worldHopTimeoutHour)
 	worldHopTimeoutHour = null
+	clearInterval(playerRetention['timer'])
+	playerRetention = { 'last': 80, 'added': 0, 'timer': null, 'rate': 0, 'seenNames': [] }
 
 	var worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
 	var groupID = ''
@@ -2389,7 +2559,7 @@ async function eventHeadingToWorld(logOutputLine) {
 		return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': worldID } }), 'world')
 	})
 	isWorldUnlisted(worldID, '14anthony7095')
-	apiEmitter.emit('fetchedDistThumbnail', gotWorld.data.imageUrl, gotWorld.data.name.slice(0, 50), gotWorld.data.authorName.slice(0, 50), worldID)
+	apiEmitter.emit('fetchedDistThumbnail', gotWorld.data?.imageUrl || '', gotWorld.data?.name.slice(0, 50) || 'UnknownName', gotWorld.data?.authorName.slice(0, 50) || 'UnknownAuthor', worldID)
 
 
 	// El Alba starting world
@@ -2429,7 +2599,13 @@ async function eventHeadingToWorld(logOutputLine) {
 
 }
 
-
+var playerRetention = {
+	'last': 80,
+	'added': 1,
+	'timer': null,
+	'rate': 0,
+	'seenNames': []
+}
 function eventJoiningWorld() {
 	worldHopTimeout = setTimeout(() => {
 		say.speak(`Been in world for too long. Proceed to next in queue`, 'Microsoft David Desktop', 1.0, (err) => {
@@ -2442,6 +2618,24 @@ function eventJoiningWorld() {
 			if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) }
 		})
 	}, 3600_000)
+	playerRetention['timer'] = setInterval(() => {
+
+		// console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate]: `, playersInInstance.length, playerRetention['added'], (playersInInstance.length - playerRetention['added']), playerRetention['last'], (playersInInstance.length - playerRetention['added']) / playerRetention['last'])
+		playerRetention['rate'] = (playersInInstance.length - playerRetention['added']) / playerRetention['last']
+		playerRetention['added'] = 0
+		playerRetention['last'] = playersInInstance.length
+
+		console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate]: ${Math.floor(playerRetention['rate'] * 100)}%`)
+
+		if ([`groupPlus`, `groupPublic`].includes(InstanceHistory[0].instanceType)) {
+			membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
+			memberRatio = membersInInstance.length / playersInInstance.length
+			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'] != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'] * 100) + '% ]' : ''}`
+		} else {
+			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'] != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'] * 100) + '% ]' : ''}`
+		}
+
+	}, 600_000);
 
 	if (cooldownUrl == true) { cooldownUrl = false }
 
@@ -2474,10 +2668,10 @@ async function eventPlayerInitialized(logOutputLine) {
 		if ([`groupPlus`, `groupPublic`].includes(InstanceHistory[0].instanceType)) {
 			memberRatio = membersInInstance.length / playersInInstance.length
 			console.log(`${loglv.info}${selflogL} There are now ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`)
-			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`
+			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'] != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'] * 100) + '% ]' : ''}`
 		} else {
 			console.log(`${loglv.info}${selflogL} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`)
-			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`
+			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'] != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'] * 100) + '% ]' : ''}`
 		}
 
 		if (Date.now() > (InstanceHistory[0].join_timestamp + 30000)) { queueInstanceDataBurst() }
@@ -2533,6 +2727,11 @@ async function eventPlayerJoin(logOutputLine) {
 		// Append UserID to tracked player
 		let pioIndex = playersInstanceObject.findIndex(playersInstanceObject => playersInstanceObject.name == playerDisplayName)
 
+		// Don't start tracking New players until after First-Load stablization
+		if (Date.now() > InstanceHistory[0].join_timestamp + 10_000 && !playerRetention['seenNames'].includes(playerDisplayName)) {
+			playerRetention['added']++
+			playerRetention['seenNames'].push(playerDisplayName)
+		}
 
 		// When I join instance
 		if (playerDisplayName == currentAccountInUse.name) {
@@ -2570,6 +2769,11 @@ async function eventPlayerJoin(logOutputLine) {
 				InstanceHistory = InstanceHistory.filter((ih, index) => ih.leave_timestamp + 3600_000 > Date.now() || index <= 1)
 			}
 
+			// Wait for First-Load stablization then set Player-Retention start
+			setTimeout(() => {
+				playerRetention['last'] = playersInInstance.length
+			}, 10_000);
+
 		}
 
 		// Group Member tagging
@@ -2578,7 +2782,6 @@ async function eventPlayerJoin(logOutputLine) {
 
 			try {
 				playersInstanceObject[pioIndex].isGroupMember = I_memberStatus
-
 			} catch (error) {
 				console.log(`${loglv.hey}${selflogL} playerTracker Object got Member before PlayerName - ${error}`)
 				playersInstanceObject.push({ 'name': playerDisplayName, 'id': playerID, 'isGroupMember': I_memberStatus })
@@ -2597,7 +2800,7 @@ async function eventPlayerJoin(logOutputLine) {
 			memberRatio = membersInInstance.length / playersInInstance.length
 			playerRatio = playersInInstance.length / playerHardLimit
 			console.log(`${loglv.info}${selflogA} There are now ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`)
-			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`
+			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'] != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'] * 100) + '% ]' : ''}`
 		}
 
 
@@ -2674,11 +2877,12 @@ async function eventPlayerJoin(logOutputLine) {
 			try {
 				playersInstanceObject[pioIndex].platform = userCachePlatform || 'standalonewindows'
 				playersInstanceObject[pioIndex].status = userCacheStatus
+				playersInstanceObject[pioIndex].isFriend = gotUser.data.isFriend
 				playersInstanceObject[pioIndex].trust = userCacheTrust[1]
 			} catch (err) {
 				console.log(`${loglv.hey}${selflogL} playerTrackerObject - ${err}`)
 				playersInstanceObject.push({
-					'name': playerDisplayName, 'id': playerID, 'platform': userCachePlatform || 'standalonewindows', 'status': userCacheStatus, 'trust': userCacheTrust[1]
+					'name': playerDisplayName, 'id': playerID, 'isFriend': gotUser.data.isFriend, 'platform': userCachePlatform || 'standalonewindows', 'status': userCacheStatus, 'trust': userCacheTrust[1]
 				})
 			}
 
@@ -2718,10 +2922,10 @@ function eventPlayerLeft(logOutputLine) {
 			membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
 			memberRatio = membersInInstance.length / playersInInstance.length
 			console.log(`${loglv.info}${selflogL} There are now ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`)
-			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`
+			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'] != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'] * 100) + '% ]' : ''}`
 		} else {
 			console.log(`${loglv.info}${selflogL} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`)
-			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`
+			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'] != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'] * 100) + '% ]' : ''}`
 		}
 		// logEmitter.emit('playerLeft', playerDisplayName, playerID, playersInInstance)
 
@@ -2780,6 +2984,8 @@ function eventPlayerLeft(logOutputLine) {
 }
 
 function eventInstanceClosed() {
+	G_InstanceClosed = true
+
 	if (InstanceHistory[0].worldID != 'wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5' && InstanceHistory[0].groupID != 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 
 		vrcUserStatusText = 'Instance is closed'
@@ -2790,11 +2996,9 @@ function eventInstanceClosed() {
 			vrcUserStatusText = `Exploring World Queue`
 			setUserStatus(`Exploring World Queue`)
 		}
-		inviteLocalQueue(G_autoNextWorldHop)
+		inviteLocalQueue(G_autoNextWorldHop, G_exploreInviteMode)
 
 	}
-
-	G_InstanceClosed = true
 	oscSend('/avatar/parameters/log/instance_closed', true)
 
 }
