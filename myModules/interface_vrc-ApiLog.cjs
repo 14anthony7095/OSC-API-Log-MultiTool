@@ -703,7 +703,7 @@ exports.getVrchatRunning = getVrchatRunning;
 
 function average(array) {
 	if (array.length == 0) { return 0 }
-	return Math.floor(array.reduce((a, b) => a + b) / array.length)
+	return array.reduce((a, b) => a + b) / array.length
 }
 
 
@@ -735,9 +735,11 @@ const tonbrConsts = {
 		{ context: 'Perk', regex: /Player playing as (\d+)/, regexIndex: 1 },
 		{ context: 'Perk', regex: /Applied Perk - (\d+)/, regexIndex: 1 },
 		{ context: 'Location', regex: /Entering (.+)/, regexIndex: 1 },
-		{ context: 'Death', regex: /You died at Wave/, regexIndex: 0 },
+		{ context: 'UserDeath', regex: /You died at Wave/, regexIndex: 0 },
+		{ context: 'PlayerDeath', regex: /\[DEATH\]\[(.+)\] \1 .+\./, regexIndex: 1 },
 		{ context: 'FoundItem', regex: /Found \d+ \((.+)\)!/, regexIndex: 1 },
-		{ context: 'DeleteItem', regex: /Item destroyed\./, regexIndex: 0 }],
+		{ context: 'DeleteItem', regex: /Item destroyed\./, regexIndex: 0 }
+	],
 	ToNPerks: [
 		{ label: 'None', hexColorR: 118, hexColorG: 131, hexColorB: 151 },
 		{ label: 'Sinner', hexColorR: 198, hexColorG: 96, hexColorB: 100 },
@@ -876,11 +878,15 @@ function processLogLine(line) {
 						console.log(`${loglv.info}${selflogL} [ToNBR] Item-Removed`);
 						break;
 
-					case 'Death':
+					case 'UserDeath':
 						tonbrRoundData['alive'] = false;
 						oscSend('/avatar/parameters/osc/doAutoJump', false);
 
-						console.log(`${loglv.info}${selflogL} [ToNBR] Player-Death`);
+						console.log(`${loglv.info}${selflogL} [ToNBR] User-Death`);
+						break;
+
+					case 'PlayerDeath':
+						console.log(`${loglv.info}${selflogL} [ToNBR] Player-Death: ${match[1]}`);
 						break;
 
 					case 'Location':
@@ -925,8 +931,8 @@ function processLogLine(line) {
 		}
 		if (lineC == `Verified Round End`) {
 			tonRoundReadyTime = Date.now()
-			let avgStartDisplay = new Date(average(tonAvgStartWait)).toISOString()
-			let avgRoundsPerHour = Math.floor(3600000 / (192000 + average(tonAvgStartWait)))
+			let avgStartDisplay = new Date(Math.floor(average(tonAvgStartWait))).toISOString()
+			let avgRoundsPerHour = Math.floor(3600000 / (192000 + Math.floor(average(tonAvgStartWait))))
 			console.log(`${loglv.info}${selflogL} [TON] Intermission.. Ready to start next round. ${tonAvgStartWait.length > 1 ? `Avg. wait time: ${avgStartDisplay.substring(11, 19)} | Rounds Per Hour: ${avgRoundsPerHour}` : ''}`)
 
 			if (currentAccountInUse['Agroup'] == true) {
@@ -1200,6 +1206,7 @@ async function addFavWorlds(I_friendID) {
 	return new Promise(async (resolve, reject) => {
 		console.log(`${loglv.debug}${selflogA} Fetching ${I_friendID}'s fav worlds`)
 		var userFavList_adding = []
+		console.log(`${loglv.debug}${selflogA} Switching to worlds1`)
 		var gotUserFavList1 = await manualCall('favorites/groups/world/worlds1', 'GET', 'ownerId=' + I_friendID).catch((err) => { return { 'favorites': [] } })
 		if (gotUserFavList1.favorites.length > 0) {
 			for (const w in gotUserFavList1.favorites) {
@@ -1212,6 +1219,7 @@ async function addFavWorlds(I_friendID) {
 				}
 			}
 		}
+		console.log(`${loglv.debug}${selflogA} Switching to worlds2`)
 		var gotUserFavList2 = await manualCall('favorites/groups/world/worlds2', 'GET', 'ownerId=' + I_friendID).catch((err) => { return { 'favorites': [] } })
 		if (gotUserFavList2.favorites.length > 0) {
 			for (const w in gotUserFavList2.favorites) {
@@ -1224,6 +1232,7 @@ async function addFavWorlds(I_friendID) {
 				}
 			}
 		}
+		console.log(`${loglv.debug}${selflogA} Switching to worlds3`)
 		var gotUserFavList3 = await manualCall('favorites/groups/world/worlds3', 'GET', 'ownerId=' + I_friendID).catch((err) => { return { 'favorites': [] } })
 		if (gotUserFavList3.favorites.length > 0) {
 			for (const w in gotUserFavList3.favorites) {
@@ -1236,6 +1245,7 @@ async function addFavWorlds(I_friendID) {
 				}
 			}
 		}
+		console.log(`${loglv.debug}${selflogA} Switching to worlds4`)
 		var gotUserFavList4 = await manualCall('favorites/groups/world/worlds4', 'GET', 'ownerId=' + I_friendID).catch((err) => { return { 'favorites': [] } })
 		if (gotUserFavList4.favorites.length > 0) {
 			for (const w in gotUserFavList4.favorites) {
@@ -1248,6 +1258,60 @@ async function addFavWorlds(I_friendID) {
 				}
 			}
 		}
+
+		console.log(`${loglv.debug}${selflogA} Switching to vrcPlusWorlds1`)
+		var gotUserFavVRC1 = await manualCall('favorites/groups/vrcPlusWorld/vrcPlusWorlds1', 'GET', 'ownerId=' + I_friendID).catch((err) => { return { 'favorites': [] } })
+		if (gotUserFavVRC1.favorites.length > 0) {
+			for (const w in gotUserFavVRC1.favorites) {
+				if (!userFavList_adding.includes(gotUserFavVRC1.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavVRC1.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavVRC1.favorites.length}) Added ${gotUserFavVRC1.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavVRC1.favorites[w].world.id)
+				} else {
+					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList4.favorites.length}) Skipped ${gotUserFavList4.favorites[w].world.name} to queue`)
+				}
+			}
+		}
+		console.log(`${loglv.debug}${selflogA} Switching to vrcPlusWorlds2`)
+		var gotUserFavVRC2 = await manualCall('favorites/groups/vrcPlusWorld/vrcPlusWorlds2', 'GET', 'ownerId=' + I_friendID).catch((err) => { return { 'favorites': [] } })
+		if (gotUserFavVRC2.favorites.length > 0) {
+			for (const w in gotUserFavVRC2.favorites) {
+				if (!userFavList_adding.includes(gotUserFavVRC2.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavVRC2.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavVRC2.favorites.length}) Added ${gotUserFavVRC2.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavVRC2.favorites[w].world.id)
+				} else {
+					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList4.favorites.length}) Skipped ${gotUserFavList4.favorites[w].world.name} to queue`)
+				}
+			}
+		}
+		console.log(`${loglv.debug}${selflogA} Switching to vrcPlusWorlds3`)
+		var gotUserFavVRC3 = await manualCall('favorites/groups/vrcPlusWorld/vrcPlusWorlds3', 'GET', 'ownerId=' + I_friendID).catch((err) => { return { 'favorites': [] } })
+		if (gotUserFavVRC3.favorites.length > 0) {
+			for (const w in gotUserFavVRC3.favorites) {
+				if (!userFavList_adding.includes(gotUserFavVRC3.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavVRC3.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavVRC3.favorites.length}) Added ${gotUserFavVRC3.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavVRC3.favorites[w].world.id)
+				} else {
+					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList4.favorites.length}) Skipped ${gotUserFavList4.favorites[w].world.name} to queue`)
+				}
+			}
+		}
+		console.log(`${loglv.debug}${selflogA} Switching to vrcPlusWorlds4`)
+		var gotUserFavVRC4 = await manualCall('favorites/groups/vrcPlusWorld/vrcPlusWorlds4', 'GET', 'ownerId=' + I_friendID).catch((err) => { return { 'favorites': [] } })
+		if (gotUserFavVRC4.favorites.length > 0) {
+			for (const w in gotUserFavVRC4.favorites) {
+				if (!userFavList_adding.includes(gotUserFavVRC4.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavVRC4.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavVRC4.favorites.length}) Added ${gotUserFavVRC4.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavVRC4.favorites[w].world.id)
+				} else {
+					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList4.favorites.length}) Skipped ${gotUserFavList4.favorites[w].world.name} to queue`)
+				}
+			}
+		}
+		2
 
 		if (userFavList_adding.length > 0) {
 			fs.appendFile(worldQueueTxt, `\r\n` + userFavList_adding.toString().replace(/,/g, '\r\n'), { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) }; resolve(true) })
@@ -1295,7 +1359,7 @@ async function addSearchToLocalQueue(i_searchString) {
 						console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
 						worldlist_addcount++
 						lastInQueue == w.id ? skipAdd = true : ''
-						index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
+						worldlist == '' ? worldlist = w.id : worldlist += `\r\n${w.id}`
 					} else {
 						console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Skipped ${w.name}`)
 					}
@@ -1307,7 +1371,7 @@ async function addSearchToLocalQueue(i_searchString) {
 						console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
 						worldlist_addcount++
 						lastInQueue == w.id ? skipAdd = true : ''
-						index == 0 ? worldlist = w.id : worldlist += `\r\n${w.id}`
+						worldlist == '' ? worldlist = w.id : worldlist += `\r\n${w.id}`
 					} else {
 						console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Skipped ${w.name}`)
 					}
@@ -1424,7 +1488,19 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 			setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
 			return
 		}
+		var filter_worldPC = gotWorld.data.unityPackages.find(p => p.platform == 'standalonewindows')
+		if (filter_worldPC == undefined) {
+			console.log(`${loglv.hey}${selflogA} World is not PC compatible. Retrying..`);
+			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
+				if (data.includes(world_id)) {
+					fs.writeFile(worldQueueTxt, data.replaceAll(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
+				}
+			})
+			setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
+			return
+		}
 		isWorldUnlisted(world_id, '14anthony7095')
+
 
 		var filter_UserAndroid = playersInstanceObject.find(u => u.platform == 'android')
 		var filter_worldAndroid = gotWorld.data.unityPackages.find(p => p.platform == 'android')
@@ -1434,7 +1510,7 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 		if (InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 			if (gotWorld.data.capacity < Math.min(playersInInstance.length + playersInQueue, 80)) {
 				console.log(`${loglv.hey}${selflogA} World can not fit everyone. Retrying..`);
-				oscChatBoxV2(`~World can not fit everyone.\vRetrying.\v${playersInInstance.length + playersInQueue} > ${gotWorld.data.capacity}`, 5000, true, true, false, false, false)
+				// oscChatBoxV2(`~World can not fit everyone.\vRetrying.\v${playersInInstance.length + playersInQueue} > ${gotWorld.data.capacity}`, 5000, true, true, false, false, false)
 				setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
 				return
 			} else if (filter_UserAndroid != undefined && filter_worldAndroid == undefined) {
@@ -1493,11 +1569,8 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 			if (I_InviteEveryoneToNext == true || G_exploreInviteMode == true) {
 				for (const ply in playersInstanceObject) {
 					if (playersInstanceObject[ply].isFriend == true) {
-						limiter.req(vrchat.inviteUser(
-							{
-								'body': { 'instanceId': created_instance.data.location, 'messageSlot': 1 },
-								'path': { 'userId': playersInstanceObject[ply].id }
-							}))
+						var invitedUser = await limiter.req(vrchat.inviteUser({ 'body': { 'instanceId': created_instance.data.location, 'messageSlot': 1 }, 'path': { 'userId': playersInstanceObject[ply].id } }))
+						console.log(invitedUser.data != undefined ? invitedUser.data : invitedUser.error)
 					}
 				}
 			}
@@ -2620,18 +2693,23 @@ function eventJoiningWorld() {
 	playerRetention['timer'] = setInterval(() => {
 
 		// console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate]: `, playersInInstance.length, playerRetention['added'], (playersInInstance.length - playerRetention['added']), playerRetention['last'], (playersInInstance.length - playerRetention['added']) / playerRetention['last'])
+
+		if (playerRetention['rate'].length == 0 || playerRetention['rate'][0] == 0) {
+			playerRetention['last'] = playersInInstance.length
+		}
 		playerRetention['rate'].unshift((playersInInstance.length - playerRetention['added']) / playerRetention['last'])
 		playerRetention['added'] = 0
 		playerRetention['last'] = playersInInstance.length
 
-		console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate]: ${playerRetention['rate'].map(r=>Math.floor(r*100)).toString()}%`)
+		console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate] 10m: ${Math.floor(playerRetention['rate'][0] * 100)}%`)
+		console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate] avg: ${Math.floor(average(playerRetention['rate']) * 100)}%`)
 
 		if ([`groupPlus`, `groupPublic`].includes(InstanceHistory[0].instanceType)) {
 			membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
 			memberRatio = membersInInstance.length / playersInInstance.length
-			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'][0] * 100) + '% ]' : ''}`
+			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(average(playerRetention['rate']) * 100) + '% ]' : ''}`
 		} else {
-			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'][0] * 100) + '% ]' : ''}`
+			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(average(playerRetention['rate']) * 100) + '% ]' : ''}`
 		}
 
 	}, 600_000);
@@ -2667,10 +2745,10 @@ async function eventPlayerInitialized(logOutputLine) {
 		if ([`groupPlus`, `groupPublic`].includes(InstanceHistory[0].instanceType)) {
 			memberRatio = membersInInstance.length / playersInInstance.length
 			console.log(`${loglv.info}${selflogL} There are now ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`)
-			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'][0] * 100) + '% ]' : ''}`
+			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(average(playerRetention['rate']) * 100) + '% ]' : ''}`
 		} else {
 			console.log(`${loglv.info}${selflogL} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`)
-			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'][0] * 100) + '% ]' : ''}`
+			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(average(playerRetention['rate']) * 100) + '% ]' : ''}`
 		}
 
 		if (Date.now() > (InstanceHistory[0].join_timestamp + 30000)) { queueInstanceDataBurst() }
@@ -2727,7 +2805,7 @@ async function eventPlayerJoin(logOutputLine) {
 		let pioIndex = playersInstanceObject.findIndex(playersInstanceObject => playersInstanceObject.name == playerDisplayName)
 
 		// Don't start tracking New players until after First-Load stablization
-		if (Date.now() > InstanceHistory[0].join_timestamp + 10_000 && !playerRetention['seenNames'].includes(playerDisplayName)) {
+		if (!playerRetention['seenNames'].includes(playerDisplayName)) {
 			playerRetention['added']++
 			playerRetention['seenNames'].push(playerDisplayName)
 		}
@@ -2768,11 +2846,6 @@ async function eventPlayerJoin(logOutputLine) {
 				InstanceHistory = InstanceHistory.filter((ih, index) => ih.leave_timestamp + 3600_000 > Date.now() || index <= 1)
 			}
 
-			// Wait for First-Load stablization then set Player-Retention start
-			setTimeout(() => {
-				playerRetention['last'] = playersInInstance.length
-			}, 10_000);
-
 		}
 
 		// Group Member tagging
@@ -2799,7 +2872,7 @@ async function eventPlayerJoin(logOutputLine) {
 			memberRatio = membersInInstance.length / playersInInstance.length
 			playerRatio = playersInInstance.length / playerHardLimit
 			console.log(`${loglv.info}${selflogA} There are now ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`)
-			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'][0] * 100) + '% ]' : ''}`
+			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(average(playerRetention['rate']) * 100) + '% ]' : ''}`
 		}
 
 
@@ -2886,7 +2959,7 @@ async function eventPlayerJoin(logOutputLine) {
 			}
 
 			clearTimeout(userTrustTableTimer)
-			userTrustTableTimer = setTimeout(() => { requestUserTrustTable() }, 10000);
+			userTrustTableTimer = setTimeout(() => { requestUserTrustTable() }, 10_000);
 
 		}
 
@@ -2921,10 +2994,10 @@ function eventPlayerLeft(logOutputLine) {
 			membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
 			memberRatio = membersInInstance.length / playersInInstance.length
 			console.log(`${loglv.info}${selflogL} There are now ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]`)
-			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'][0] * 100) + '% ]' : ''}`
+			process.title = `Instance: ${G_groupMembersVisible == true ? membersInInstance.length : '⛔'} / ${playersInInstance.length} (${playerHardLimit}) members in the instance. [ ${G_groupMembersVisible == true ? Math.round(memberRatio * 100) : '⛔'}% - ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(average(playerRetention['rate']) * 100) + '% ]' : ''}`
 		} else {
 			console.log(`${loglv.info}${selflogL} There are now ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]`)
-			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(playerRetention['rate'][0] * 100) + '% ]' : ''}`
+			process.title = `Instance: ${playersInInstance.length} / ${playerHardLimit} players in the instance. [ ${Math.round(playerRatio * 100)}% ]${playerRetention['rate'][0] || 0 != 0 ? ' [ Retention-Rate: ' + Math.floor(average(playerRetention['rate']) * 100) + '% ]' : ''}`
 		}
 		// logEmitter.emit('playerLeft', playerDisplayName, playerID, playersInInstance)
 
@@ -2983,10 +3056,7 @@ function eventPlayerLeft(logOutputLine) {
 }
 
 function eventInstanceClosed() {
-	G_InstanceClosed = true
-
 	if (InstanceHistory[0].worldID != 'wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5' && InstanceHistory[0].groupID != 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
-
 		vrcUserStatusText = 'Instance is closed'
 		setUserStatus('Instance is closed')
 
@@ -2998,6 +3068,7 @@ function eventInstanceClosed() {
 		inviteLocalQueue(G_autoNextWorldHop, G_exploreInviteMode)
 
 	}
+	G_InstanceClosed = true
 	oscSend('/avatar/parameters/log/instance_closed', true)
 
 }

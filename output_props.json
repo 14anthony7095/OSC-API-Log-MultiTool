@@ -27,11 +27,12 @@
             "id": "invt_c436c406-f8f1-4997-8bec-5b5e8a1015d8",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_1181ab99-751d-4ee0-bfd5-2611386a5f1f/5/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_1181ab99-751d-4ee0-bfd5-2611386a5f1f/5/file",
-                "propId": "prop_89be973f-9e1a-4260-8deb-211e32da8196"
+                "propId": "prop_89be973f-9e1a-4260-8deb-211e32da8196",
+                "propKind": 0
             },
             "name": "Rainbow Ribbon",
             "productId": "prod_7ac20d0b-7e00-41b9-b525-677b38fe8de9",
@@ -80,11 +81,12 @@
             "id": "invt_642a8113-3798-4761-98e9-dc2c84adc960",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_903a3af2-4233-4698-808c-d9349e527f5d/9/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_903a3af2-4233-4698-808c-d9349e527f5d/9/file",
-                "propId": "prop_829ba6f6-b837-49d9-b9a9-056b82103b58"
+                "propId": "prop_829ba6f6-b837-49d9-b9a9-056b82103b58",
+                "propKind": 0
             },
             "name": "THE REFERENCE CUBE",
             "tags": [],
@@ -131,11 +133,12 @@
             "id": "invt_e79951e2-89b0-4973-bf9e-60fa5088a8aa",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_a1c5eb62-dfeb-4266-8e61-a89bbe19e725/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_a1c5eb62-dfeb-4266-8e61-a89bbe19e725/1/file",
-                "propId": "prop_5c54ccdb-cafb-461b-b07f-91d189fc7b72"
+                "propId": "prop_5c54ccdb-cafb-461b-b07f-91d189fc7b72",
+                "propKind": 0
             },
             "name": "Bubble Blaster",
             "tags": [
@@ -182,11 +185,12 @@
             "id": "invt_accbf7b7-80ce-4f3c-a8cf-3fcc108020b7",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_5c2c811a-1b06-468d-bb78-a1c5baacc7ec/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_5c2c811a-1b06-468d-bb78-a1c5baacc7ec/1/file",
-                "propId": "prop_79789b58-e020-4b2e-aa25-ba21a1938eec"
+                "propId": "prop_79789b58-e020-4b2e-aa25-ba21a1938eec",
+                "propKind": 0
             },
             "name": "Mori Calliope Penlight",
             "tags": [
@@ -233,11 +237,12 @@
             "id": "invt_1f11aa73-8f05-4d50-a1a8-c59074d03ce2",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_10880ad6-dd90-411f-a7e5-6c7c19710551/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_10880ad6-dd90-411f-a7e5-6c7c19710551/1/file",
-                "propId": "prop_49fec698-f0cb-475c-9bc3-8f24e1bcc4eb"
+                "propId": "prop_49fec698-f0cb-475c-9bc3-8f24e1bcc4eb",
+                "propKind": 0
             },
             "name": "Campfire",
             "tags": [
@@ -284,11 +289,12 @@
             "id": "invt_15cade9e-e11a-4509-aa93-7a1b8584d006",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_e9a8b13b-f31d-4af7-b5a5-a89305b103ac/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_e9a8b13b-f31d-4af7-b5a5-a89305b103ac/1/file",
-                "propId": "prop_fb4e6b9e-ddd2-464c-8e44-cdba7f77eb5d"
+                "propId": "prop_fb4e6b9e-ddd2-464c-8e44-cdba7f77eb5d",
+                "propKind": 0
             },
             "name": "Marshmallow on a Stick",
             "tags": [
@@ -389,12 +395,13 @@
             "id": "invt_d47411a4-ec36-48b2-8e64-6b1c1e730e71",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_c0897a25-bab8-4166-8303-0f0ea74b3356/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_c0897a25-bab8-4166-8303-0f0ea74b3356",
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_c0897a25-bab8-4166-8303-0f0ea74b3356/1/file",
-                "propId": "prop_213156fd-eb54-4c2c-8e12-cc840581ec73"
+                "propId": "prop_213156fd-eb54-4c2c-8e12-cc840581ec73",
+                "propKind": 0
             },
             "name": "Candy Codex",
             "productId": "prod_ebacd727-7d13-4e41-a1d3-beb88f826ac8",
@@ -421,7 +428,7 @@
     },
     {
         "_created_at": "2025-10-03T23:16:45.311Z",
-        "_updated_at": "2025-11-20T00:41:51.531Z",
+        "_updated_at": "2026-06-25T20:52:22.965Z",
         "abilities": [],
         "authorId": "8JoV9XEdpo",
         "authorName": "VRChat",
@@ -429,28 +436,46 @@
         "id": "prop_0b5e9595-e9e6-4f11-bd59-5ae6abe34f67",
         "imageUrl": "https://api.vrchat.cloud/api/1/image/file_5dc7d87e-cfed-424c-ae91-47fb33b28366/2/256",
         "itemTemplate": {
-            "attribution": null,
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                },
+                "publisher": null
+            },
             "authorId": "8JoV9XEdpo",
             "collections": [],
             "created_at": "2025-10-03T23:16:45.324Z",
-            "defaultAttributes": {},
+            "defaultAttributes": {
+                "companionOffset": {
+                    "defaultValue": "0.35,1.35,0.55",
+                    "validator": {
+                        "type": "string"
+                    }
+                }
+            },
             "description": "Treats, a Spookality Companion. …wait, where does the candy come from?",
             "dropStatus": "draft",
-            "equipSlots": [],
+            "equipSlots": [
+                "companion"
+            ],
             "flags": [
                 "instantiatable",
                 "archivable",
-                "unique"
+                "unique",
+                "equippable"
             ],
             "id": "invt_f2d3dd49-e23b-45ec-990f-536ecd08a898",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_d7d75439-22c6-40c9-99f1-4abf74fe5ff1/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Companion",
             "metadata": {
                 "animated": false,
                 "fileId": "file_d7d75439-22c6-40c9-99f1-4abf74fe5ff1",
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_d7d75439-22c6-40c9-99f1-4abf74fe5ff1/1/file",
-                "propId": "prop_0b5e9595-e9e6-4f11-bd59-5ae6abe34f67"
+                "propId": "prop_0b5e9595-e9e6-4f11-bd59-5ae6abe34f67",
+                "propKind": 1
             },
             "name": "Treats",
             "productId": "prod_564f8e69-ba64-4665-a7a6-43b60b64bc32",
@@ -460,24 +485,25 @@
                 "candy_hunt_2025_cozy",
                 "Spookality 2025"
             ],
-            "updated_at": "2025-11-21T17:52:14.459Z",
+            "updated_at": "2026-06-25T20:52:23.333Z",
             "validateUserAttributes": false
         },
+        "kind": 1,
         "maxCountPerUser": 1,
         "name": "Treats",
         "releaseStatus": "private",
-        "scaleWithAvatar": false,
+        "scaleWithAvatar": true,
         "spawnType": 1,
         "tags": [],
         "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_5dc7d87e-cfed-424c-ae91-47fb33b28366/2/256",
         "unityPackages": [],
-        "version": 178,
+        "version": 186,
         "visibilityType": "everyone",
         "worldPlacementMask": 0
     },
     {
         "_created_at": "2025-10-03T23:11:08.760Z",
-        "_updated_at": "2025-11-20T00:39:48.583Z",
+        "_updated_at": "2026-06-25T20:52:09.454Z",
         "abilities": [],
         "authorId": "8JoV9XEdpo",
         "authorName": "VRChat",
@@ -485,7 +511,14 @@
         "id": "prop_57484479-1f1b-4a9c-986b-b0c86e1c0dda",
         "imageUrl": "https://api.vrchat.cloud/api/1/image/file_d53307de-14fe-4cbc-bf74-55dab5bae2a7/3/256",
         "itemTemplate": {
-            "attribution": null,
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                },
+                "publisher": null
+            },
             "authorId": "8JoV9XEdpo",
             "collections": [],
             "created_at": "2025-10-03T23:11:08.788Z",
@@ -495,25 +528,35 @@
                     "validator": {
                         "type": "color"
                     }
+                },
+                "companionOffset": {
+                    "defaultValue": "0.35,1.35,0.55",
+                    "validator": {
+                        "type": "string"
+                    }
                 }
             },
             "description": "Kath, a Spookality Companion. A relic, from a more civilized age.",
             "dropStatus": "draft",
-            "equipSlots": [],
+            "equipSlots": [
+                "companion"
+            ],
             "flags": [
                 "instantiatable",
                 "archivable",
-                "unique"
+                "unique",
+                "equippable"
             ],
             "id": "invt_7083477a-40c0-4475-93a8-28238c1fc020",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_b1face7a-dc17-404a-8fe0-78762496b7c4/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Companion",
             "metadata": {
                 "animated": false,
                 "fileId": "file_b1face7a-dc17-404a-8fe0-78762496b7c4",
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_b1face7a-dc17-404a-8fe0-78762496b7c4/1/file",
-                "propId": "prop_57484479-1f1b-4a9c-986b-b0c86e1c0dda"
+                "propId": "prop_57484479-1f1b-4a9c-986b-b0c86e1c0dda",
+                "propKind": 1
             },
             "name": "Kath",
             "productId": "prod_f231075e-b9e1-441c-b00a-5db88d6a1ed9",
@@ -523,9 +566,10 @@
                 "candy_hunt_2025_spooky",
                 "Spookality 2025"
             ],
-            "updated_at": "2025-11-21T17:53:36.418Z",
+            "updated_at": "2026-06-25T20:52:09.316Z",
             "validateUserAttributes": false
         },
+        "kind": 1,
         "maxCountPerUser": 1,
         "name": "Kath",
         "releaseStatus": "private",
@@ -534,7 +578,7 @@
         "tags": [],
         "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_d53307de-14fe-4cbc-bf74-55dab5bae2a7/3/256",
         "unityPackages": [],
-        "version": 124,
+        "version": 132,
         "visibilityType": "everyone",
         "worldPlacementMask": 0
     },
@@ -564,11 +608,12 @@
             "id": "invt_e3c12462-78d7-4d50-be7c-0ca179e97a96",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_76250daf-2267-4fdd-8944-a06b9c14472e/5/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_76250daf-2267-4fdd-8944-a06b9c14472e/5/file",
-                "propId": "prop_dae2be6b-9c3b-4783-948b-4ff46d3a14e5"
+                "propId": "prop_dae2be6b-9c3b-4783-948b-4ff46d3a14e5",
+                "propKind": 0
             },
             "name": "Bigscreen Beyond 2e: VRChat Edition",
             "tags": [
@@ -624,12 +669,13 @@
             "id": "invt_f34897ff-9a96-4a5a-a739-fc76ebffd564",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_19f0efe7-3340-42b1-afed-a2596ca940fd/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_19f0efe7-3340-42b1-afed-a2596ca940fd",
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_19f0efe7-3340-42b1-afed-a2596ca940fd/1/file",
-                "propId": "prop_0fd9deb0-6ca8-4c69-acbe-17035f93792b"
+                "propId": "prop_0fd9deb0-6ca8-4c69-acbe-17035f93792b",
+                "propKind": 0
             },
             "name": "Groan Tube",
             "tags": [],
@@ -674,12 +720,13 @@
             "id": "invt_d7c4d47b-591d-4013-819c-ebaf6c9698bf",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_a19f1724-2a0e-4c01-8c68-549b7e0bde16/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_a19f1724-2a0e-4c01-8c68-549b7e0bde16",
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_a19f1724-2a0e-4c01-8c68-549b7e0bde16/1/file",
-                "propId": "prop_e9d0bc1f-f7fd-4886-abec-d299745b2264"
+                "propId": "prop_e9d0bc1f-f7fd-4886-abec-d299745b2264",
+                "propKind": 0
             },
             "name": "Flask of Effervescence",
             "productId": "prod_44ec43f4-9909-40ca-9a29-cf854647aa7e",
@@ -728,12 +775,13 @@
             "id": "invt_bc315a45-df13-47cb-8018-171cab5b23d4",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_f4e0c1fe-888b-4c5a-a5c5-2807f2ff329e/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_f4e0c1fe-888b-4c5a-a5c5-2807f2ff329e",
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_f4e0c1fe-888b-4c5a-a5c5-2807f2ff329e/1/file",
-                "propId": "prop_3e81ff20-b64a-4ecb-9429-bd076a96fcf8"
+                "propId": "prop_3e81ff20-b64a-4ecb-9429-bd076a96fcf8",
+                "propKind": 0
             },
             "name": "VRChat Penlight",
             "productId": "prod_7f8e0d21-a60c-4378-ab12-90010a45d1cd",
@@ -784,12 +832,13 @@
             "id": "invt_31fb9268-a100-4b90-8903-e4b14dcd8cd1",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_e792a253-beb5-40e5-a061-42b43228df06/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_e792a253-beb5-40e5-a061-42b43228df06",
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_e792a253-beb5-40e5-a061-42b43228df06/1/file",
-                "propId": "prop_81ce8d80-72d8-4f60-9d6b-689a8340f55d"
+                "propId": "prop_81ce8d80-72d8-4f60-9d6b-689a8340f55d",
+                "propKind": 0
             },
             "name": "Unstable Reference Cube",
             "productId": "prod_885c362b-a8a2-4e88-9e1a-48b3043ed724",
@@ -838,11 +887,12 @@
             "id": "invt_a2fc2ee6-44fb-4490-b1bb-005a49921037",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_24c02f3b-ac7b-4898-aacf-ca808ba7ca2b/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_24c02f3b-ac7b-4898-aacf-ca808ba7ca2b/1/file",
-                "propId": "prop_afbc0df4-da97-4036-bb84-b4513350fd2a"
+                "propId": "prop_afbc0df4-da97-4036-bb84-b4513350fd2a",
+                "propKind": 0
             },
             "name": "Open Flight Prop Port Test",
             "tags": [
@@ -912,12 +962,13 @@
             "id": "invt_2c2aab9f-8042-40da-af41-9788c2bd53b0",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_12a99e9f-f208-46b9-b878-00a0796312bf/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_12a99e9f-f208-46b9-b878-00a0796312bf",
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_12a99e9f-f208-46b9-b878-00a0796312bf/1/file",
-                "propId": "prop_062e8001-d338-4dd1-b3c7-ecfb4f30eb1c"
+                "propId": "prop_062e8001-d338-4dd1-b3c7-ecfb4f30eb1c",
+                "propKind": 0
             },
             "name": "Frosted Scribe",
             "productId": "prod_b64dffd2-8447-4c69-8934-8e18e682819d",
@@ -1009,11 +1060,12 @@
             "id": "invt_fc05cc7a-8aa4-4995-9411-b62c303b964c",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_375f14d7-05b0-43d1-9cf1-0f38518d8429/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_375f14d7-05b0-43d1-9cf1-0f38518d8429/1/file",
-                "propId": "prop_8ac42f15-14fa-4438-97df-9c10b654e75e"
+                "propId": "prop_8ac42f15-14fa-4438-97df-9c10b654e75e",
+                "propKind": 0
             },
             "name": "Throw-n-Go",
             "tags": [
@@ -1491,12 +1543,13 @@
             "id": "invt_23ac4cb8-f289-48fe-8eed-0a1b5e658f5b",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_54b5a529-11db-49e9-afb8-1affd7d0021e/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_54b5a529-11db-49e9-afb8-1affd7d0021e",
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_54b5a529-11db-49e9-afb8-1affd7d0021e/1/file",
-                "propId": "prop_f7f48957-06e6-4fed-9e4f-25f71f68ae8b"
+                "propId": "prop_f7f48957-06e6-4fed-9e4f-25f71f68ae8b",
+                "propKind": 0
             },
             "name": "Bee Blaster",
             "tags": [
@@ -1551,12 +1604,13 @@
             "id": "invt_e7569ba2-d892-466a-a8ed-0196db8d647f",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_0fd1d87d-5b49-4978-85f5-5e81bbd9c16a/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_0fd1d87d-5b49-4978-85f5-5e81bbd9c16a",
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_0fd1d87d-5b49-4978-85f5-5e81bbd9c16a/1/file",
-                "propId": "prop_b69cef3f-6624-43e9-b44d-43aefe86cc64"
+                "propId": "prop_b69cef3f-6624-43e9-b44d-43aefe86cc64",
+                "propKind": 0
             },
             "name": "Hanami Dango",
             "productId": "prod_7445da92-f6ff-4fed-806b-3bead79ea4d6",
@@ -1613,10 +1667,11 @@
             "id": "invt_3277ef64-f029-42de-bed8-8d1e82e66775",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_3200e71d-1938-4c1e-9997-47bcd64f56dd/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
-                "propId": "prop_10a9b133-cf37-4664-b4a2-9a9cbd43d03d"
+                "propId": "prop_10a9b133-cf37-4664-b4a2-9a9cbd43d03d",
+                "propKind": 0
             },
             "name": "Wagasa",
             "productId": "prod_857a9809-7c28-4537-a597-259b79f3a4f2",
@@ -1674,12 +1729,13 @@
             "id": "invt_89a61eba-ae04-4191-96fa-b404f3197a0d",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_b2896f43-6d81-4ab1-8f3d-f758bb66b5b5/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_b2896f43-6d81-4ab1-8f3d-f758bb66b5b5",
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_b2896f43-6d81-4ab1-8f3d-f758bb66b5b5/1/file",
-                "propId": "prop_d411089d-dfad-4a2a-81a2-30a2ad1a4867"
+                "propId": "prop_d411089d-dfad-4a2a-81a2-30a2ad1a4867",
+                "propKind": 0
             },
             "name": "Portable Cherry Tree",
             "productId": "prod_edd3d03b-20b2-4e1b-8702-446e07f06295",
@@ -1736,12 +1792,13 @@
             "id": "invt_0bc4d3bf-7e7a-4782-af5b-58a16aca243a",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_c0ce3679-62e3-4be2-b196-4d7b0d1aa790/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Item",
+            "itemTypeLabel": "Prop",
             "metadata": {
                 "animated": false,
                 "fileId": "file_c0ce3679-62e3-4be2-b196-4d7b0d1aa790",
                 "imageUrl": "https://api.vrchat.cloud/api/1/file/file_c0ce3679-62e3-4be2-b196-4d7b0d1aa790/1/file",
-                "propId": "prop_f63b77ac-977a-40dc-8410-453e937a627d"
+                "propId": "prop_f63b77ac-977a-40dc-8410-453e937a627d",
+                "propKind": 0
             },
             "name": "TwitchCon25 Coin",
             "tags": [
@@ -1764,14 +1821,14 @@
     },
     {
         "_created_at": "2026-03-10T23:37:55.564Z",
-        "_updated_at": "2026-05-01T16:38:58.064Z",
+        "_updated_at": "2026-06-25T20:56:05.625Z",
         "abilities": [],
         "authorId": "8JoV9XEdpo",
         "authorName": "VRChat",
         "description": "A type of mysterious creature known as “Mogu.” It lounges all day and snoozes on its big tail after snacks.",
         "id": "prop_73aefdb1-d8af-4ffd-84a8-ab9d038e300a",
         "imageUrl": "https://api.vrchat.cloud/api/1/file/file_6a284b58-1fba-405f-bcc8-be226fbb2b03/1/file",
-        "kind": 0,
+        "kind": 1,
         "maxCountPerUser": 1,
         "name": "Tabetchane",
         "releaseStatus": "private",
@@ -1780,7 +1837,7 @@
         "tags": [],
         "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_6a284b58-1fba-405f-bcc8-be226fbb2b03/1/256",
         "unityPackages": [],
-        "version": 71,
+        "version": 79,
         "visibilityType": "everyone",
         "worldPlacementMask": 0
     },
@@ -1927,7 +1984,7 @@
     },
     {
         "_created_at": "2026-05-21T19:23:25.634Z",
-        "_updated_at": "2026-05-29T22:21:51.225Z",
+        "_updated_at": "2026-06-25T20:58:13.340Z",
         "abilities": [],
         "authorId": "8JoV9XEdpo",
         "authorName": "VRChat",
@@ -1947,8 +2004,8 @@
             "collections": [],
             "created_at": "2026-05-21T19:23:25.606Z",
             "defaultAttributes": {
-                "empty": {
-                    "defaultValue": "",
+                "companionOffset": {
+                    "defaultValue": "0.35,1.35,0.55",
                     "validator": {
                         "type": "string"
                     }
@@ -1956,30 +2013,33 @@
             },
             "description": "Behind every cloud is a lining of… rainbow?",
             "dropStatus": "draft",
-            "equipSlots": [],
+            "equipSlots": [
+                "companion"
+            ],
             "flags": [
                 "instantiatable",
                 "archivable",
-                "unique"
+                "unique",
+                "equippable"
             ],
             "id": "invt_30222765-203c-4ea5-8f15-021c9eb556d7",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_4d6b9c02-6e13-4fe8-a11b-cd836d06ed49/1/256",
             "itemType": "prop",
-            "itemTypeLabel": "Prop",
+            "itemTypeLabel": "Companion",
             "metadata": {
                 "animated": false,
                 "fileId": "file_36ad75af-4c97-4288-84dd-d7a08f990e08",
                 "propId": "prop_9a2cbd89-52e1-4715-b339-2ea6ad143291",
-                "propKind": 0
+                "propKind": 1
             },
             "name": "Christopher Cloud",
             "tags": [
                 "prop"
             ],
-            "updated_at": "2026-05-29T22:21:51.210Z",
+            "updated_at": "2026-06-25T20:58:13.195Z",
             "validateUserAttributes": false
         },
-        "kind": 0,
+        "kind": 1,
         "maxCountPerUser": 1,
         "name": "Christopher Cloud",
         "releaseStatus": "private",
@@ -1988,7 +2048,7 @@
         "tags": [],
         "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_a0120b98-4150-44cb-baf6-c91e6e224bdc/3/256",
         "unityPackages": [],
-        "version": 111,
+        "version": 118,
         "visibilityType": "everyone",
         "worldPlacementMask": 0
     },
