@@ -182,7 +182,6 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 		console.log(`
 -   api requestall
 -   years [open/close]
--   hypetrain
 -   forceaudit
 -   preload [wrld_UUID...]
 -   addworlds [<string>]
@@ -206,9 +205,9 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	}
 	if (cmd == 'api' && args[0] == 'requestall') { requestAllOnlineFriends(currentUser) }
 	if (cmd == 'years' && args[0] == 'close') { switchYearGroupsClosed() }
-	if (cmd == 'hypetrain') { hypeTrainLocater() }
 	if (cmd == 'years' && args[0] == 'open') { switchYearGroupsReOpen() }
 	if (cmd == 'forceaudit') { scanGroupAuditLogs() }
+	if (cmd == 'setlogo') { applyGroupLogo(args[0]) }
 	if (cmd == 'findjoinable') { findJoinableInstances().then(d => { G_instanceJoinQueue = d }) }
 
 	if (cmd == 'pruneseen') { pruneLocalQueue() }
@@ -1130,7 +1129,9 @@ oscEmitter.on('osc', (addr, value) => {
 			case 1:
 				findJoinableInstances().then(d => {
 					G_instanceJoinQueue = d
-					oscChatBoxV2(`~Found ${d.length} joinable instances`, 5000, false, true, false, false)
+					// oscChatBoxV2(`~Found ${d.length} joinable instances`, 5000, false, true, false, false)
+					say.speak(`Found ${d.length} joinable instances`,
+						'Microsoft Zira Desktop', 1.0, (err) => { err ? console.error(`${loglv.warn}${selflogL} say.js error: ` + err) : '' })
 					console.log(`${loglv.hey}${selflogA} Found ${d.length} joinable instances`)
 				})
 				break
@@ -1145,7 +1146,8 @@ oscEmitter.on('avatar', (avtrID) => {
 	if (['avtr_305ddd5d-d1f9-4adb-a025-50c2f1a9d219',
 		`avtr_5c866609-f49a-4867-ac74-5dab03d5d713`,
 		`avtr_75c670ca-4614-4db2-a687-e27994acb0ac`,
-		'avtr_6b25124e-e141-4df4-ad27-22766608e5dc'
+		'avtr_6b25124e-e141-4df4-ad27-22766608e5dc',
+		'avtr_88f7fc7e-25a2-4a61-bc06-42202ad7805d'
 	].includes(avtrID)) {
 		queueInstanceDataBurst()
 		oscSend(vrcap + 'log/instance_closed', G_InstanceClosed)
@@ -1154,6 +1156,7 @@ oscEmitter.on('avatar', (avtrID) => {
 		// oscSend(vrcap + 'api/explore/inviteMode', G_exploreInviteMode == true)
 		// oscSend(vrcap + 'api/explore/autoClose', G_exploreAutoClose == true)
 		applyGroupLogo(InstanceHistory[0]?.groupID)
+		oscSend('/avatar/eyeheight', 1.5549639463424683)
 	}
 });
 
@@ -1435,10 +1438,11 @@ function inviteHubQueue(returnHubID = false) {
 function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 	fs.readFile(worldQueueTxt, 'utf8', async (err, fsReadFile) => {
 		// err ? console.log(err); return : ''
-		let localQueueList = fsReadFile.split('\r\n===')[0].split(`\r\n`)
-		if (localQueueList == ['']) {
+		let localQueueList = fsReadFile.split('\r\n===\r\n')[0].split(`\r\n`)
+		if (localQueueList[0] == '===' || localQueueList == ['']) {
 			console.log(`${loglv.hey}${selflogA} Explore queue is empty${fsReadFile.includes('===') ? `: Remove bookmark` : ``}`);
 			oscChatBoxV2(`~Explore Queue is empty${fsReadFile.includes('===') ? `\vRemove bookmark.` : ``}`, 5000, true, true, false, false, false);
+			oscSend(vrcap + `api/explore/next`, false)
 			return
 		}
 
@@ -1605,42 +1609,6 @@ function setUserStatus(I_statusText = '', I_status) {
 	}
 }
 
-
-async function hypeTrainLocater() {
-	console.log(`${loglv.info}${selflogA} [HypeTrainLocater] Searching for active HypeTrain..`)
-	// Active World List
-	var activeworlds = await limiter.req(vrchat.getActiveWorlds({ 'query': { 'offset': 0, 'n': 100, 'order': 'ascending' } }))
-	// Worlds Data
-	var count = 0
-	var highestPercent = [0, 0] // Percent , Gift Count
-	for (const wrld in activeworlds.data) {
-		console.log(`${loglv.info}${selflogA} [HypeTrainLocater] World Target: ${activeworlds.data[wrld].name}`)
-
-		var gotworld = await limiter.req(vrchat.getWorld({ 'path': { 'worldId': activeworlds.data[wrld].id } }))
-		// Instances Data
-		for (const ints in gotworld.data.instances) {
-			if (gotworld.data.instances[ints][1] <= 2) { continue }
-
-			var gotInstance = await limiter.req(vrchat.getInstance({ 'path': { 'worldId': activeworlds.data[wrld].id, 'instanceId': gotworld.data.instances[ints][0] } }))
-			// Has Hypetrain data
-			if (gotInstance.data.hypeTrain?.current != null) {
-				count++
-				require('open').default('vrcx://world/' + activeworlds.data[wrld].id + ':' + gotworld.data.instances[ints][0])
-				G_instanceJoinQueue.unshift(activeworlds.data[wrld].id + ':' + gotworld.data.instances[ints][0])
-
-				var goalPercent = Math.floor(gotInstance.data.hypeTrain.current.currentGiftCount / gotInstance.data.hypeTrain.current.totalGiftGoal * 100)
-				highestPercent = goalPercent > highestPercent[0] ? [goalPercent, gotInstance.data.hypeTrain.current.currentGiftCount] : highestPercent
-				console.log(`${loglv.info}${selflogA} [HypeTrainLocater] Active: [ ${goalPercent}% (${gotInstance.data.hypeTrain.current.currentGiftCount}/${gotInstance.data.hypeTrain.current.totalGiftGoal}) ]  ${activeworlds.data[wrld].name}\n${activeworlds.data[wrld].id}:${gotworld.data.instances[ints][0]}`)
-
-			} else if (gotInstance.data.hypeTrain?.potentialTrain != null) {
-				console.log(`${loglv.info}${selflogA} [HypeTrainLocater] Warm: ${gotworld.data.instances[ints][0]}`)
-			}
-
-		}
-	}
-	console.log(`${loglv.info}${selflogA} [HypeTrainLocater] Finished search..`)
-	oscChatBoxV2(`~Found ${count} instance${count != 1 ? 's' : ''} with active HypeTrain.${count >= 1 ? '\v' : ''}${count >= 2 ? 'Highest ' : ''}${count >= 1 ? 'Goal: ' + highestPercent[0] + '%  (' + highestPercent[1] + ' of 50)' : ''}`, 5000, false, true)
-}
 
 
 var highestCount = 0
@@ -1903,7 +1871,9 @@ async function findJoinableInstances() {
 function inviteJoinableInstanceQueue() {
 	if (G_instanceJoinQueue.length == 0) {
 		console.log(`${loglv.hey}${selflogA} Joinable queue is empty`);
-		oscChatBoxV2(`~Joinable Queue is empty`, 5000, false, true, false, false, false);
+		// oscChatBoxV2(`~Joinable Queue is empty`, 5000, false, true, false, false, false);
+		say.speak(`Joinable Queue is empty`,
+			'Microsoft Zira Desktop', 1.0, (err) => { err ? console.error(`${loglv.warn}${selflogL} say.js error: ` + err) : '' })
 		return
 	}
 	// let randnum = Math.round(Math.random() * (G_instanceJoinQueue.length - 1))
@@ -2014,7 +1984,12 @@ function eventGameClose() {
 	playersInInstance = []
 	membersInInstance = []
 	playersInstanceObject = []
-	playerRetention = { 'last': 80, 'added': 0, 'timer': null, 'rate': [], 'seenNames': [] }
+	playerRetention = {
+		'seenNames': [],
+		'history': [],
+		'rate': [],
+		'timer': null
+	}
 
 	process.title = `14anthony7095 OSC Multi-Interface`
 
@@ -2170,9 +2145,9 @@ async function updateBioWorldQueue() {
 
 				if (mybio.bio.match(/Worlds in queue[:˸] (\d{1,4})/) != null) {
 					if (parseInt(mybio.bio.match(/Worlds in queue[:˸] (\d{1,4})/)[1]) != localQueueList.length) {
-						console.log(`${loglv.info}${selflogA} Updating Bio queue count: ${mybio.bio.match(/Worlds in queue[:˸] (\d{1,4})/)[1]} -> ${localQueueList.length}`)
+						console.log(`${loglv.info}${selflogA} Updating Bio queue count: ${mybio.bio.match(/Worlds in queue[:˸] (\d{1,10})/)[1]} -> ${localQueueList.length}`)
 						// console.log(`${loglv.debug}${selflog} ${mybio.bio}`)
-						let mybioUpdated = mybio.bio.replace(/Worlds in queue[:˸] \d{1,4}/, 'Worlds in queue: ' + localQueueList.length)
+						let mybioUpdated = mybio.bio.replace(/Worlds in queue[:˸] \d{1,10}/, 'Worlds in queue: ' + localQueueList.length)
 						await limiter.req(vrchat.updateUser({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' }, 'body': { 'bio': mybioUpdated } }))
 
 						// console.log(`${loglv.debug}${selflog} ${mybioUpdated}`)
@@ -2557,7 +2532,17 @@ async function eventHeadingToWorld(logOutputLine) {
 	clearTimeout(worldHopTimeoutHour)
 	worldHopTimeoutHour = null
 	clearInterval(playerRetention['timer'])
-	playerRetention = { 'last': 80, 'added': 0, 'timer': null, 'rate': [], 'seenNames': [] }
+	playerRetention = {
+		'seenNames': [],
+		'history': [{
+			'startingValue': 0,
+			'added': 0,
+			'endingValue': null
+		}],
+		'rate': [],
+		'timer': null
+	}
+
 
 	var worldID = /wrld_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}/.exec(logOutputLine)[0]
 	var groupID = ''
@@ -2665,18 +2650,14 @@ async function eventHeadingToWorld(logOutputLine) {
 	}
 	*/
 
-
-
 	console.log(`${loglv.info}${selflogL} Instance Type ${instanceType}`)
-
 }
 
 var playerRetention = {
-	'last': 80,
-	'added': 1,
-	'timer': null,
+	'seenNames': [],
+	'history': [],
 	'rate': [],
-	'seenNames': []
+	'timer': null
 }
 function eventJoiningWorld() {
 	worldHopTimeout = setTimeout(() => {
@@ -2690,19 +2671,24 @@ function eventJoiningWorld() {
 			if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) }
 		})
 	}, 3600_000)
+
+	console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate] history: `, playerRetention['history'])
 	playerRetention['timer'] = setInterval(() => {
 
-		// console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate]: `, playersInInstance.length, playerRetention['added'], (playersInInstance.length - playerRetention['added']), playerRetention['last'], (playersInInstance.length - playerRetention['added']) / playerRetention['last'])
+		// Process frame (last 10mins)
+		let rateP = (playersInInstance.length - playerRetention['history'][0].added) / playerRetention['history'][0].startingValue
+		playerRetention['rate'].unshift(rateP)
+		playerRetention['history'][0]['endingValue'] = playersInInstance.length
+		playerRetention['history'][0]['chunk-rate'] = rateP
 
-		if (playerRetention['rate'].length == 0 || playerRetention['rate'][0] == 0) {
-			playerRetention['last'] = playersInInstance.length
-		}
-		playerRetention['rate'].unshift((playersInInstance.length - playerRetention['added']) / playerRetention['last'])
-		playerRetention['added'] = 0
-		playerRetention['last'] = playersInInstance.length
-
-		console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate] 10m: ${Math.floor(playerRetention['rate'][0] * 100)}%`)
-		console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate] avg: ${Math.floor(average(playerRetention['rate']) * 100)}%`)
+		// Start new frame
+		playerRetention['history'].unshift({
+			'startingValue': playersInInstance.length,
+			'added': 0,
+			'endingValue': null
+		})
+		console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate] History: `, playerRetention['history'])
+		console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate] Avg: ${Math.floor(average(playerRetention['rate']) * 100)}%`)
 
 		if ([`groupPlus`, `groupPublic`].includes(InstanceHistory[0].instanceType)) {
 			membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
@@ -2806,7 +2792,11 @@ async function eventPlayerJoin(logOutputLine) {
 
 		// Don't start tracking New players until after First-Load stablization
 		if (!playerRetention['seenNames'].includes(playerDisplayName)) {
-			playerRetention['added']++
+			try {
+				playerRetention['history'][0].added++
+			} catch (e) {
+				playerRetention['history'] = [{ 'added': 1 }]
+			}
 			playerRetention['seenNames'].push(playerDisplayName)
 		}
 
@@ -2816,6 +2806,11 @@ async function eventPlayerJoin(logOutputLine) {
 
 			InstanceHistory[0].join_timestamp = Date.now()
 			// console.log(`${loglv.debug}[InstanceHistory] Loaded into world, appending join Timestamp ${InstanceHistory[0].join_timestamp}`)
+
+			setTimeout(() => {
+				playerRetention['history'][0]['startingValue'] = playersInInstance.length
+				playerRetention['history'][0].added -= playersInInstance.length
+			}, 2000)
 
 			// Remove world from Explore Queue
 			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {

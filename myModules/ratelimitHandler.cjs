@@ -46,6 +46,7 @@ class ratelimitHandler {
 		return new Promise((resolve, reject) => {
 			let timeMS = this.waitTimeMS
 			console.log(`${loglv.warn}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Backing off for ${Math.round(timeMS * I_amount / 1000)} sec - Retry: ${new Date(Date.now() + timeMS * I_amount).toTimeString()}`)
+			process.title = `Backing off for ${Math.round(timeMS * I_amount / 1000)} sec - Retry: ${new Date(Date.now() + timeMS * I_amount).toTimeString()}`
 			setTimeout(() => {
 				this.pause_exp++
 				resolve(true)
@@ -94,7 +95,7 @@ class ratelimitHandler {
 				if (self.isLimiting == false) {
 					attemptRequest()
 				} else {
-					console.log(`${loglv.hey}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Holding off on Request, Backoff protocol is active.`)
+					// console.log(`${loglv.hey}\x1b[0m[\x1b[31mRatelimit-Handler\x1b[0m] Holding off on Request, Backoff protocol is active.`)
 					setTimeout(() => {
 						checkLimit()
 					}, self.delayMulti * 10000)

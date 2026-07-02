@@ -4,7 +4,7 @@
 const { Client } = require('archipelago.js')
 
 
-main('wss://archipelago.gg:60502', '14aShine', 'Super Mario Sunshine')
+main('wss://archipelago.gg:51557', '14aPVZ', 'Plants vs. Zombies')
 
 async function main(I_url, I_slot, I_game) {
     const apClient = new Client()
@@ -46,7 +46,7 @@ async function main(I_url, I_slot, I_game) {
         console.log(`${logPrefix} [deathReceived]: `, time, source, cause)
     })
     
-
+apClient.goal()
 
     // apClient.check(['81'])
     // apClient.storage.fetchLocationNameGroups(apClient.game)        .then(f => console.log(f))
