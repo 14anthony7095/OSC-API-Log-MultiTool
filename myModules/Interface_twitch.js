@@ -99,10 +99,10 @@ function start() {
 		rejoinChannel()
 	}
 	oscSend('/avatar/parameters/ttvIsTalking', false)
-	oscSend('/avatar/parameters/ToN_IsStarted', false)
-	oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156))
-	oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901))
-	oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137))
+	// oscSend('/avatar/parameters/ToN_IsStarted', false)
+	// oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156))
+	// oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901))
+	// oscSend('/avatar/parameters/ToN_ColorB', parseFloat(0.643137))
 }
 
 

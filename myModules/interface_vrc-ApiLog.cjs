@@ -58,6 +58,7 @@ var worldQueueTxt = './datasets/worldQueue.txt'
 var explorePrivacyLevel = 1
 var G_exploreInviteMode = false // Self: false - Friends: true
 var G_exploreAutoClose = true
+var G_autoRandomizeApparel = false
 var authToken = null
 var isApiErrorSkip = false
 var socket_VRC_API
@@ -1123,6 +1124,7 @@ oscEmitter.on('osc', (addr, value) => {
 	if (addr == vrcap + `api/explore/privacy` && value == 3) { explorePrivacyLevel = 3 }
 	if (addr == vrcap + `api/explore/inviteMode`) { G_exploreInviteMode = value }
 	if (addr == vrcap + `api/explore/autoClose`) { G_exploreAutoClose = value }
+	if (addr == vrcap + `toggle/autoRandomizeApparel`) { G_autoRandomizeApparel = value }
 	if (addr == vrcap + `api/requestall` && value == true) { requestAllOnlineFriends(currentUser) }
 	if (addr == vrcap + 'api/favWorld' && value != 0) {
 		switch (value) {
@@ -1142,7 +1144,7 @@ oscEmitter.on('osc', (addr, value) => {
 	}
 
 })
-oscEmitter.on('avatar', (avtrID) => {
+oscEmitter.on('avatar', async (avtrID) => {
 	if (['avtr_305ddd5d-d1f9-4adb-a025-50c2f1a9d219',
 		`avtr_5c866609-f49a-4867-ac74-5dab03d5d713`,
 		`avtr_75c670ca-4614-4db2-a687-e27994acb0ac`,
@@ -1152,11 +1154,18 @@ oscEmitter.on('avatar', (avtrID) => {
 		queueInstanceDataBurst()
 		oscSend(vrcap + 'log/instance_closed', G_InstanceClosed)
 		oscSend(vrcap + 'log/instance_10min', G_Instance10min)
+		applyGroupLogo(InstanceHistory[0]?.groupID)
+		oscSend('/avatar/eyeheight', 1.5549639463424683)
+		if (G_autoRandomizeApparel == true) {
+			await sleep(1000)
+			oscSend(vrcap + 'button/randomApparel', true)
+		}
+		await sleep(100)
+		oscSend(vrcap + 'button/randomApparel', false)
 		// oscSend(vrcap + 'api/explore/privacy', parseInt(explorePrivacyLevel))
 		// oscSend(vrcap + 'api/explore/inviteMode', G_exploreInviteMode == true)
 		// oscSend(vrcap + 'api/explore/autoClose', G_exploreAutoClose == true)
-		applyGroupLogo(InstanceHistory[0]?.groupID)
-		oscSend('/avatar/eyeheight', 1.5549639463424683)
+
 	}
 });
 
@@ -1890,7 +1899,7 @@ function applyGroupLogo(gID) {
 	0001 - Community Events
 	0010 - Nanachi's hollow inn
 
-	0011 - Nanachis of VRChat
+	0011 - 
 	0100 - 
 	0101 - Furry Argentina VR
 
@@ -1919,13 +1928,6 @@ function applyGroupLogo(gID) {
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 1)
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 0)
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 1)
-			break;
-		case `grp_e483cc04-a610-471f-90eb-ec4eda8420be`:
-			// Nanachis of VRChat
-			// 0011 - 3
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 1)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 1)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 0)
 			break;
 		case `grp_3473d54b-8e10-4752-9548-d77a092051a4`:
 			// Nanachi's hollow inn
