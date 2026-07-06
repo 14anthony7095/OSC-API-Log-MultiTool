@@ -2948,10 +2948,11 @@ async function eventPlayerJoin(logOutputLine) {
 				playersInstanceObject[pioIndex].status = userCacheStatus
 				playersInstanceObject[pioIndex].isFriend = gotUser.data.isFriend
 				playersInstanceObject[pioIndex].trust = userCacheTrust[1]
+				playersInstanceObject[pioIndex].joinedAt = Date.now()
 			} catch (err) {
 				console.log(`${loglv.hey}${selflogL} playerTrackerObject - ${err}`)
 				playersInstanceObject.push({
-					'name': playerDisplayName, 'id': playerID, 'isFriend': gotUser.data.isFriend, 'platform': userCachePlatform || 'standalonewindows', 'status': userCacheStatus, 'trust': userCacheTrust[1]
+					'name': playerDisplayName, 'id': playerID, 'joinedAt': Date.now(), 'isFriend': gotUser.data.isFriend, 'platform': userCachePlatform || 'standalonewindows', 'status': userCacheStatus, 'trust': userCacheTrust[1]
 				})
 			}
 
@@ -2963,9 +2964,10 @@ async function eventPlayerJoin(logOutputLine) {
 
 		try {
 			playersInstanceObject[pioIndex].id = playerID
+			playersInstanceObject[pioIndex].joinedAt = Date.now()
 		} catch (error) {
 			console.log(`${loglv.hey}${selflogL} playerTracker Object got UserID before PlayerName - ${error}`)
-			playersInstanceObject.push({ 'name': playerDisplayName, 'id': playerID })
+			playersInstanceObject.push({ 'name': playerDisplayName, 'id': playerID, 'joinedAt': Date.now() })
 		}
 
 	}
@@ -2978,14 +2980,20 @@ function eventPlayerLeft(logOutputLine) {
 		// var playerID = /(?:\([0-z]{10}\))|(?:\(usr_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}\))/.exec(playerDisplayName)[0]
 
 		playerDisplayName = playerDisplayName.replace(/ \(usr_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}\)/, '').replace(/ \([0-z]{10}\)/, '')
-		console.log(`${loglv.info}${selflogL} Player Left: ` + playerDisplayName)
 
 		playersInInstance = playersInInstance.filter(name => name != playerDisplayName)
 		playersInstanceObject = playersInstanceObject.filter(playersInstanceObject => playersInstanceObject.name !== playerDisplayName)
 		playerRatio = playersInInstance.length / playerHardLimit
 
-		if (Date.now() > (InstanceHistory[0].join_timestamp + 30000) && worldHopTimeout != null) { queueInstanceDataBurst() }
+		if (playerDisplayName != currentAccountInUse.name) {
+			var playerTimeSpentInInstance = new Date(Date.now() - (playersInstanceObject[0] || { joinedAt: 0 })['joinedAt'] || 0).toISOString().substring(11, 19)
+			console.log(`${loglv.info}${selflogL} Player Left: ${playerDisplayName}`.padEnd(97, ' ') + ` [${playerTimeSpentInInstance}]`)
+		} else {
+			var playerTimeSpentInInstance = new Date(Date.now() - InstanceHistory[1].join_timestamp).toISOString().substring(11, 19)
+			console.log(`${loglv.info}${selflogL} Player Left: ${playerDisplayName}`.padEnd(97, ' ') + ` [${playerTimeSpentInInstance}]`)
+		}
 
+		if (Date.now() > (InstanceHistory[0].join_timestamp + 30000) && worldHopTimeout != null) { queueInstanceDataBurst() }
 
 		if ([`groupPlus`, `groupPublic`].includes(InstanceHistory[0].instanceType)) {
 			membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
@@ -3023,14 +3031,7 @@ function eventPlayerLeft(logOutputLine) {
 			worldHopTimeout = null
 			cooldownUrl = true
 			G_Instance10min = false
-
-			if (G_InstanceClosed == true) {
-				G_InstanceClosed = false
-				if (vrcUserStatusText != `Exploring World Queue`) {
-					vrcUserStatusText = ``
-					setUserStatus('')
-				}
-			}
+			G_InstanceClosed = false
 
 
 			oscSend('/avatar/parameters/log/instance_closed', false)
@@ -3053,21 +3054,12 @@ function eventPlayerLeft(logOutputLine) {
 }
 
 function eventInstanceClosed() {
-	if (InstanceHistory[0].worldID != 'wrld_6c4492e6-a0f2-4fb0-a211-234c573ab7d5' && InstanceHistory[0].groupID != 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
-		vrcUserStatusText = 'Instance is closed'
-		setUserStatus('Instance is closed')
-
-	} else if (InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
-		if (vrcUserStatusText != `Exploring World Queue`) {
-			vrcUserStatusText = `Exploring World Queue`
-			setUserStatus(`Exploring World Queue`)
-		}
+	if (InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 		inviteLocalQueue(G_autoNextWorldHop, G_exploreInviteMode)
-
 	}
+	
 	G_InstanceClosed = true
 	oscSend('/avatar/parameters/log/instance_closed', true)
-
 }
 
 function eventReceivedNotification(line) {

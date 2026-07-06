@@ -2344,5 +2344,240 @@
         "version": 104,
         "visibilityType": "everyone",
         "worldPlacementMask": 0
+    },
+    {
+        "_created_at": "2026-06-17T23:58:07.333Z",
+        "_updated_at": "2026-06-25T21:45:14.248Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "Hand-woven by Orihime, dancing in the wind.",
+        "id": "prop_d61bea79-c8b5-4f91-897b-2dc4175f8c5f",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_f8571168-2560-4501-acf8-5d9b442240b3/1/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                },
+                "publisher": null
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-06-17T23:58:07.278Z",
+            "defaultAttributes": {},
+            "description": "Hand-woven by Orihime, dancing in the wind.",
+            "dropStatus": "draft",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_718c2443-ed87-4a20-addd-0441e855412c",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_95e90e96-b369-492b-8cdd-1b40a66dfa87/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Prop",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_95e90e96-b369-492b-8cdd-1b40a66dfa87",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_95e90e96-b369-492b-8cdd-1b40a66dfa87/1/file",
+                "propId": "prop_d61bea79-c8b5-4f91-897b-2dc4175f8c5f",
+                "propKind": 0
+            },
+            "name": "Tanabata Fukinagashi",
+            "productId": "prod_d8a64186-d05a-4fc9-8c38-e5626ea9be3d",
+            "publishedListings": [
+                "prod_b10fd6cf-b109-4f72-8456-2b81cfc71647",
+                "prod_5c4df980-38e6-48b3-b4fc-d89bd25870a0"
+            ],
+            "tags": [
+                "prop",
+                "included_in_product"
+            ],
+            "updated_at": "2026-07-03T21:00:12.488Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "Tanabata Fukinagashi",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 0,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_f8571168-2560-4501-acf8-5d9b442240b3/1/256",
+        "unityPackages": [],
+        "version": 47,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 1
+    },
+    {
+        "_created_at": "2026-06-16T23:05:18.848Z",
+        "_updated_at": "2026-06-26T14:56:39.904Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "A bamboo plant covered in wishes.",
+        "id": "prop_02ee7ae8-dca6-4803-ba02-89a13259c95f",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_3dc4c56f-c6da-45e1-874b-6c229d4dc621/1/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                },
+                "publisher": null
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-06-16T23:05:17.629Z",
+            "defaultAttributes": {},
+            "description": "A bamboo plant covered in wishes.",
+            "dropStatus": "draft",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_9326867b-12f7-4f33-8095-f87e1cb1f12a",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_29001d5e-2218-4a9a-8412-015d9033c104/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Prop",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_29001d5e-2218-4a9a-8412-015d9033c104",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_29001d5e-2218-4a9a-8412-015d9033c104/1/file",
+                "propId": "prop_02ee7ae8-dca6-4803-ba02-89a13259c95f",
+                "propKind": 0
+            },
+            "name": "Wish-strung Bamboo",
+            "productId": "prod_d1b04d89-3199-43e2-8c6c-e6a5e1eeee41",
+            "publishedListings": [
+                "prod_038701e9-322f-4623-ba9f-bfd3774ee6b9",
+                "prod_b10fd6cf-b109-4f72-8456-2b81cfc71647"
+            ],
+            "tags": [
+                "prop",
+                "included_in_product"
+            ],
+            "updated_at": "2026-07-03T21:00:12.479Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "Wish-strung Bamboo",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 0,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_3dc4c56f-c6da-45e1-874b-6c229d4dc621/1/256",
+        "unityPackages": [],
+        "version": 41,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 1
+    },
+    {
+        "_created_at": "2026-06-24T20:40:12.108Z",
+        "_updated_at": "2026-06-25T16:27:57.607Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "A fish-shaped treat, for your face.",
+        "id": "prop_95cf8886-4043-4dac-865e-6719c98b61aa",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_91437316-2fcb-4e3d-ab00-693d298f1a3e/1/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                },
+                "publisher": null
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-06-24T20:40:12.083Z",
+            "defaultAttributes": {
+                "ice Cream Swirl 1": {
+                    "defaultValue": "#4BB40F",
+                    "validator": {
+                        "type": "color"
+                    }
+                },
+                "ice Cream Swirl 2": {
+                    "defaultValue": "#FFFFFF",
+                    "validator": {
+                        "type": "color"
+                    }
+                }
+            },
+            "description": "A fish-shaped treat, for your face.",
+            "dropStatus": "draft",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_03d914ce-9fd0-4d06-b52a-1e2dde5d98f8",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_a24a8b64-edea-4425-b6cd-0b60e3baa976/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Prop",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_a24a8b64-edea-4425-b6cd-0b60e3baa976",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_a24a8b64-edea-4425-b6cd-0b60e3baa976/1/file",
+                "propId": "prop_95cf8886-4043-4dac-865e-6719c98b61aa",
+                "propKind": 0
+            },
+            "name": "Taiyaki Ice Cream",
+            "productId": "prod_9cb401f2-5034-4f2b-b277-2f1e39150b66",
+            "publishedListings": [
+                "prod_1fd57fd1-a36d-4aba-8a03-f922a09d7200",
+                "prod_b10fd6cf-b109-4f72-8456-2b81cfc71647"
+            ],
+            "tags": [
+                "prop",
+                "included_in_product"
+            ],
+            "updated_at": "2026-07-03T21:00:12.479Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "Taiyaki Ice Cream",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_91437316-2fcb-4e3d-ab00-693d298f1a3e/1/256",
+        "unityPackages": [],
+        "version": 25,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    {
+        "_created_at": "2025-12-04T00:04:34.811Z",
+        "_updated_at": "2025-12-04T23:34:09.387Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "",
+        "id": "prop_977cf399-9b51-43d0-9f37-935018e3663e",
+        "imageUrl": "https://api.vrchat.cloud/api/1/image/file_4de8d7a4-1138-44cf-8c32-dd74993933de/1/256",
+        "maxCountPerUser": 1,
+        "name": "Snow Machine",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 0,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_4de8d7a4-1138-44cf-8c32-dd74993933de/1/256",
+        "unityPackages": [],
+        "version": 21,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 1
     }
 ]
