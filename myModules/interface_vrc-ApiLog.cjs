@@ -76,7 +76,6 @@ var InstanceHistory = [
 		'location': 'offline',
 		'join_timestamp': 0,
 		"leave_timestamp": 0,
-		'timeSpent': 0,
 		'worldID': '',
 		'ownerID': '',
 		'groupID': '',
@@ -86,7 +85,6 @@ var InstanceHistory = [
 		'location': 'offline',
 		'join_timestamp': 0,
 		"leave_timestamp": 0,
-		'timeSpent': 0,
 		'worldID': '',
 		'ownerID': '',
 		'groupID': '',
@@ -331,8 +329,7 @@ async function updateCurrentUserInfo(isFirstLaunch = false) {
 				'join_timestamp': Date.now(),
 				'leave_timestamp': 0,
 				'location': currentUser.data.presence.world + ':' + currentUser.data.presence.instance,
-				'worldID': currentUser.data.presence.world,
-				'timeSpent': 0
+				'worldID': currentUser.data.presence.world
 			}
 			console.log(`${loglv.info}${selflogA} Adding User Presence instance to history: `, InstanceHistory[0])
 
@@ -1206,7 +1203,9 @@ async function addLabWorldsToLocalQueue() {
 		console.log(`${loglv.info}${selflogA} Added ${worldlist_addcount}`)
 		if (worldlist.includes(lastInQueue) || skipAdd == true) {
 			console.log(`${loglv.hey}${selflogA} Cancelled list appendage, Queue already contains part of latest batch`)
-			oscChatBoxV2(`Cancelled queue append:\v Queue already contains latest labs batch`, 5000, true, true, false, false, false)
+			say.speak(`Cancelled queue append. Queue already contains latest labs batch`,
+				'Microsoft Zira Desktop', 1.0, (err) => { err ? console.error(`${loglv.warn}${selflogL} say.js error: ` + err) : '' })
+			// oscChatBoxV2(`Cancelled queue append:\v Queue already contains latest labs batch`, 5000, true, true, false, false, false)
 
 		} else {
 			fs.appendFile(worldQueueTxt, `\r\n` + worldlist, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) } })
@@ -2003,8 +2002,7 @@ function eventGameClose() {
 		'join_timestamp': Date.now(),
 		'leave_timestamp': 0,
 		'location': 'offline',
-		'worldID': 'offline',
-		'timeSpent': 0
+		'worldID': 'offline'
 	}
 
 	setTimeout(() => {
@@ -2145,11 +2143,11 @@ async function updateBioWorldQueue() {
 				console.log(`${loglv.info}${selflogA} Fetching current Bio`)
 				let { data: mybio } = await limiter.req(vrchat.getUser({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' } }))
 
-				if (mybio.bio.match(/Worlds in queue[:˸] (\d{1,4})/) != null) {
-					if (parseInt(mybio.bio.match(/Worlds in queue[:˸] (\d{1,4})/)[1]) != localQueueList.length) {
-						console.log(`${loglv.info}${selflogA} Updating Bio queue count: ${mybio.bio.match(/Worlds in queue[:˸] (\d{1,10})/)[1]} -> ${localQueueList.length}`)
+				if (mybio.bio.match(/Worlds in queue (\d{1,6})/) != null) {
+					if (parseInt(mybio.bio.match(/Worlds in queue (\d{1,6})/)[1]) != localQueueList.length) {
+						console.log(`${loglv.info}${selflogA} Updating Bio queue count: ${mybio.bio.match(/Worlds in queue (\d{1,6})/)[1]} -> ${localQueueList.length}`)
 						// console.log(`${loglv.debug}${selflog} ${mybio.bio}`)
-						let mybioUpdated = mybio.bio.replace(/Worlds in queue[:˸] \d{1,10}/, 'Worlds in queue: ' + localQueueList.length)
+						let mybioUpdated = mybio.bio.replace(/Worlds in queue \d{1,6}/, 'Worlds in queue ' + localQueueList.length)
 						await limiter.req(vrchat.updateUser({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' }, 'body': { 'bio': mybioUpdated } }))
 
 						// console.log(`${loglv.debug}${selflog} ${mybioUpdated}`)
@@ -2596,8 +2594,6 @@ async function eventHeadingToWorld(logOutputLine) {
 
 	console.log(`${loglv.debug}[InstanceHistory] Marking instance as Leaving: ${InstanceHistory[0].location}`)
 	InstanceHistory[0].leave_timestamp = Date.now()
-	InstanceHistory[0].timespentDisplay = new Date(InstanceHistory[1].leave_timestamp - InstanceHistory[1].join_timestamp).toISOString().substring(11, 19)
-	InstanceHistory[0].timeSpent = InstanceHistory[1].leave_timestamp - InstanceHistory[1].join_timestamp
 
 	InstanceHistory.unshift({
 		'location': 'wrld_' + logOutputLine.split('wrld_')[1],
@@ -2606,9 +2602,7 @@ async function eventHeadingToWorld(logOutputLine) {
 		'ownerID': ownerID,
 		'instanceType': instanceType,
 		'join_timestamp': 0,
-		'leave_timestamp': 0,
-		'timespentDisplay': 0,
-		'timeSpent': 0
+		'leave_timestamp': 0
 	});
 	console.log(`${loglv.debug}[InstanceHistory] Adding upcoming instance to history: `, InstanceHistory[0])
 
@@ -2948,11 +2942,10 @@ async function eventPlayerJoin(logOutputLine) {
 				playersInstanceObject[pioIndex].status = userCacheStatus
 				playersInstanceObject[pioIndex].isFriend = gotUser.data.isFriend
 				playersInstanceObject[pioIndex].trust = userCacheTrust[1]
-				playersInstanceObject[pioIndex].joinedAt = Date.now()
 			} catch (err) {
 				console.log(`${loglv.hey}${selflogL} playerTrackerObject - ${err}`)
 				playersInstanceObject.push({
-					'name': playerDisplayName, 'id': playerID, 'joinedAt': Date.now(), 'isFriend': gotUser.data.isFriend, 'platform': userCachePlatform || 'standalonewindows', 'status': userCacheStatus, 'trust': userCacheTrust[1]
+					'name': playerDisplayName, 'id': playerID, 'isFriend': gotUser.data.isFriend, 'platform': userCachePlatform || 'standalonewindows', 'status': userCacheStatus, 'trust': userCacheTrust[1]
 				})
 			}
 
@@ -2964,10 +2957,9 @@ async function eventPlayerJoin(logOutputLine) {
 
 		try {
 			playersInstanceObject[pioIndex].id = playerID
-			playersInstanceObject[pioIndex].joinedAt = Date.now()
 		} catch (error) {
 			console.log(`${loglv.hey}${selflogL} playerTracker Object got UserID before PlayerName - ${error}`)
-			playersInstanceObject.push({ 'name': playerDisplayName, 'id': playerID, 'joinedAt': Date.now() })
+			playersInstanceObject.push({ 'name': playerDisplayName, 'id': playerID, })
 		}
 
 	}
@@ -2985,13 +2977,7 @@ function eventPlayerLeft(logOutputLine) {
 		playersInstanceObject = playersInstanceObject.filter(playersInstanceObject => playersInstanceObject.name !== playerDisplayName)
 		playerRatio = playersInInstance.length / playerHardLimit
 
-		if (playerDisplayName != currentAccountInUse.name) {
-			var playerTimeSpentInInstance = new Date(Date.now() - (playersInstanceObject[0] || { joinedAt: 0 })['joinedAt'] || 0).toISOString().substring(11, 19)
-			console.log(`${loglv.info}${selflogL} Player Left: ${playerDisplayName}`.padEnd(97, ' ') + ` [${playerTimeSpentInInstance}]`)
-		} else {
-			var playerTimeSpentInInstance = new Date(Date.now() - InstanceHistory[1].join_timestamp).toISOString().substring(11, 19)
-			console.log(`${loglv.info}${selflogL} Player Left: ${playerDisplayName}`.padEnd(97, ' ') + ` [${playerTimeSpentInInstance}]`)
-		}
+		console.log(`${loglv.info}${selflogL} Player Left: ${playerDisplayName}`)
 
 		if (Date.now() > (InstanceHistory[0].join_timestamp + 30000) && worldHopTimeout != null) { queueInstanceDataBurst() }
 
@@ -3033,7 +3019,6 @@ function eventPlayerLeft(logOutputLine) {
 			G_Instance10min = false
 			G_InstanceClosed = false
 
-
 			oscSend('/avatar/parameters/log/instance_closed', false)
 			oscSend('/avatar/parameters/log/instance_10min', false) // G_Instance10min
 			tonAvgStartWait = []
@@ -3057,7 +3042,7 @@ function eventInstanceClosed() {
 	if (InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 		inviteLocalQueue(G_autoNextWorldHop, G_exploreInviteMode)
 	}
-	
+
 	G_InstanceClosed = true
 	oscSend('/avatar/parameters/log/instance_closed', true)
 }
