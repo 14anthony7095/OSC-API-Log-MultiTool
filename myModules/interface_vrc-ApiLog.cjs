@@ -43,7 +43,15 @@ var tarFileSize = 0
 var tarFilePath = 'nothing'
 var playersInInstance = []
 var membersInInstance = []
-var playersInstanceObject = []
+var playersInstanceObject = [{
+	name: null,
+	id: null,
+	isFriend: false,
+	platform: null,
+	status: null,
+	trust: null,
+	isGroupMember: false
+}]
 var playerHardLimit = 99
 var playerRatio = 0.5
 var memberRatio = 0.5
@@ -189,6 +197,8 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
         > prefill
         > autonext [True/False]
 -   hoppers
+-	playersInstanceObject [DEBUG VIEW]
+-	members
 -   log
         > vidurl [True/False]
         > vidtitle [True/False]
@@ -227,14 +237,42 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'twitch' && args[0] == 'switch') { ttvFetchFrom = 1; setTimeout(() => { switchChannel(args[1].toString()) }, 100) }
 	if (cmd == 'twitch' && args[0] == 'from') { ttvFetchFrom = args[1] }
 
+	if (cmd == 'playersInstanceObject') { console.log(playersInstanceObject) }
+	if (cmd == 'members') {
+		let string = `${loglv.info}${selflogL} [Instance Member List]`
+
+		playersInstanceObject.forEach((m, i, a) => {
+			if (m.isGroupMember == true) {
+				var userCachePlatformLog = m.platform == 'android' ? '🍏 Android' :
+					m.platform == 'ios' ? '📱 iOS    ' :
+						'🖥️ PC     '
+
+				var userCacheStatusLog = m.status == 'join me' ? '🔵 Join Me' :
+					m.status == 'busy' ? '🔴 Busy' :
+						m.status == 'ask me' ? '🟠 Ask Me' :
+							'🟢 Active'
+
+				var userCacheTrust = m.trust == 'Trusted User' ? ['🟪 Trusted User', 'Trusted User'] :
+					m.trust == 'Known User' ? ['🟧 Known User  ', 'Known User'] :
+						m.trust == 'User' ? ['🟩 User        ', 'User'] :
+							m.trust == 'New User' ? ['🟦 New User    ', 'New User'] :
+								['👻 Visitor     ', 'Visitor']
+
+				string += `\n			${loglv.true}${m.name.replace(/[^\x20-\x7E]/g, "?").padEnd(20, ' ').slice(0, 20)}${loglv.reset} is a ${userCacheTrust[0]} on ${userCachePlatformLog} set to ${userCacheStatusLog}`
+			}
+		})
+
+		console.log(string)
+	}
+
 	if (cmd == 'hoppers') {
 		var string = ''
 		worldHoppers.sort((a, b) => { return b.playtime - a.playtime }).forEach((a) => {
 			var discordInfo = vrchatDiscord.filter(e => e.vrcUUID == a.id)
 			if (discordInfo.length != 0) {
-				string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` ${a.groupMember == true ? `💜` : `👻`} ${a.name} <@${discordInfo[0].discordid}> - [${discordInfo[0].discordid}]`
+				string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` 🌎 \`${a.worldCount.toString().padStart(2, ' ')}\` ${a.groupMember == true ? `💜` : `👻`} ${a.name} <@${discordInfo[0].discordid}> - [${discordInfo[0].discordid}]`
 			} else {
-				string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` ${a.groupMember == true ? `💜` : `👻`} ${a.name} [profile](<https://vrchat.com/home/user/${a.id}>)`
+				string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` 🌎 \`${a.worldCount.toString().padStart(2, ' ')}\` ${a.groupMember == true ? `💜` : `👻`} ${a.name} [profile](<https://vrchat.com/home/user/${a.id}>)`
 			}
 		})
 		console.log(string)
@@ -246,6 +284,8 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 
 async function main() {
 	console.log(`${loglv.debug}${selflogA} Started main function`)
+
+	playersInstanceObject = []
 
 	currentUser = await limiter.req(vrchat.getCurrentUser({ throwOnError: true }))
 	console.log(`${loglv.info}${selflogA} Logged in as: ${currentUser.data.displayName}`);
@@ -2786,16 +2826,6 @@ async function eventPlayerJoin(logOutputLine) {
 		// Append UserID to tracked player
 		let pioIndex = playersInstanceObject.findIndex(playersInstanceObject => playersInstanceObject.name == playerDisplayName)
 
-		// Don't start tracking New players until after First-Load stablization
-		if (!playerRetention['seenNames'].includes(playerDisplayName)) {
-			try {
-				playerRetention['history'][0].added++
-			} catch (e) {
-				playerRetention['history'] = [{ 'added': 1 }]
-			}
-			playerRetention['seenNames'].push(playerDisplayName)
-		}
-
 		// When I join instance
 		if (playerDisplayName == currentAccountInUse.name) {
 			logEmitter.emit('joinedworld', InstanceHistory[0].worldID)
@@ -2853,8 +2883,11 @@ async function eventPlayerJoin(logOutputLine) {
 					try {
 						var whindex = worldHoppers.findIndex(f => f.name == playerDisplayName)
 						worldHoppers[whindex]["joinTime"] = Date.now()
+						if (!playerRetention['seenNames'].includes(playerDisplayName)) {
+							worldHoppers[whindex]["worldCount"] = (worldHoppers[whindex]["worldCount"] || 0) + 1
+						}
 					} catch (error) {
-						worldHoppers.push({ "name": playerDisplayName, "id": playerID, "playtime": 0, "joinTime": Date.now(), "groupMember": I_memberStatus })
+						worldHoppers.push({ "name": playerDisplayName, "id": playerID, "playtime": 0, "joinTime": Date.now(), "worldCount": 1, "groupMember": I_memberStatus })
 					}
 				}
 			}
@@ -2873,7 +2906,7 @@ async function eventPlayerJoin(logOutputLine) {
 				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
 			})
 
-			if (gotUserGroups.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
+			if (gotUserGroups?.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
 				markUserAsMember(false, 'ElAlba', true)
 			} else { markUserAsMember(true, 'ElAlba', true) }
 
@@ -2883,7 +2916,7 @@ async function eventPlayerJoin(logOutputLine) {
 				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
 			})
 
-			if (gotUserGroups.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
+			if (gotUserGroups?.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
 				markUserAsMember(false, 'CommunityMeetup', true)
 			} else { markUserAsMember(true, 'CommunityMeetup', true) }
 
@@ -2893,7 +2926,7 @@ async function eventPlayerJoin(logOutputLine) {
 				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
 			})
 
-			if (gotUserGroups.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
+			if (gotUserGroups?.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
 				markUserAsMember(false, '14aWorldHop', true)
 			} else { markUserAsMember(true, '14aWorldHop', true) }
 
@@ -2903,7 +2936,7 @@ async function eventPlayerJoin(logOutputLine) {
 				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
 			})
 
-			if (gotUserGroups.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
+			if (gotUserGroups?.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
 				markUserAsMember(false)
 			} else { markUserAsMember(true) }
 
@@ -2955,6 +2988,17 @@ async function eventPlayerJoin(logOutputLine) {
 		}
 
 
+		// Don't start tracking New players until after First-Load stablization
+		if (!playerRetention['seenNames'].includes(playerDisplayName)) {
+			try {
+				playerRetention['history'][0].added++
+			} catch (e) {
+				playerRetention['history'] = [{ 'added': 1 }]
+			}
+			playerRetention['seenNames'].push(playerDisplayName)
+		}
+
+
 		try {
 			playersInstanceObject[pioIndex].id = playerID
 		} catch (error) {
@@ -3000,6 +3044,7 @@ function eventPlayerLeft(logOutputLine) {
 				console.debug(worldHoppers[foundindex]["playtime"])
 				console.debug(worldHoppers[foundindex]["joinTime"])
 				console.debug(Date.now() - worldHoppers[foundindex]["joinTime"])
+				console.debug(worldHoppers[foundindex]["worldCount"])
 				worldHoppers[foundindex]["playtime"] += Date.now() - worldHoppers[foundindex]["joinTime"]
 			} else {
 				console.log(`${loglv.hey}${selflogL} [WorldHoppers] Skipping undetected join`)
