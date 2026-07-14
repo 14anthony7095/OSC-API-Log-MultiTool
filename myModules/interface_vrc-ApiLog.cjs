@@ -29,6 +29,8 @@ const { KeyvFile } = require("keyv-file");
 const { WebSocket } = require("ws");
 const { table } = require('table');
 const { default: open } = require('open');
+const confuseable = require('confusables')
+
 // const sqlite3 = require('sqlite3').verbose();
 // const db = new sqlite3.Database('datasets/vrchat-X-discord.db');
 
@@ -258,7 +260,8 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 							m.trust == 'New User' ? ['🟦 New User    ', 'New User'] :
 								['👻 Visitor     ', 'Visitor']
 
-				string += `\n			${loglv.true}${m.name.replace(/[^\x20-\x7E]/g, "?").padEnd(20, ' ').slice(0, 20)}${loglv.reset} is a ${userCacheTrust[0]} on ${userCachePlatformLog} set to ${userCacheStatusLog}`
+								
+				string += `\n${loglv.info}${selflogA} [User] ${loglv.true}${confuseable.default(m.name).replace(/[^\x20-\x7E]/g, "?").padEnd(20, ' ').slice(0, 20)}${loglv.reset} is a ${userCacheTrust[0]} on ${userCachePlatformLog} set to ${userCacheStatusLog}`
 			}
 		})
 
@@ -278,6 +281,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 		console.log(string)
 	}
 	if (cmd == 'clearhoppers') {
+		console.log(`${loglv.hey}[WorldHop] Cleared ${worldHoppers.length} users from tracker`)
 		worldHoppers = []
 	}
 })
@@ -2181,13 +2185,13 @@ async function updateBioWorldQueue() {
 			console.log(`${loglv.hey}${selflogA} Preping Bio for world queue update`)
 			if (localQueueList.length != 0) {
 				console.log(`${loglv.info}${selflogA} Fetching current Bio`)
-				let { data: mybio } = await limiter.req(vrchat.getUser({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' } }))
+				let mybio = await limiter.req(vrchat.getUser({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' } }))
 
-				if (mybio.bio.match(/Worlds in queue (\d{1,6})/) != null) {
-					if (parseInt(mybio.bio.match(/Worlds in queue (\d{1,6})/)[1]) != localQueueList.length) {
-						console.log(`${loglv.info}${selflogA} Updating Bio queue count: ${mybio.bio.match(/Worlds in queue (\d{1,6})/)[1]} -> ${localQueueList.length}`)
+				if (mybio.data != undefined && mybio?.data.bio.match(/Worlds in queue (\d{1,6})/) != null) {
+					if (parseInt(mybio?.data.bio.match(/Worlds in queue (\d{1,6})/)[1]) != localQueueList.length) {
+						console.log(`${loglv.info}${selflogA} Updating Bio queue count: ${mybio?.data.bio.match(/Worlds in queue (\d{1,6})/)[1]} -> ${localQueueList.length}`)
 						// console.log(`${loglv.debug}${selflog} ${mybio.bio}`)
-						let mybioUpdated = mybio.bio.replace(/Worlds in queue \d{1,6}/, 'Worlds in queue ' + localQueueList.length)
+						let mybioUpdated = mybio?.data.bio.replace(/Worlds in queue \d{1,6}/, 'Worlds in queue ' + localQueueList.length)
 						await limiter.req(vrchat.updateUser({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' }, 'body': { 'bio': mybioUpdated } }))
 
 						// console.log(`${loglv.debug}${selflog} ${mybioUpdated}`)
@@ -2655,6 +2659,8 @@ async function eventHeadingToWorld(logOutputLine) {
 	apiEmitter.emit('fetchedDistThumbnail', gotWorld.data?.imageUrl || '', gotWorld.data?.name.slice(0, 50) || 'UnknownName', gotWorld.data?.authorName.slice(0, 50) || 'UnknownAuthor', worldID)
 
 
+	// Community Meetup starting world
+	if (groupID == 'grp_c24efb98-3234-4060-94f1-7729523e9689' && worldID == 'wrld_7de12122-be9d-42a1-99c0-4cc763144629') { worldHoppers = [] }
 	// El Alba starting world
 	if (groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && worldID == 'wrld_f6445b27-037d-4926-b51f-d79ada716b31') { worldHoppers = [] }
 	// 14aHop starting world
@@ -2697,15 +2703,17 @@ var playerRetention = {
 }
 function eventJoiningWorld() {
 	worldHopTimeout = setTimeout(() => {
-		say.speak(`Been in world for too long. Proceed to next in queue`, 'Microsoft David Desktop', 1.0, (err) => {
-			if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) }
-		})
+		say.speak(`Been in world for too long. Proceed to next in queue`,
+			'Microsoft David Desktop', 1.0,
+			(err) => { if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) } }
+		)
 		oscSend('/avatar/parameters/log/instance_10min', true); G_Instance10min = true
 	}, 600_000)
 	worldHopTimeoutHour = setTimeout(() => {
-		say.speak(`Been in world for over an hour. Find a new world`, 'Microsoft David Desktop', 1.0, (err) => {
-			if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) }
-		})
+		say.speak(`Been in world for over an hour. Find a new world`,
+			'Microsoft David Desktop', 1.0,
+			(err) => { if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) } }
+		)
 	}, 3600_000)
 
 	console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate] history: `, playerRetention['history'])
@@ -2714,6 +2722,7 @@ function eventJoiningWorld() {
 		// Process frame (last 10mins)
 		let rateP = (playersInInstance.length - playerRetention['history'][0].added) / playerRetention['history'][0].startingValue
 		playerRetention['rate'].unshift(rateP)
+		plyRRP = Math.floor(average(playerRetention['rate']) * 100)
 		playerRetention['history'][0]['endingValue'] = playersInInstance.length
 		playerRetention['history'][0]['chunk-rate'] = rateP
 
@@ -2724,7 +2733,16 @@ function eventJoiningWorld() {
 			'endingValue': null
 		})
 		console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate] History: `, playerRetention['history'])
-		console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate] Avg: ${Math.floor(average(playerRetention['rate']) * 100)}%`)
+		console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate] Avg: ${plyRRP}%`)
+
+		if (plyRRP < 70) {
+			setTimeout(() => {
+				say.speak(`Warning, the player retention rate for the instance is below 70%. Currently at ${plyRRP}%`,
+					'Microsoft Zira Desktop', 1.0,
+					(err) => { if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) } }
+				)
+			}, 5000);
+		}
 
 		if ([`groupPlus`, `groupPublic`].includes(InstanceHistory[0].instanceType)) {
 			membersInInstance = playersInstanceObject.filter(p => p.isGroupMember == true)
@@ -2906,7 +2924,7 @@ async function eventPlayerJoin(logOutputLine) {
 				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
 			})
 
-			if (gotUserGroups?.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
+			if ((gotUserGroups?.data || []).find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
 				markUserAsMember(false, 'ElAlba', true)
 			} else { markUserAsMember(true, 'ElAlba', true) }
 
@@ -2916,9 +2934,19 @@ async function eventPlayerJoin(logOutputLine) {
 				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
 			})
 
-			if (gotUserGroups?.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
+			if ((gotUserGroups?.data || []).find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
 				markUserAsMember(false, 'CommunityMeetup', true)
 			} else { markUserAsMember(true, 'CommunityMeetup', true) }
+
+		} else if (InstanceHistory[0].groupID == 'grp_65121a00-ea58-49f2-8ca4-797e52a11798') {
+
+			var gotUserGroups = await limiter.reqCached('userGroups', playerID).catch(async () => {
+				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
+			})
+
+			if ((gotUserGroups?.data || []).find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
+				markUserAsMember(false, 'ClubSova', true)
+			} else { markUserAsMember(true, 'ClubSova', true) }
 
 		} else if (InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 
@@ -2926,7 +2954,7 @@ async function eventPlayerJoin(logOutputLine) {
 				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
 			})
 
-			if (gotUserGroups?.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
+			if ((gotUserGroups?.data || []).find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
 				markUserAsMember(false, '14aWorldHop', true)
 			} else { markUserAsMember(true, '14aWorldHop', true) }
 
@@ -2936,7 +2964,7 @@ async function eventPlayerJoin(logOutputLine) {
 				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
 			})
 
-			if (gotUserGroups?.data.find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
+			if ((gotUserGroups?.data || []).find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
 				markUserAsMember(false)
 			} else { markUserAsMember(true) }
 
@@ -2967,7 +2995,7 @@ async function eventPlayerJoin(logOutputLine) {
 						gotUser.data.tags.includes('system_trust_basic') ? ['🟦 New User    ', 'New User'] :
 							['👻 Visitor     ', 'Visitor']
 
-			console.log(`${loglv.info}${selflogA} [User] ${loglv.true}${playerDisplayName.replace(/[^\x20-\x7E]/g, "?").padEnd(20, ' ').slice(0, 20)}${loglv.reset} is a ${userCacheTrust[0]} on ${userCachePlatformLog} set to ${userCacheStatusLog}`)
+			console.log(`${loglv.info}${selflogA} [User] ${loglv.true}${confuseable.default(playerDisplayName).replace(/[^\x20-\x7E]/g, "?").padEnd(20, ' ').slice(0, 20)}${loglv.reset} is a ${userCacheTrust[0]} on ${userCachePlatformLog} set to ${userCacheStatusLog}`)
 			// console.log(`${loglv.info}${selflogA} [User] ${loglv.true}${playerDisplayName.replace(/[^\x00-\x7F]/g, "?").padEnd(20,' ').slice(0,20)}${loglv.reset} is a ${userCacheTrust[0]} on ${userCachePlatformLog} set to ${userCacheStatusLog}`)
 
 			try {
@@ -3037,7 +3065,10 @@ function eventPlayerLeft(logOutputLine) {
 		// logEmitter.emit('playerLeft', playerDisplayName, playerID, playersInInstance)
 
 		// worldhop Tracker
-		if (['grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad', 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce'].includes(InstanceHistory[0].groupID)) {
+		if (['grp_65121a00-ea58-49f2-8ca4-797e52a11798',
+			'grp_c24efb98-3234-4060-94f1-7729523e9689',
+			'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad',
+			'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce'].includes(InstanceHistory[0].groupID)) {
 			var filteredhoppers = worldHoppers.find(a => a.name == playerDisplayName)
 			if (filteredhoppers != undefined) {
 				var foundindex = worldHoppers.findIndex(a => a.name == playerDisplayName)
