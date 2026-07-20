@@ -242,7 +242,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'playersInstanceObject') { console.log(playersInstanceObject) }
 	if (cmd == 'members') {
 		let string = `${loglv.info}${selflogL} [Instance Member List]`
-
+		var memberidsvrcx = ''
 		playersInstanceObject.forEach((m, i, a) => {
 			if (m.isGroupMember == true) {
 				var userCachePlatformLog = m.platform == 'android' ? '🍏 Android' :
@@ -260,10 +260,11 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 							m.trust == 'New User' ? ['🟦 New User    ', 'New User'] :
 								['👻 Visitor     ', 'Visitor']
 
-								
 				string += `\n${loglv.info}${selflogA} [User] ${loglv.true}${confuseable.default(m.name).replace(/[^\x20-\x7E]/g, "?").padEnd(20, ' ').slice(0, 20)}${loglv.reset} is a ${userCacheTrust[0]} on ${userCachePlatformLog} set to ${userCacheStatusLog}`
+				if (args[0] == 'vrcx') { setTimeout(() => { open(`vrcx://user/${m.id}`) }, i * 200); }
 			}
 		})
+
 
 		console.log(string)
 	}
@@ -2858,7 +2859,7 @@ async function eventPlayerJoin(logOutputLine) {
 
 			// Remove world from Explore Queue
 			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
-				if (data.includes(InstanceHistory[0].worldID) && InstanceHistory[0].worldID != '') {
+				if (data.includes(InstanceHistory[0].worldID) && InstanceHistory[0].worldID != '' && vrcUserStatusText != 'Preloading worlds') {
 					fs.writeFile(worldQueueTxt, data.replaceAll(`${InstanceHistory[0].worldID}\r\n`, ''), (err) => {
 						if (err) { console.log(err) }
 						console.log(`${loglv.debug}${selflogL} Purged world from Queue: ${InstanceHistory[0].worldID}`)
