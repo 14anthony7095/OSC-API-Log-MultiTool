@@ -11,7 +11,8 @@ var { logOscIn, logOscOut } = require('./config.js')
 const { deviceIP } = require('../index.js')
 let selflog = `\x1b[0m[\x1b[34mOSC\x1b[0m]`
 var osc = require('osc');
-var udpPort = new osc.UDPPort({ localAddress: '127.0.0.1', localPort: 9100 })
+var udpPort = new osc.UDPPort({ localAddress: '127.0.0.1', localPort: 9100 }); udpPort.open()
+// var udpPortAudio = new osc.UDPPort({ localAddress: '127.0.0.1', localPort: 7000 }); udpPortAudio.open()
 const remotePort = 9000
 const { cmdEmitter } = require('./input.js');
 const { playNote } = require('./interface_midi.js')
@@ -97,9 +98,6 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 		}
 	}
 })
-
-
-udpPort.open()
 
 
 function oscChatTyping(active) {
@@ -368,6 +366,22 @@ var oscCache = {
 	'doAutoJump': false,
 	'earsDown': false
 }
+function remapValueRange(i_value, oldMin, oldMax, newMin, newMax) {
+	return newMin + (i_value - oldMin) * (newMax - newMin) / (oldMax - oldMin)
+}
+
+try {
+	udpPortAudio.on("message", (msg, rinfo) => {
+		// console.log(msg,rinfo)
+		if (msg["address"] == '/composition/tempocontroller/tempo') {
+			// tempo float to bpm
+			var bpmFromFloat = remapValueRange(msg["args"][0], 0.0125, 1, 20, 500)
+			oscSend(vrcap + 'Go/Action', true)
+			oscSend(vrcap + 'VRCEmote', 10)
+			oscSend(vrcap + 'Go/Float', remapValueRange(bpmFromFloat, 20, 250, 0.08, 1))
+		}
+	})
+} catch (error) { }
 udpPort.on("message", function (msg, rinfo) {
 	if (logOscIn == true) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
 	oscEmitter.emit('osc', msg['address'], msg['args'][0]);

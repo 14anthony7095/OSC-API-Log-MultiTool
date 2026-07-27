@@ -323,7 +323,7 @@ async function manualCall(vrcapiEndpoint, methodType = 'GET', bodyJson = undefin
 			}
 		}
 
-		let request = await fetch(vrcapihttp + '' + vrcapiEndpoint + `${uriJson != undefined ? '?' + encodeURIComponent(uriJson).replaceAll('%3D', '=') : ''}`, apiRequest)
+		let request = await fetch(vrcapihttp + '' + vrcapiEndpoint + `${uriJson != undefined ? '?' + new URLSearchParams(uriJson).toString() : ''}`, apiRequest)
 		// console.log(request)
 		let jsonResponse = await request.json()
 		if (jsonResponse.error) {
@@ -1025,6 +1025,25 @@ function processLogLine(line) {
 	if (line.includes(`[ModerationManager]`)) {
 		var moderationlog = line.split(`[ModerationManager] `)[1]
 		console.log(`${loglv.info}${selflogL} [ModerationManager]: ${moderationlog}`)
+
+		const voteKickRegex = [
+			/A vote kick has been initiated against (.+), do you agree\?/,
+			/A vote to kick (.+) has been requested/
+		]
+		for (const regex of voteKickRegex) {
+			let match = moderationlog.match(regex)
+			if (match) {
+				// Mark player in Player list object
+				var plyIndex = playersInstanceObject.findIndex(p => p.name == votedKickPlayer[1])
+				playersInstanceObject[plyIndex].voteKick = true
+
+				// Open player in VRCX if in friendly group instance
+				if (InstanceHistory[0].groupID == 'grp_f018a0ac-2ec6-4176-aa47-a0fd2b7ea817') {
+					open(`vrcx://user/${playersInstanceObject.find(p => p.name == votedKickPlayer[1]).id}`)
+				}
+
+			}
+		}
 	}
 
 	// Asset Bundle Download Manager
@@ -1847,22 +1866,27 @@ function eventPopcornPalace(json) {
 	//     "looping": false
 	// }
 	var movieShowName = ''
-	try { movieShowName = JSON.parse(json).videoName } catch (error) { movieShowName = 'Youtube' }
+	try { movieShowName = JSON.parse(json).videoName } catch (error) { movieShowName = '' }
 
 	// Reformat title for One Piece watch sessions
 	if (movieShowName.includes('One Piece')) { movieShowName = movieShowName.replace('- S1E', 'ep.').split(' -')[0] }
+
+	// Reformat title for Default SoundCloud
+	if (movieShowName.includes('soundcloud.com')) { movieShowName = '' }
+
 
 	// Difference while on Main accounts
 	if (movieShowName != popcornPalaceMovieTitle && currentAccountInUse['Agroup'] == true) {
 		popcornPalaceMovieTitle = movieShowName
 
-		if (movieShowName != '') {
+		if (movieShowName != '' ) {
 			oscChatBoxV2(`~MovieTitle:\v ${movieShowName}`, 5000, true, true, false, false, false)
 
 			// Been in world long enough
-			if ((InstanceHistory[0].join_timestamp + 300_000 < Date.now() || InstanceHistory[0].ownerID == currentAccountInUse['id']) && InstanceHistory[0].join_timestamp != 0) {
-				setUserStatus(`Watching ${movieShowName}`)
-			}
+			if (InstanceHistory[0].join_timestamp == 0) { return }
+			var elapsedTime = (Date.now() - InstanceHistory[0].join_timestamp) / 1000
+			var timeCheck = InstanceHistory[0].ownerID == currentAccountInUse['id'] ? elapsedTime >= 60 : elapsedTime >= 300
+			if (timeCheck) { setUserStatus(`Watching ${movieShowName}`) }
 
 		}
 	}
@@ -2723,7 +2747,8 @@ function eventJoiningWorld() {
 		// Process frame (last 10mins)
 		let rateP = (playersInInstance.length - playerRetention['history'][0].added) / playerRetention['history'][0].startingValue
 		playerRetention['rate'].unshift(rateP)
-		plyRRP = Math.floor(average(playerRetention['rate']) * 100)
+		let plyRRPLast = Math.floor(rateP * 100)
+		let plyRRP = Math.floor(average(playerRetention['rate']) * 100)
 		playerRetention['history'][0]['endingValue'] = playersInInstance.length
 		playerRetention['history'][0]['chunk-rate'] = rateP
 
@@ -2738,7 +2763,7 @@ function eventJoiningWorld() {
 
 		if (plyRRP < 70) {
 			setTimeout(() => {
-				say.speak(`Warning, the player retention rate for the instance is below 70%. Currently at ${plyRRP}%`,
+				say.speak(`Warning, the player retention rate for the instance is below 70%. Average is at ${plyRRP}%. Last chunk is at ${plyRRPLast}%`,
 					'Microsoft Zira Desktop', 1.0,
 					(err) => { if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) } }
 				)
@@ -3045,8 +3070,17 @@ function eventPlayerLeft(logOutputLine) {
 		// var playerID = /(?:\([0-z]{10}\))|(?:\(usr_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}\))/.exec(playerDisplayName)[0]
 
 		playerDisplayName = playerDisplayName.replace(/ \(usr_[0-z]{8}-([0-z]{4}-){3}[0-z]{12}\)/, '').replace(/ \([0-z]{10}\)/, '')
-
 		playersInInstance = playersInInstance.filter(name => name != playerDisplayName)
+
+		var isBeingKicked = playersInstanceObject.find(p => p.name == playerDisplayName && p.voteKick == true)
+		if (isBeingKicked != undefined && worldHopTimeout != null) {
+			console.log(`${loglv.info}${selflogL} [ModerationManager] Player Successfully Kicked: ${playerDisplayName}`)
+			say.speak(`${playerDisplayName} was successfully kicked`,
+				'Microsoft Zira Desktop', 1.0,
+				(err) => { if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) } }
+			)
+		}
+
 		playersInstanceObject = playersInstanceObject.filter(playersInstanceObject => playersInstanceObject.name !== playerDisplayName)
 		playerRatio = playersInInstance.length / playerHardLimit
 
