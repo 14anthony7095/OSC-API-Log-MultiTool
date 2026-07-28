@@ -65,7 +65,7 @@ var currentUser;
 var userAutoAcceptWhiteList = []
 var worldsSeenDB = new Set()
 var worldQueueTxt = './datasets/worldQueue.txt'
-var explorePrivacyLevel = 1
+var explorePrivacyLevel = 'groupPlus'
 var G_exploreInviteMode = false // Self: false - Friends: true
 var G_exploreAutoClose = true
 var G_autoRandomizeApparel = false
@@ -189,30 +189,30 @@ const limiter = new ratelimitHandler();
 cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'help') {
 		console.log(`
--   api requestall
--   years [open/close]
--   forceaudit
--   preload [wrld_UUID...]
--   addworlds [<string>]
+-	api requestall
+-	years [open/close]
+-	forceaudit
+-	preload [wrld_UUID...]
+-	addworlds [<string>]
 -	pruneseen
--   explore
-        > prefill
-        > autonext [True/False]
--   hoppers
+-	explore
+		> prefill
+		> autonext [True/False]
+-	hoppers
 -	playersInstanceObject [DEBUG VIEW]
 -	members
--   log
-        > vidurl [True/False]
-        > vidtitle [True/False]
-        > printall [True/False]
-        > queue [True/False]
-        > speed [True/False]
--   twitch
-        > alwaysrun [True/False]
-        > join [channel:<string>]
-        > leave [channel:<string>]
-        > switch [channel:<string>]
-        > from [0-3]`)
+-	log
+		> vidurl [True/False]
+		> vidtitle [True/False]
+		> printall [True/False]
+		> queue [True/False]
+		> speed [True/False]
+-	twitch
+		> alwaysrun [True/False]
+		> join [channel:<string>]
+		> leave [channel:<string>]
+		> switch [channel:<string>]
+		> from [0-3]`)
 	}
 	if (cmd == 'api' && args[0] == 'requestall') { requestAllOnlineFriends(currentUser) }
 	if (cmd == 'years' && args[0] == 'close') { switchYearGroupsClosed() }
@@ -511,7 +511,11 @@ function socket_VRC_API_Connect() {
 				console.log(`${loglv.info}${selflogWS} [GPS] ${wsContent.user.displayName} - Now Online`);
 				// console.log(wsContent)
 
-				if (wsContent.location != 'private' || wsContent.travelingToLocation != 'private' || wsContent.travelingToLocation != 'private') {
+				if (userAutoAcceptWhiteList.includes(wsContent.user.displayName)) {
+					sayQueue(`Tracked user, ${wsContent.user.displayName}, is now Online.`, 0)
+				}
+
+				if (wsContent.location != 'private' || wsContent.travelingToLocation != 'private') {
 					var notif_user_location = wsContent.location.includes('wrld_') ? wsContent.location.split(':')[0] : wsContent.travelingToLocation.includes('wrld_') ? wsContent.travelingToLocation.split(':')[0] : wsContent.worldId.includes('wrld_') ? wsContent.worldId : 'private'
 					if (notif_user_location != 'private') {
 						console.log(`${loglv.debug}${selflogA} Checking if Friend location is an Unlisted world.`)
@@ -536,6 +540,11 @@ function socket_VRC_API_Connect() {
 
 			case 'friend-active':
 				console.log(`${loglv.info}${selflogWS} [GPS] ${wsContent.user.displayName} - Active on Web`);
+
+				if (userAutoAcceptWhiteList.includes(wsContent.user.displayName)) {
+					sayQueue(`Tracked user, ${wsContent.user.displayName}, is now Active on web.`, 0)
+				}
+
 				break;
 
 			case 'friend-update':
@@ -617,6 +626,22 @@ function socket_VRC_API_Connect() {
 	});
 }
 
+
+var sayMessageQueue = []
+function sayQueue(I_message, I_voiceID, isLoop = false) {
+	if (isLoop == false) {
+		sayMessageQueue.push({ 'message': I_message, 'voice': I_voiceID == 0 ? 'Microsoft David Desktop' : 'Microsoft Zira Desktop' })
+	}
+	if (isLoop == true || sayMessageQueue.length <= 1) {
+		say.speak(sayMessageQueue[0].message, sayMessageQueue[0].voice, 1.0, (err) => {
+			if (err) { console.error(`${loglv.warn}${selflogL} say.js error: ` + err) }
+			sayMessageQueue.shift();
+			if (sayMessageQueue != 0) { sayQueue(undefined, undefined, true) }
+		})
+	} else {
+		console.log(`${loglv.debug}${selflogL} [\x1b[33m/sayJS/input\x1b[0m] Busy: Adding to Queue`)
+	}
+}
 
 async function isWorldUnlisted(I_worldID = '', I_userDisplayName = '') {
 	var gotWorld = await limiter.req(vrchat.getWorld({ 'path': { 'worldId': I_worldID } }), 'world', I_worldID)
@@ -968,7 +993,7 @@ function processLogLine(line) {
 		}
 		if (line.includes(`Sus player =`)) {
 			tonSusPlayer = line.split('Sus player = ')[1]
-			say.speak('Impostor is ' + tonSusPlayer, 'Microsoft Zira Desktop', 1.0)
+			sayQueue('Impostor is ' + tonSusPlayer, 1)
 			console.log(`${loglv.info}${selflogL} [TON] Impostor is ${tonSusPlayer}`)
 		}
 		if (lineC == `Verified Round End`) {
@@ -1034,12 +1059,12 @@ function processLogLine(line) {
 			let match = moderationlog.match(regex)
 			if (match) {
 				// Mark player in Player list object
-				var plyIndex = playersInstanceObject.findIndex(p => p.name == votedKickPlayer[1])
+				var plyIndex = playersInstanceObject.findIndex(p => p.name == match)
 				playersInstanceObject[plyIndex].voteKick = true
 
 				// Open player in VRCX if in friendly group instance
 				if (InstanceHistory[0].groupID == 'grp_f018a0ac-2ec6-4176-aa47-a0fd2b7ea817') {
-					open(`vrcx://user/${playersInstanceObject.find(p => p.name == votedKickPlayer[1]).id}`)
+					open(`vrcx://user/${playersInstanceObject.find(p => p.name == match).id}`)
 				}
 
 			}
@@ -1179,10 +1204,10 @@ oscEmitter.on('osc', (addr, value) => {
 		apiEmitter.emit('exploreQueue', undefined, 'world')
 	}
 	if (addr == vrcap + `api/explore/prefill` && value == true) { addLabWorldsToLocalQueue() }
-	if (addr == vrcap + `api/explore/privacy` && value == 0) { explorePrivacyLevel = 0 }
-	if (addr == vrcap + `api/explore/privacy` && value == 1) { explorePrivacyLevel = 1 }
-	if (addr == vrcap + `api/explore/privacy` && value == 2) { explorePrivacyLevel = 2 }
-	if (addr == vrcap + `api/explore/privacy` && value == 3) { explorePrivacyLevel = 3 }
+	if (addr == vrcap + `api/explore/privacy` && value == 0) { explorePrivacyLevel = 'groupPublic' }
+	if (addr == vrcap + `api/explore/privacy` && value == 1) { explorePrivacyLevel = 'groupPlus' }
+	if (addr == vrcap + `api/explore/privacy` && value == 2) { explorePrivacyLevel = 'private' }
+	if (addr == vrcap + `api/explore/privacy` && value == 3) { explorePrivacyLevel = 'friendsPlus' }
 	if (addr == vrcap + `api/explore/inviteMode`) { G_exploreInviteMode = value }
 	if (addr == vrcap + `api/explore/autoClose`) { G_exploreAutoClose = value }
 	if (addr == vrcap + `toggle/autoRandomizeApparel`) { G_autoRandomizeApparel = value }
@@ -1193,8 +1218,7 @@ oscEmitter.on('osc', (addr, value) => {
 				findJoinableInstances().then(d => {
 					G_instanceJoinQueue = d
 					// oscChatBoxV2(`~Found ${d.length} joinable instances`, 5000, false, true, false, false)
-					say.speak(`Found ${d.length} joinable instances`,
-						'Microsoft Zira Desktop', 1.0, (err) => { err ? console.error(`${loglv.warn}${selflogL} say.js error: ` + err) : '' })
+					sayQueue(`Found ${d.length} joinable instances`, 1)
 					console.log(`${loglv.hey}${selflogA} Found ${d.length} joinable instances`)
 				})
 				break
@@ -1223,9 +1247,6 @@ oscEmitter.on('avatar', async (avtrID) => {
 		}
 		await sleep(100)
 		oscSend(vrcap + 'button/randomApparel', false)
-		// oscSend(vrcap + 'api/explore/privacy', parseInt(explorePrivacyLevel))
-		// oscSend(vrcap + 'api/explore/inviteMode', G_exploreInviteMode == true)
-		// oscSend(vrcap + 'api/explore/autoClose', G_exploreAutoClose == true)
 
 	}
 });
@@ -1267,8 +1288,7 @@ async function addLabWorldsToLocalQueue() {
 		console.log(`${loglv.info}${selflogA} Added ${worldlist_addcount}`)
 		if (worldlist.includes(lastInQueue) || skipAdd == true) {
 			console.log(`${loglv.hey}${selflogA} Cancelled list appendage, Queue already contains part of latest batch`)
-			say.speak(`Cancelled queue append. Queue already contains latest labs batch`,
-				'Microsoft Zira Desktop', 1.0, (err) => { err ? console.error(`${loglv.warn}${selflogL} say.js error: ` + err) : '' })
+			sayQueue(`Cancelled queue append. Queue already contains latest labs batch`, 1)
 			// oscChatBoxV2(`Cancelled queue append:\v Queue already contains latest labs batch`, 5000, true, true, false, false, false)
 
 		} else {
@@ -1475,12 +1495,15 @@ async function pruneLocalQueue() {
 		} finally { if (fileHandler) { await fileHandler.close() } }
 
 		var rebuild = ''
+		var sweepcount = {'kept':0,'pruned':0}
 		for (const w in localQueueList) {
+			!worldsSeenDB.has(localQueueList[w]) ? count.kept++ : count.pruned++
 			rebuild += !worldsSeenDB.has(localQueueList[w]) ? `${rebuild == '' ? '' : '\r\n'}${localQueueList[w]}` : ''
 		}
 
 		fs.writeFile(worldQueueTxt, rebuild, (err) => {
 			if (err) { console.log(err) }
+			console.log(`${loglv.debug} [PruneSeenWorldsInQueue]`,sweepcount)
 			resolve(true)
 		})
 	})
@@ -1511,7 +1534,20 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 	fs.readFile(worldQueueTxt, 'utf8', async (err, fsReadFile) => {
 		// err ? console.log(err); return : ''
 		let localQueueList = fsReadFile.split('\r\n===\r\n')[0].split(`\r\n`)
-		if (localQueueList[0] == '===' || localQueueList == ['']) {
+
+		if (localQueueList[0].startsWith('[')) {
+			explorePrivacyLevel = localQueueList[0].slice(1, -1)
+			switch (explorePrivacyLevel) {
+				case 'groupPublic': oscSend(vrcap + `api/explore/privacy`, 0); break
+				case 'groupPlus': oscSend(vrcap + `api/explore/privacy`, 1); break
+				case 'private': oscSend(vrcap + `api/explore/privacy`, 2); break
+				case 'friendsPlus': oscSend(vrcap + `api/explore/privacy`, 3); break
+				default: break;
+			}
+			localQueueList.shift()
+		}
+
+		if (localQueueList[0] == '===' || localQueueList == [''] || localQueueList.length == 0) {
 			console.log(`${loglv.hey}${selflogA} Explore queue is empty${fsReadFile.includes('===') ? `: Remove bookmark` : ``}`);
 			oscChatBoxV2(`~Explore Queue is empty${fsReadFile.includes('===') ? `\vRemove bookmark.` : ``}`, 5000, true, true, false, false, false);
 			oscSend(vrcap + `api/explore/next`, false)
@@ -1611,28 +1647,34 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 		if (G_exploreAutoClose == true) { instanceBody['closedAt'] = new Date(new Date().getTime() + 3600_000).toISOString() }
 		if (vrcUserHasVRCplus == true) { instanceBody['displayName'] = 'World Hop' }
 		switch (explorePrivacyLevel) {
-			case 0:
+			case 'groupPublic':
 				instanceBody['type'] = 'group'
 				instanceBody['ownerId'] = 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce'
 				instanceBody['groupAccessType'] = 'public'
 				instanceBody['minimumAvatarPerformance'] = 'Poor'
 				instanceBody['queueEnabled'] = true
 				break;
-			case 1:
+			case 'groupPlus':
 				instanceBody['type'] = 'group'
 				instanceBody['ownerId'] = 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce'
 				instanceBody['groupAccessType'] = 'plus'
 				instanceBody['minimumAvatarPerformance'] = 'Poor'
 				instanceBody['queueEnabled'] = true
 				break;
-			case 2:
+			case 'private':
 				instanceBody['type'] = 'private'
 				instanceBody['ownerId'] = process.env["VRC_ACC_ID_1"]
 				instanceBody['canRequestInvite'] = true
 				break;
-			default:
+			case 'friendsPlus':
 				instanceBody['type'] = 'hidden'
 				instanceBody['ownerId'] = process.env["VRC_ACC_ID_1"]
+				break;
+
+			default:
+				instanceBody['type'] = 'private'
+				instanceBody['ownerId'] = process.env["VRC_ACC_ID_1"]
+				instanceBody['canRequestInvite'] = false
 				break;
 		}
 
@@ -1879,7 +1921,7 @@ function eventPopcornPalace(json) {
 	if (movieShowName != popcornPalaceMovieTitle && currentAccountInUse['Agroup'] == true) {
 		popcornPalaceMovieTitle = movieShowName
 
-		if (movieShowName != '' ) {
+		if (movieShowName != '') {
 			oscChatBoxV2(`~MovieTitle:\v ${movieShowName}`, 5000, true, true, false, false, false)
 
 			// Been in world long enough
@@ -1949,8 +1991,7 @@ function inviteJoinableInstanceQueue() {
 	if (G_instanceJoinQueue.length == 0) {
 		console.log(`${loglv.hey}${selflogA} Joinable queue is empty`);
 		// oscChatBoxV2(`~Joinable Queue is empty`, 5000, false, true, false, false, false);
-		say.speak(`Joinable Queue is empty`,
-			'Microsoft Zira Desktop', 1.0, (err) => { err ? console.error(`${loglv.warn}${selflogL} say.js error: ` + err) : '' })
+		sayQueue(`Joinable Queue is empty`, 1)
 		return
 	}
 	// let randnum = Math.round(Math.random() * (G_instanceJoinQueue.length - 1))
@@ -2728,17 +2769,11 @@ var playerRetention = {
 }
 function eventJoiningWorld() {
 	worldHopTimeout = setTimeout(() => {
-		say.speak(`Been in world for too long. Proceed to next in queue`,
-			'Microsoft David Desktop', 1.0,
-			(err) => { if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) } }
-		)
+		sayQueue(`Been in world for too long. Proceed to next in queue`, 0)
 		oscSend('/avatar/parameters/log/instance_10min', true); G_Instance10min = true
 	}, 600_000)
 	worldHopTimeoutHour = setTimeout(() => {
-		say.speak(`Been in world for over an hour. Find a new world`,
-			'Microsoft David Desktop', 1.0,
-			(err) => { if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) } }
-		)
+		sayQueue(`Been in world for over an hour. Find a new world`, 0)
 	}, 3600_000)
 
 	console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate] history: `, playerRetention['history'])
@@ -2762,12 +2797,7 @@ function eventJoiningWorld() {
 		console.log(`${loglv.debug}${selflogL} [Player-Retention-Rate] Avg: ${plyRRP}%`)
 
 		if (plyRRP < 70) {
-			setTimeout(() => {
-				say.speak(`Warning, the player retention rate for the instance is below 70%. Average is at ${plyRRP}%. Last chunk is at ${plyRRPLast}%`,
-					'Microsoft Zira Desktop', 1.0,
-					(err) => { if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) } }
-				)
-			}, 5000);
+			sayQueue(`Warning, the player retention rate for the instance is below 70%. Average is at ${plyRRP}%. Last chunk is at ${plyRRPLast}%`, 1)
 		}
 
 		if ([`groupPlus`, `groupPublic`].includes(InstanceHistory[0].instanceType)) {
@@ -3075,10 +3105,7 @@ function eventPlayerLeft(logOutputLine) {
 		var isBeingKicked = playersInstanceObject.find(p => p.name == playerDisplayName && p.voteKick == true)
 		if (isBeingKicked != undefined && worldHopTimeout != null) {
 			console.log(`${loglv.info}${selflogL} [ModerationManager] Player Successfully Kicked: ${playerDisplayName}`)
-			say.speak(`${playerDisplayName} was successfully kicked`,
-				'Microsoft Zira Desktop', 1.0,
-				(err) => { if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) } }
-			)
+			sayQueue(`${playerDisplayName} was successfully kicked`, 1)
 		}
 
 		playersInstanceObject = playersInstanceObject.filter(playersInstanceObject => playersInstanceObject.name !== playerDisplayName)
@@ -3339,10 +3366,5 @@ function worldDownloadProgress(dlduration, dlprogress) {
 		dlETA = dlETA + ' seconds';
 	}
 	console.log(`${loglv.info}${selflogL} World Download ETA ${dlETA}`);
-	say.speak(`E T A ${dlETA}`, 'Microsoft Zira Desktop', 1.0, (err) => {
-		if (err) { return console.error(`${loglv.warn}${selflogL} say.js error: ` + err) }
-		setTimeout(() => {
-			isTalking = false
-		}, 1000)
-	})
+	sayQueue(`E T A ${dlETA}`, 1)
 }
