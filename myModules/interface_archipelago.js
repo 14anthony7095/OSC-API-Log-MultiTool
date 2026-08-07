@@ -8,7 +8,7 @@ main('wss://archipelago.gg:51557', '14aPVZ', 'Plants vs. Zombies')
 
 async function main(I_url, I_slot, I_game) {
     const apClient = new Client()
-    var loggedIn = await apClient.login(I_url, I_slot, I_game, { 'tags': ['DealthLink', 'NoText'] })
+    var loggedIn = await apClient.login(I_url, I_slot, I_game, { 'tags': ['NoText'] })
     const logPrefix = `[\x1b[32m${apClient.game}\x1b[0m]`
     var hintQueue = []
     var hintPoints = apClient.room.hintPoints
@@ -40,13 +40,13 @@ async function main(I_url, I_slot, I_game) {
         // console.log(`${logPrefix} [itemHinted]: `, text, item, found)
     })
     apClient.messages.on('message', (text) => {
-        // console.log(`${logPrefix}: `, text)
+        console.log(`${logPrefix}: `, text)
     })
     apClient.deathLink.on('deathReceived', (source, time, cause) => {
         console.log(`${logPrefix} [deathReceived]: `, time, source, cause)
     })
-    
-apClient.goal()
+
+    apClient.goal()
 
     // apClient.check(['81'])
     // apClient.storage.fetchLocationNameGroups(apClient.game)        .then(f => console.log(f))

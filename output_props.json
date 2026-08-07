@@ -2579,5 +2579,26 @@
         "version": 21,
         "visibilityType": "everyone",
         "worldPlacementMask": 1
+    },
+    {
+        "_created_at": "2026-03-18T11:33:17.270Z",
+        "_updated_at": "2026-04-10T11:22:35.673Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "",
+        "id": "prop_6515d429-d2fa-4241-9051-d15b3e5e2fb1",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_b9211461-75f5-4ab3-8562-12dcc89baaaa/1/file",
+        "maxCountPerUser": 1,
+        "name": "testprop",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 0,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_b9211461-75f5-4ab3-8562-12dcc89baaaa/1/256",
+        "unityPackages": [],
+        "version": 12,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
     }
 ]

@@ -395,8 +395,11 @@ udpPort.on("message", function (msg, rinfo) {
 	if (address == vrcap + 'toggle/earsDown') { oscCache['earsDown'] = value }
 	if (address == vrcap + '14a/button/roomScaleRay') { oscCache['roomScaleRay'] = value }
 
-	if (oscCache['roomScaleRay'] == true && oscCache['findUp_Hit'] == true && oscCache['eyeheight_RateLimit'] < Date.now()) {
-		oscSend('/avatar/eyeheight', parseFloat(oscCache['findUp_Distance'] * parseFloat(oscCache['earsDown'] == true ? 0.83 : 0.7)))
+	if (oscCache['roomScaleRay'] == true && oscCache['findUp_Hit'] == true && oscCache['findUp_Distance'] < 1000 && oscCache['eyeheight_RateLimit'] < Date.now()) {
+		var scaleToHeight = parseFloat(oscCache['findUp_Distance'] * parseFloat(oscCache['earsDown'] == true ? 0.83 : 0.7))
+		if (Math.round(oscCache['eyeheight'] * 100) / 100 != Math.round(scaleToHeight * 100) / 100) {
+			oscSend('/avatar/eyeheight', scaleToHeight)
+		}
 	}
 
 
