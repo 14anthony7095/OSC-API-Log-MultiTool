@@ -2191,7 +2191,7 @@
                 "prop",
                 "included_in_product"
             ],
-            "updated_at": "2026-06-04T00:12:03.778Z",
+            "updated_at": "2026-08-08T01:07:50.370Z",
             "validateUserAttributes": false
         },
         "kind": 0,
@@ -2600,5 +2600,329 @@
         "version": 12,
         "visibilityType": "everyone",
         "worldPlacementMask": 0
+    },
+    {
+        "_created_at": "2026-07-22T18:41:08.968Z",
+        "_updated_at": "2026-08-08T00:00:14.676Z",
+        "abilities": [
+            "player_movement"
+        ],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "Time to bounce.",
+        "id": "prop_383b6548-0364-4765-914b-7bb738d7427e",
+        "imageUrl": "https://api.vrchat.cloud/api/1/image/file_46c77590-69b0-4317-84ba-42f81ef0bad5/1/256",
+        "itemTemplate": null,
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "Trampoline",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 0,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_46c77590-69b0-4317-84ba-42f81ef0bad5/1/256",
+        "unityPackages": [],
+        "version": 57,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 1
+    },
+    {
+        "_created_at": "2026-07-24T21:54:32.427Z",
+        "_updated_at": "2026-08-12T22:14:33.193Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "Pass the (virtual) aux.",
+        "id": "prop_e96c8fcc-b65e-42bd-867b-fa2d393c69ea",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_1b3a6a65-e683-4ba7-89d6-8e257b3d9e59/1/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                },
+                "publisher": null
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-07-24T21:54:32.398Z",
+            "defaultAttributes": {
+                "01": {
+                    "defaultValue": "#000000",
+                    "validator": {
+                        "type": "color"
+                    }
+                },
+                "02": {
+                    "defaultValue": "#000000",
+                    "validator": {
+                        "type": "color"
+                    }
+                },
+                "03": {
+                    "defaultValue": "#000000",
+                    "validator": {
+                        "type": "color"
+                    }
+                },
+                "glow": {
+                    "defaultValue": "#00C85A",
+                    "validator": {
+                        "type": "color"
+                    }
+                }
+            },
+            "description": "Pass the (virtual) aux.",
+            "dropStatus": "draft",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_80066c55-bfb2-48d3-ae26-7c570e265190",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_02a5c191-1d7d-4ce5-bf41-a01cccdae2bf/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Prop",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_02a5c191-1d7d-4ce5-bf41-a01cccdae2bf",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_02a5c191-1d7d-4ce5-bf41-a01cccdae2bf/1/file",
+                "propId": "prop_e96c8fcc-b65e-42bd-867b-fa2d393c69ea",
+                "propKind": 0
+            },
+            "name": "VDJ-8000",
+            "productId": "prod_cb3a2ca1-167c-41b7-b7d8-c5fc8af520ba",
+            "publishedListings": [
+                "prod_41b386db-d887-46ad-84a0-bc7d59115aed",
+                "prod_403d0e7b-94db-4646-b7f4-0cfa2a91331b"
+            ],
+            "tags": [
+                "prop",
+                "included_in_product"
+            ],
+            "updated_at": "2026-08-12T22:14:33.166Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "VDJ-8000",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 0,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_1b3a6a65-e683-4ba7-89d6-8e257b3d9e59/1/256",
+        "unityPackages": [],
+        "version": 30,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    {
+        "_created_at": "2026-07-13T22:04:25.506Z",
+        "_updated_at": "2026-08-04T19:41:14.887Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "Crack to activate!",
+        "id": "prop_d2286859-7fcd-46b9-a9f4-6dd4945bb5e5",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_7fd35ab1-1acc-4b7e-99b5-9654749ebccc/1/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                },
+                "publisher": null
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-07-13T22:04:25.480Z",
+            "defaultAttributes": {
+                "glow": {
+                    "defaultValue": "#575DFF",
+                    "validator": {
+                        "type": "color"
+                    }
+                }
+            },
+            "description": "Crack to activate!",
+            "dropStatus": "draft",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_0034a86b-ffbd-43b0-b94d-a7cc405a67cb",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_6795738e-1054-419c-ba1d-c8f12c632854/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Prop",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_6795738e-1054-419c-ba1d-c8f12c632854",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_6795738e-1054-419c-ba1d-c8f12c632854/1/file",
+                "propId": "prop_d2286859-7fcd-46b9-a9f4-6dd4945bb5e5",
+                "propKind": 0
+            },
+            "name": "Glowstick",
+            "productId": "prod_c630102c-b7f8-4d43-9938-7f67836242bf",
+            "publishedListings": [
+                "prod_41b386db-d887-46ad-84a0-bc7d59115aed",
+                "prod_cc626627-3d07-4dfe-b7b6-612807c98c0e"
+            ],
+            "tags": [
+                "prop",
+                "included_in_product"
+            ],
+            "updated_at": "2026-08-07T20:59:00.653Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "Glowstick",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_7fd35ab1-1acc-4b7e-99b5-9654749ebccc/1/256",
+        "unityPackages": [],
+        "version": 120,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    {
+        "_created_at": "2026-07-28T19:14:23.140Z",
+        "_updated_at": "2026-08-17T16:42:27.973Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "JR-WEST collaboration.",
+        "id": "prop_c4c45b34-6e84-4130-a668-0439a72b6a04",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_514fa443-33a7-4c5b-8f36-a6a131fa346d/1/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "Gugenka",
+                    "userId": "usr_90f4067a-a70f-4099-9c7d-0d90ebd7fe62"
+                },
+                "publisher": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                }
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-07-28T19:14:23.085Z",
+            "defaultAttributes": {},
+            "description": "JR-WEST collaboration.",
+            "dropStatus": "draft",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_7e1c0841-adbc-4c0a-aed7-1f3c23b3ed7c",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_b13c36fe-21d9-41e5-9b50-a693cd29c15c/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Prop",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_b13c36fe-21d9-41e5-9b50-a693cd29c15c",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_b13c36fe-21d9-41e5-9b50-a693cd29c15c/1/file",
+                "propId": "prop_c4c45b34-6e84-4130-a668-0439a72b6a04",
+                "propKind": 0
+            },
+            "name": "227 Series Train Plushie",
+            "productId": "prod_20ac6349-2944-43a5-a70e-92db1a448685",
+            "publishedListings": [
+                "prod_50c37a52-3d4d-4e2d-a390-b33afe6392dc",
+                "prod_0641bb46-be2b-41a4-9f54-8b3e1e5415b1"
+            ],
+            "tags": [
+                "prop",
+                "included_in_product"
+            ],
+            "updated_at": "2026-08-17T16:42:27.958Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "227 Series Train Plushie",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_514fa443-33a7-4c5b-8f36-a6a131fa346d/1/256",
+        "unityPackages": [],
+        "version": 35,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    {
+        "_created_at": "2026-08-17T18:45:10.819Z",
+        "_updated_at": "2026-08-19T17:16:15.961Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "There are many",
+        "id": "prop_6f03d224-2001-4974-ae4e-fb9881b66fdf",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_0bb5ba2b-4a83-431c-acde-d689d7c3ffc0/2/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                },
+                "publisher": null
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-08-17T18:45:10.793Z",
+            "defaultAttributes": {},
+            "description": "There are many",
+            "dropStatus": "draft",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_57f135d5-3551-4cf0-a3d6-45caf180ce65",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_50198fd2-d59c-45f4-9738-8aeac8dd43e8/1/256",
+            "itemType": "prop",
+            "itemTypeLabel": "Prop",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_589db74a-cb64-4c5f-b9a0-98d0d2e5d11a",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_589db74a-cb64-4c5f-b9a0-98d0d2e5d11a/1/file",
+                "propId": "prop_6f03d224-2001-4974-ae4e-fb9881b66fdf",
+                "propKind": 0
+            },
+            "name": "Multiple Companion Cube",
+            "tags": [
+                "prop",
+                "internal",
+                "autogenerated"
+            ],
+            "updated_at": "2026-08-19T17:16:16.107Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "Multiple Companion Cube",
+        "releaseStatus": "private",
+        "scaleWithAvatar": false,
+        "spawnType": 0,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_0bb5ba2b-4a83-431c-acde-d689d7c3ffc0/2/256",
+        "unityPackages": [],
+        "version": 38,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 1
     }
 ]

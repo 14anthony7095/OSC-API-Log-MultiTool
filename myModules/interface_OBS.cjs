@@ -3,7 +3,7 @@ const obs = new OBSWebSocket();
 const { loglv } = require("./config.js");
 const fs = require('fs');
 require('dotenv').config({ 'quiet': true })
-const { logEmitter, apiEmitter } = require("./Interface_vrc-ApiLog.cjs");
+const { logEmitter, apiEmitter } = require("./interface_vrc-ApiLog.cjs");
 const { oscEmitter } = require('./Interface_osc_v1.js');
 
 var selflog = `\x1b[0m[\x1b[36mOBStudio\x1b[0m]`

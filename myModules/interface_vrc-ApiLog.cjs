@@ -1616,27 +1616,25 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 		var filter_UserIOS = playersInstanceObject.find(u => u.platform == 'iso')
 		var filter_worldIOS = gotWorld.data.unityPackages.find(p => p.platform == 'iso')
 
-		if (InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce' || InstanceHistory[0].ownerID == process.env["VRC_ACC_ID_1"] ) {
-			if (gotWorld.data.capacity < Math.min(playersInInstance.length + playersInQueue, 80)) {
-				console.log(`${loglv.hey}${selflogA} World can not fit everyone. Retrying..`);
-				// oscChatBoxV2(`~World can not fit everyone.\vRetrying.\v${playersInInstance.length + playersInQueue} > ${gotWorld.data.capacity}`, 5000, true, true, false, false, false)
-				setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
-				return
-			} else if (filter_UserAndroid != undefined && filter_worldAndroid == undefined) {
-				oscSend(vrcap + `api/explore/next`, false)
-				console.log(`${loglv.hey}${selflogA} World is not Quest compatible. Try another..`);
-				sayQueue(`World is not Quest compatible. Try another.`, 1)
-				oscChatBoxV2(`~World is not Quest compatible.\vTry another.\v${filter_UserAndroid.name} wouldn't beable to join.`, 5000, true, true, false, false, false)
-				// setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
-				return
-			} else if (filter_UserIOS != undefined && filter_worldIOS == undefined) {
-				oscSend(vrcap + `api/explore/next`, false)
-				console.log(`${loglv.hey}${selflogA} World is not iOS compatible. Try another..`);
-				sayQueue(`World is not iOS compatible. Try another.`, 1)
-				oscChatBoxV2(`~World is not iOS compatible.\vTry another.\v${filter_UserIOS.name} wouldn't beable to join.`, 5000, true, true, false, false, false)
-				// setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
-				return
-			}
+		if (gotWorld.data.capacity < Math.min(playersInInstance.length + playersInQueue, 80)) {
+			console.log(`${loglv.hey}${selflogA} World can not fit everyone. Retrying..`);
+			// oscChatBoxV2(`~World can not fit everyone.\vRetrying.\v${playersInInstance.length + playersInQueue} > ${gotWorld.data.capacity}`, 5000, true, true, false, false, false)
+			setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
+			return
+		} else if (filter_UserAndroid != undefined && filter_worldAndroid == undefined) {
+			oscSend(vrcap + `api/explore/next`, false)
+			console.log(`${loglv.hey}${selflogA} World is not Quest compatible. Try another..`);
+			sayQueue(`World is not Quest compatible. Try another.`, 1)
+			oscChatBoxV2(`~World is not Quest compatible.\vTry another.\v${filter_UserAndroid.name} wouldn't beable to join.`, 5000, true, true, false, false, false)
+			// setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
+			return
+		} else if (filter_UserIOS != undefined && filter_worldIOS == undefined) {
+			oscSend(vrcap + `api/explore/next`, false)
+			console.log(`${loglv.hey}${selflogA} World is not iOS compatible. Try another..`);
+			sayQueue(`World is not iOS compatible. Try another.`, 1)
+			oscChatBoxV2(`~World is not iOS compatible.\vTry another.\v${filter_UserIOS.name} wouldn't beable to join.`, 5000, true, true, false, false, false)
+			// setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
+			return
 		}
 
 		var instanceBody = {
@@ -1912,6 +1910,8 @@ function eventPopcornPalace(json) {
 
 	// Reformat title for One Piece watch sessions
 	if (movieShowName.includes('One Piece')) { movieShowName = movieShowName.replace('- S1E', 'ep.').split(' -')[0] }
+	else if (movieShowName.includes('Mob Psycho 100')) { movieShowName = movieShowName.replace(/ -\s.+- (S\dE\d{1,2}) - \d{4}-\d{2}-\d{2}/, ': $1') }
+	else { movieShowName = movieShowName.replace(/ - \d{4}-\d{2}-\d{2}/, '') }
 
 	// Reformat title for Default SoundCloud
 	if (movieShowName.includes('soundcloud.com')) { movieShowName = '' }
@@ -2004,74 +2004,130 @@ function inviteJoinableInstanceQueue() {
 
 function applyGroupLogo(gID) {
 	/*
-	0000 - CORE Default
-	0001 - Community Events
-	0010 - Nanachi's hollow inn
-
-	0011 - No Friends Friends Club
-	0100 - The Lunar Howl
-	0101 - Furry Argentina VR
-
-	0110 - VRDance
-	0111 - El Alba
-	1000 - 
+	 0 - 0000 - CORE Default
+	 1 - 0001 - Community Events
+	 2 - 0010 - Nanachi's hollow inn
+	 3 - 0011 - No Friends Friends Club
+ 
+	 4 - 0100 - The Lunar Howl
+	 5 - 0101 - Furry Argentina VR
+	 6 - 0110 - VRDance
+	 7 - 0111 - El Alba
+ 
+	 8 - 1000 - Party Animals
+	 9 - 1001 - Club Sova
+	10 - 1010 - DegenTechINC
+	11 - 1011 - KemonoTherapy
+	
+	12 - 1100 - Say 5
+	13 - 1101 - 
+	14 - 1110 - 
+	15 - 1111 - 
 	*/
 	switch (gID) {
+		case 'grp_f0e5ca11-8254-48c5-8fa4-9660cfcf2472':
+			// Say 5
+			// 1100 - 12
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, true)
+			break;
+		case 'grp_b684ee43-f983-425a-9f2c-ed9eb643e609':
+			// KemonoTherapy
+			// 1011 - 11
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, true)
+			break;
+		case 'grp_b2a19685-c53e-4c5a-9503-744a5373bf2c':
+			// DegenTechINC
+			// 1010 - 10
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, true)
+			break;
+		case 'grp_65121a00-ea58-49f2-8ca4-797e52a11798':
+			// Club Sova
+			// 1001 - 9
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, true)
+			break;
+		case 'grp_b8cac373-7cbb-4cd2-b56a-b621edbfef17':
+			// Party Animals
+			// 1000 - 8
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, true)
+			break;
 		case 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad':
 			// El Alba
 			// 0111 - 7
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 1)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 1)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 1)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
 			break;
 		case 'grp_d960be54-cfc2-44cb-863d-6d624d8975c1':
 			// VR Dance
 			// 0110 - 6
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 0)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 1)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 1)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
 			break;
 		case `grp_a8f9e8f8-6ccb-410e-b96e-8977bd3a094f`:
 			// Furry Argentina VR
 			// 0101 - 5
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 1)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 0)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 1)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
 			break;
 		case `grp_f018a0ac-2ec6-4176-aa47-a0fd2b7ea817`:
 			// The Lunar Howl
 			// 0100 - 4
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 0)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 0)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 1)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
 			break;
 		case `grp_693ddad7-3e90-46c6-bd38-04ccb1734420`:
 			// No Friends Friends Club
 			// 0011 - 3	
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 1)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 1)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 0)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
 			break;
 		case `grp_3473d54b-8e10-4752-9548-d77a092051a4`:
 			// Nanachi's hollow inn
 			// 0010 - 2
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 0)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 1)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 0)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
 			break;
 		case `grp_c24efb98-3234-4060-94f1-7729523e9689`:
 			// Community Events
 			// 0001 - 1
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 1)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 0)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 0)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, true)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
 			break;
 		default:
 			// CORE Default
 			// 0000 - 0
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, 1 == 0)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, 1 == 0)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, 1 == 0)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
+			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
 			break;
 	}
 }

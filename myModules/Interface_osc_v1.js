@@ -370,6 +370,7 @@ function remapValueRange(i_value, oldMin, oldMax, newMin, newMax) {
 	return newMin + (i_value - oldMin) * (newMax - newMin) / (oldMax - oldMin)
 }
 
+
 try {
 	udpPortAudio.on("message", (msg, rinfo) => {
 		// console.log(msg,rinfo)
@@ -408,6 +409,21 @@ udpPort.on("message", function (msg, rinfo) {
 	if (address == '/avatar/parameters/Grounded' && value == true && oscCache['doAutoJump'] == true) {
 		oscSend('/input/Jump', true); setTimeout(() => { oscSend('/input/Jump', false) }, 100);
 	}
+
+
+	// Auto-Center
+	/* if (oscCache['playerMovement_AutoCenter'] == true) {
+		if (address == vrcap + 'VelocityX') {
+			oscSend('/input/Horizontal', -1 * (value / 2))
+		}
+		// if (address == vrcap + 'VelocityX' && value == 0) { oscSend('/input/Horizontal', 0) }
+
+		if (address == vrcap + 'VelocityZ') {
+			oscSend('/input/Vertical', -1 * (value / 2))
+
+		}
+		// if (address == vrcap + 'VelocityZ' && value == 0) { oscSend('/input/Vertical', 0) }
+	} */
 
 
 	// Proxy menu parameters
@@ -499,6 +515,6 @@ udpPort.on("ready", function () {
 	require('./sys_taskKill.js') // OSC , LOG
 	require('./osc_vrcPopulation.js') // OSC , API (directly)
 	require('./interface_OBS.cjs')
-	require('./Interface_vrc-ApiLog.cjs') // OSC+ , Twitch
+	require('./interface_vrc-ApiLog.cjs') // OSC+ , Twitch
 
 });
