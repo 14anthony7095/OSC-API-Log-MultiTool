@@ -58,7 +58,7 @@ var playerHardLimit = 99
 var playerRatio = 0.5
 var memberRatio = 0.5
 var G_autoNextWorldHop = false
-var worldHoppers = []
+var worldHoppers = { 'worlds': [], 'users': [] }
 var vrchatDiscord; fs.readFile('datasets/vrc-X-dis.json', 'utf8', (err, data) => { vrchatDiscord = JSON.parse(data) })
 var lastFetchGroupLogs;
 var currentUser;
@@ -271,7 +271,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 
 	if (cmd == 'hoppers') {
 		var string = ''
-		worldHoppers.sort((a, b) => { return b.playtime - a.playtime }).forEach((a) => {
+		worldHoppers['users'].sort((a, b) => { return b.playtime - a.playtime }).forEach((a) => {
 			var discordInfo = vrchatDiscord.filter(e => e.vrcUUID == a.id)
 			if (discordInfo.length != 0) {
 				string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` 🌎 \`${a.worldCount.toString().padStart(2, ' ')}\` ${a.groupMember == true ? `💜` : `👻`} ${a.name} <@${discordInfo[0].discordid}> - [${discordInfo[0].discordid}]`
@@ -279,11 +279,12 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 				string += `${string.length == 0 ? '' : '\n'}\`${new Date(a.playtime).toISOString().substring(11, 19)}\` 🌎 \`${a.worldCount.toString().padStart(2, ' ')}\` ${a.groupMember == true ? `💜` : `👻`} ${a.name} [profile](<https://vrchat.com/home/user/${a.id}>)`
 			}
 		})
+		worldHoppers['worlds'].forEach((w, index) => { string += `${index == 0 ? `\n` : ''}\n${w}` })
 		console.log(string)
 	}
 	if (cmd == 'clearhoppers') {
-		console.log(`${loglv.hey}[WorldHop] Cleared ${worldHoppers.length} users from tracker`)
-		worldHoppers = []
+		console.log(`${loglv.hey}[WorldHop] Cleared ${worldHoppers['users'].length} users from tracker`)
+		worldHoppers = { 'worlds': [], 'users': [] }
 	}
 })
 
@@ -1525,6 +1526,26 @@ function inviteHubQueue(returnHubID = false) {
 		.catch(err => { console.log(`${loglv.warn}${selflogA}` + err) })
 }
 
+
+async function checkAndDeleteWorld(I_worldid, I_targetAmount = 100, I_targetType = 'favorites', I_greaterThan = true) {
+	if (!['popularity', 'favorites', 'heat', 'visits'].includes(I_targetType)) { return }
+	if (typeof I_greaterThan != 'boolean') { return }
+	if (typeof I_targetAmount != 'number') { return }
+
+	var gotWorld = await vrchat.getWorld({ 'path': { 'worldId': I_worldid } })
+	if (gotWorld.data != undefined) {
+
+		var conditionCheck = I_greaterThan ? gotWorld.data[I_targetType] >= I_targetAmount : gotWorld.data[I_targetType] < I_targetAmount
+		if (gotWorld.data.authorName == '14anthony7095' && conditionCheck) {
+
+			var deletedWorld = await vrchat.deleteWorld({ 'path': { 'worldId': I_worldid } })
+			console.log(deletedWorld.data)
+
+		}
+	}
+}
+
+
 function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 	fs.readFile(worldQueueTxt, 'utf8', async (err, fsReadFile) => {
 		// err ? console.log(err); return : ''
@@ -1694,7 +1715,7 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 			if (G_exploreAutoClose == true) { console.log(`${loglv.info}${selflogA} Auto-Close set for ${created_instance.data.closedAt}.`) }
 		} else {
 			sayQueue(`instance create failed. [${created_instance.error.response.status}] ${created_instance.error.response.statusText}. ${created_instance.error.message}`, 1)
-			oscChatBoxV2(`instance create failed.\v[${created_instance.error.response.status}] ${created_instance.error.response.statusText}\v${created_instance.error.message}`, 5000, true, true)
+			// oscChatBoxV2(`instance create failed.\v[${created_instance.error.response.status}] ${created_instance.error.response.statusText}\v${created_instance.error.message}`, 5000, true, true)
 			console.log(`${loglv.warn}${selflogA} `, created_instance.error.cause)
 			oscSend(vrcap + `api/explore/next`, false)
 			if (fsReadFile.includes(world_id)) {
@@ -1831,6 +1852,9 @@ async function scanGroupAuditLogs() {
 		if (err) { console.log(err); return }
 		userAutoAcceptWhiteList = data.split('\r\n')
 	})
+
+	// Check Worlds to Delete
+	// checkAndDeleteWorld('wrld_64b1b32c-aec3-4647-a6a7-d2ad0d4d7eb5', 1, 'heat', false)
 
 
 	console.log(`${loglv.hey}${selflogA} Next Audit scan at ${new Date(new Date().getTime() + 600_000).toTimeString()}`)
@@ -2796,11 +2820,11 @@ async function eventHeadingToWorld(logOutputLine) {
 	logEmitter.emit('headingToWorld')
 
 	// Community Meetup starting world
-	if (groupID == 'grp_c24efb98-3234-4060-94f1-7729523e9689' && worldID == 'wrld_7de12122-be9d-42a1-99c0-4cc763144629') { worldHoppers = [] }
+	if (groupID == 'grp_c24efb98-3234-4060-94f1-7729523e9689' && worldID == 'wrld_7de12122-be9d-42a1-99c0-4cc763144629') { worldHoppers = { 'worlds': [], 'users': [] } }
 	// El Alba starting world
-	if (groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && worldID == 'wrld_f6445b27-037d-4926-b51f-d79ada716b31') { worldHoppers = [] }
+	if (groupID == 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad' && worldID == 'wrld_f6445b27-037d-4926-b51f-d79ada716b31') { worldHoppers = { 'worlds': [], 'users': [] } }
 	// 14aHop starting world
-	if (groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce' && worldID == inviteHubQueue(true)) { worldHoppers = [] }
+	if (groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce' && worldID == inviteHubQueue(true)) { worldHoppers = { 'worlds': [], 'users': [] } }
 
 
 	/*
@@ -3014,7 +3038,7 @@ async function eventPlayerJoin(logOutputLine) {
 		}
 
 		// Group Member tagging
-		function markUserAsMember(I_memberStatus, I_groupName = 'GroupMember', I_addToWorldHop = false) {
+		async function markUserAsMember(I_memberStatus, I_groupName = 'GroupMember', I_addToWorldHop = false) {
 			console.log(`${loglv.info}${selflogA} [${I_groupName}] ${I_memberStatus == true ? '💜' : '👻'} ${playerDisplayName} ${I_memberStatus == true ? 'is' : 'NOT a'} member`)
 
 			try {
@@ -3024,14 +3048,22 @@ async function eventPlayerJoin(logOutputLine) {
 				playersInstanceObject.push({ 'name': playerDisplayName, 'id': playerID, 'isGroupMember': I_memberStatus })
 			} finally {
 				if (I_addToWorldHop) {
+
+					let gotWorld = await limiter.reqCached('world', InstanceHistory[0].worldID).catch(async () => {
+						return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': InstanceHistory[0].worldID } }), 'world')
+					})
+					var isAndroid = gotWorld.data.unityPackages.find(p => p.platform == 'android') != undefined ? ` <:OS_Android:1479897785796006120>` : ``
+					var worldNameInHoppers = `- [${gotWorld.data.name}](<https://vrchat.com/home/world/${InstanceHistory[0].worldID}>)${isAndroid}`
+					if (!worldHoppers['worlds'].includes(worldNameInHoppers)) { worldHoppers['worlds'].push(worldNameInHoppers) }
+
 					try {
-						var whindex = worldHoppers.findIndex(f => f.name == playerDisplayName)
-						worldHoppers[whindex]["joinTime"] = Date.now()
+						var whindex = worldHoppers['users'].findIndex(f => f.name == playerDisplayName)
+						worldHoppers['users'][whindex]["joinTime"] = Date.now()
 						if (!playerRetention['seenNames'].includes(playerDisplayName)) {
-							worldHoppers[whindex]["worldCount"] = (worldHoppers[whindex]["worldCount"] || 0) + 1
+							worldHoppers['users'][whindex]["worldCount"] = (worldHoppers['users'][whindex]["worldCount"] || 0) + 1
 						}
 					} catch (error) {
-						worldHoppers.push({ "name": playerDisplayName, "id": playerID, "playtime": 0, "joinTime": Date.now(), "worldCount": 1, "groupMember": I_memberStatus })
+						worldHoppers['users'].push({ "name": playerDisplayName, "id": playerID, "playtime": 0, "joinTime": Date.now(), "worldCount": 1, "groupMember": I_memberStatus })
 					}
 				}
 			}
@@ -3215,14 +3247,14 @@ function eventPlayerLeft(logOutputLine) {
 			'grp_ed3b8660-adb6-4abf-b3ab-b4c974e72144'
 		]
 		if (exploreGroups.includes(InstanceHistory[0].groupID)) {
-			var filteredhoppers = worldHoppers.find(a => a.name == playerDisplayName)
+			var filteredhoppers = worldHoppers['users'].find(a => a.name == playerDisplayName)
 			if (filteredhoppers != undefined) {
-				var foundindex = worldHoppers.findIndex(a => a.name == playerDisplayName)
-				console.debug(worldHoppers[foundindex]["playtime"])
-				console.debug(worldHoppers[foundindex]["joinTime"])
-				console.debug(Date.now() - worldHoppers[foundindex]["joinTime"])
-				console.debug(worldHoppers[foundindex]["worldCount"])
-				worldHoppers[foundindex]["playtime"] += Date.now() - worldHoppers[foundindex]["joinTime"]
+				var foundindex = worldHoppers['users'].findIndex(a => a.name == playerDisplayName)
+				console.debug(worldHoppers['users'][foundindex]["playtime"])
+				console.debug(worldHoppers['users'][foundindex]["joinTime"])
+				console.debug(Date.now() - worldHoppers['users'][foundindex]["joinTime"])
+				console.debug(worldHoppers['users'][foundindex]["worldCount"])
+				worldHoppers['users'][foundindex]["playtime"] += Date.now() - worldHoppers['users'][foundindex]["joinTime"]
 			} else {
 				console.log(`${loglv.hey}${selflogL} [WorldHoppers] Skipping undetected join`)
 			}

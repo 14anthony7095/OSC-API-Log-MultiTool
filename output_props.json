@@ -26,6 +26,7 @@
             ],
             "id": "invt_c436c406-f8f1-4997-8bec-5b5e8a1015d8",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_1181ab99-751d-4ee0-bfd5-2611386a5f1f/5/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -80,6 +81,7 @@
             ],
             "id": "invt_642a8113-3798-4761-98e9-dc2c84adc960",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_903a3af2-4233-4698-808c-d9349e527f5d/9/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -132,6 +134,7 @@
             ],
             "id": "invt_e79951e2-89b0-4973-bf9e-60fa5088a8aa",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_a1c5eb62-dfeb-4266-8e61-a89bbe19e725/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -184,6 +187,7 @@
             ],
             "id": "invt_accbf7b7-80ce-4f3c-a8cf-3fcc108020b7",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_5c2c811a-1b06-468d-bb78-a1c5baacc7ec/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -236,6 +240,7 @@
             ],
             "id": "invt_1f11aa73-8f05-4d50-a1a8-c59074d03ce2",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_10880ad6-dd90-411f-a7e5-6c7c19710551/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -288,6 +293,7 @@
             ],
             "id": "invt_15cade9e-e11a-4509-aa93-7a1b8584d006",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_e9a8b13b-f31d-4af7-b5a5-a89305b103ac/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -394,6 +400,7 @@
             ],
             "id": "invt_d47411a4-ec36-48b2-8e64-6b1c1e730e71",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_c0897a25-bab8-4166-8303-0f0ea74b3356/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -468,6 +475,7 @@
             ],
             "id": "invt_f2d3dd49-e23b-45ec-990f-536ecd08a898",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_d7d75439-22c6-40c9-99f1-4abf74fe5ff1/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Companion",
             "metadata": {
@@ -549,6 +557,7 @@
             ],
             "id": "invt_7083477a-40c0-4475-93a8-28238c1fc020",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_b1face7a-dc17-404a-8fe0-78762496b7c4/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Companion",
             "metadata": {
@@ -607,6 +616,7 @@
             ],
             "id": "invt_e3c12462-78d7-4d50-be7c-0ca179e97a96",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_76250daf-2267-4fdd-8944-a06b9c14472e/5/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -668,6 +678,7 @@
             ],
             "id": "invt_f34897ff-9a96-4a5a-a739-fc76ebffd564",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_19f0efe7-3340-42b1-afed-a2596ca940fd/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -719,6 +730,7 @@
             ],
             "id": "invt_d7c4d47b-591d-4013-819c-ebaf6c9698bf",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_a19f1724-2a0e-4c01-8c68-549b7e0bde16/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -774,6 +786,7 @@
             ],
             "id": "invt_bc315a45-df13-47cb-8018-171cab5b23d4",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_f4e0c1fe-888b-4c5a-a5c5-2807f2ff329e/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -831,6 +844,7 @@
             ],
             "id": "invt_31fb9268-a100-4b90-8903-e4b14dcd8cd1",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_e792a253-beb5-40e5-a061-42b43228df06/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -886,6 +900,7 @@
             ],
             "id": "invt_a2fc2ee6-44fb-4490-b1bb-005a49921037",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_24c02f3b-ac7b-4898-aacf-ca808ba7ca2b/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -961,6 +976,7 @@
             ],
             "id": "invt_2c2aab9f-8042-40da-af41-9788c2bd53b0",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_12a99e9f-f208-46b9-b878-00a0796312bf/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -1059,6 +1075,7 @@
             ],
             "id": "invt_fc05cc7a-8aa4-4995-9411-b62c303b964c",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_375f14d7-05b0-43d1-9cf1-0f38518d8429/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -1542,6 +1559,7 @@
             ],
             "id": "invt_23ac4cb8-f289-48fe-8eed-0a1b5e658f5b",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_54b5a529-11db-49e9-afb8-1affd7d0021e/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -1603,6 +1621,7 @@
             ],
             "id": "invt_e7569ba2-d892-466a-a8ed-0196db8d647f",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_0fd1d87d-5b49-4978-85f5-5e81bbd9c16a/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -1666,6 +1685,7 @@
             ],
             "id": "invt_3277ef64-f029-42de-bed8-8d1e82e66775",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_3200e71d-1938-4c1e-9997-47bcd64f56dd/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -1728,6 +1748,7 @@
             ],
             "id": "invt_89a61eba-ae04-4191-96fa-b404f3197a0d",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_b2896f43-6d81-4ab1-8f3d-f758bb66b5b5/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -1791,6 +1812,7 @@
             ],
             "id": "invt_0bc4d3bf-7e7a-4782-af5b-58a16aca243a",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_c0ce3679-62e3-4be2-b196-4d7b0d1aa790/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -1873,6 +1895,7 @@
             ],
             "id": "invt_2722d967-e011-4913-b1fa-9d2cc8262c4f",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_f3d8f0e5-e7a3-4fd5-a024-05b3c2348e36/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -1950,6 +1973,7 @@
             ],
             "id": "invt_d49fcb2a-3283-478a-8501-ca3e9c333d4d",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_27705d2e-690d-44aa-b533-8acd6a58c181/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -2024,6 +2048,7 @@
             ],
             "id": "invt_30222765-203c-4ea5-8f15-021c9eb556d7",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_4d6b9c02-6e13-4fe8-a11b-cd836d06ed49/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Companion",
             "metadata": {
@@ -2091,6 +2116,7 @@
             ],
             "id": "invt_9375b891-c39f-4df0-8185-fb581e349cc1",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_bc571320-9b10-4edd-85ab-848a4bf26aaa/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -2175,6 +2201,7 @@
             ],
             "id": "invt_c51a4854-b437-447b-8d61-b2ccb1ccfdeb",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_f8c61658-88bc-498d-8f5d-8c572cdcf12b/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -2239,6 +2266,7 @@
             ],
             "id": "invt_8b33dd0f-0d69-4905-b84d-50d3e51a50cd",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_02b5298e-ef70-4245-a274-9f3ec16b5abc/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -2316,6 +2344,7 @@
             ],
             "id": "invt_36e88615-df03-436e-bc4d-13e6e5599bb6",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_2ae35dbf-0578-4ca7-9d15-b8ec8124a5e0/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Companion",
             "metadata": {
@@ -2377,6 +2406,7 @@
             ],
             "id": "invt_718c2443-ed87-4a20-addd-0441e855412c",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_95e90e96-b369-492b-8cdd-1b40a66dfa87/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -2444,6 +2474,7 @@
             ],
             "id": "invt_9326867b-12f7-4f33-8095-f87e1cb1f12a",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_29001d5e-2218-4a9a-8412-015d9033c104/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -2524,6 +2555,7 @@
             ],
             "id": "invt_03d914ce-9fd0-4d06-b52a-1e2dde5d98f8",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_a24a8b64-edea-4425-b6cd-0b60e3baa976/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -2603,7 +2635,7 @@
     },
     {
         "_created_at": "2026-07-22T18:41:08.968Z",
-        "_updated_at": "2026-08-08T00:00:14.676Z",
+        "_updated_at": "2026-08-20T17:47:54.154Z",
         "abilities": [
             "player_movement"
         ],
@@ -2622,7 +2654,7 @@
         "tags": [],
         "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_46c77590-69b0-4317-84ba-42f81ef0bad5/1/256",
         "unityPackages": [],
-        "version": 57,
+        "version": 63,
         "visibilityType": "everyone",
         "worldPlacementMask": 1
     },
@@ -2683,6 +2715,7 @@
             ],
             "id": "invt_80066c55-bfb2-48d3-ae26-7c570e265190",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_02a5c191-1d7d-4ce5-bf41-a01cccdae2bf/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -2757,6 +2790,7 @@
             ],
             "id": "invt_0034a86b-ffbd-43b0-b94d-a7cc405a67cb",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_6795738e-1054-419c-ba1d-c8f12c632854/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -2827,6 +2861,7 @@
             ],
             "id": "invt_7e1c0841-adbc-4c0a-aed7-1f3c23b3ed7c",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_b13c36fe-21d9-41e5-9b50-a693cd29c15c/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -2864,7 +2899,7 @@
     },
     {
         "_created_at": "2026-08-17T18:45:10.819Z",
-        "_updated_at": "2026-08-19T17:16:15.961Z",
+        "_updated_at": "2026-08-21T16:27:54.956Z",
         "abilities": [],
         "authorId": "8JoV9XEdpo",
         "authorName": "VRChat",
@@ -2894,6 +2929,7 @@
             ],
             "id": "invt_57f135d5-3551-4cf0-a3d6-45caf180ce65",
             "imageUrl": "https://api.vrchat.cloud/api/1/image/file_50198fd2-d59c-45f4-9738-8aeac8dd43e8/1/256",
+            "initialToggleState": false,
             "itemType": "prop",
             "itemTypeLabel": "Prop",
             "metadata": {
@@ -2909,7 +2945,7 @@
                 "internal",
                 "autogenerated"
             ],
-            "updated_at": "2026-08-19T17:16:16.107Z",
+            "updated_at": "2026-08-21T16:27:54.922Z",
             "validateUserAttributes": false
         },
         "kind": 0,
@@ -2921,7 +2957,7 @@
         "tags": [],
         "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_0bb5ba2b-4a83-431c-acde-d689d7c3ffc0/2/256",
         "unityPackages": [],
-        "version": 38,
+        "version": 46,
         "visibilityType": "everyone",
         "worldPlacementMask": 1
     }

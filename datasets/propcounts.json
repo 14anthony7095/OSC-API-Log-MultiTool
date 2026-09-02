@@ -1,27 +1,27 @@
 {
   "89be973f-9e1a-4260-8deb-211e32da8196": {
     "name": "Rainbow Ribbon",
-    "count": 1032
+    "count": 1035
   },
   "829ba6f6-b837-49d9-b9a9-056b82103b58": {
     "name": "THE REFERENCE CUBE",
-    "count": 1745
+    "count": 1746
   },
   "5c54ccdb-cafb-461b-b07f-91d189fc7b72": {
     "name": "Bubble Blaster",
-    "count": 1068
+    "count": 1069
   },
   "79789b58-e020-4b2e-aa25-ba21a1938eec": {
     "name": "Mori Calliope Penlight",
-    "count": 463
+    "count": 467
   },
   "49fec698-f0cb-475c-9bc3-8f24e1bcc4eb": {
     "name": "Campfire",
-    "count": 1013
+    "count": 1015
   },
   "fb4e6b9e-ddd2-464c-8e44-cdba7f77eb5d": {
     "name": "Marshmallow on a Stick",
-    "count": 888
+    "count": 889
   },
   "213156fd-eb54-4c2c-8e12-cc840581ec73": {
     "name": "Candy Codex",
@@ -29,7 +29,7 @@
   },
   "0b5e9595-e9e6-4f11-bd59-5ae6abe34f67": {
     "name": "Treats",
-    "count": 207
+    "count": 208
   },
   "57484479-1f1b-4a9c-986b-b0c86e1c0dda": {
     "name": "Kath",
@@ -37,7 +37,7 @@
   },
   "dae2be6b-9c3b-4783-948b-4ff46d3a14e5": {
     "name": "Bigscreen Beyond 2e: VRChat Edition",
-    "count": 63
+    "count": 64
   },
   "0fd9deb0-6ca8-4c69-acbe-17035f93792b": {
     "name": "Groan Tube",
@@ -49,7 +49,7 @@
   },
   "3e81ff20-b64a-4ecb-9429-bd076a96fcf8": {
     "name": "VRChat Penlight",
-    "count": 92
+    "count": 94
   },
   "81ce8d80-72d8-4f60-9d6b-689a8340f55d": {
     "name": "Unstable Reference Cube",
@@ -65,7 +65,7 @@
   },
   "062e8001-d338-4dd1-b3c7-ecfb4f30eb1c": {
     "name": "Frosted Scribe",
-    "count": 207
+    "count": 208
   },
   "b121c206-666e-4a61-ba8b-5315d2303276": {
     "name": "Portable Winterizer",
@@ -93,7 +93,7 @@
   },
   "fb94d182-ff62-4290-835c-8a2e4944fb5d": {
     "name": "Gold-plated Lighter",
-    "count": 221
+    "count": 223
   },
   "c7f8c49f-f982-4d8c-8ab2-549b2fe8b4f8": {
     "name": "Blazing Sparkler",
@@ -105,11 +105,11 @@
   },
   "cb3cad70-5354-4ce6-810b-9e0364264e2f": {
     "name": "Fiery Sky Fireworks Show",
-    "count": 92
+    "count": 93
   },
   "036389b7-3c9d-4e0d-96d1-f23cb195e76b": {
     "name": "Snow Blaster",
-    "count": 628
+    "count": 630
   },
   "25a95ca1-bba4-48d0-8a31-249bbc3af78e": {
     "name": "MAGFest26 Coin",
@@ -185,7 +185,7 @@
   },
   "553569e8-a6ce-4718-9637-c298466af705": {
     "name": "SC-4N Reader",
-    "count": 105
+    "count": 108
   },
   "f75d9413-6fb7-44a6-9862-ed33aa76c268": {
     "name": "Photonic Slicer",
@@ -197,7 +197,7 @@
   },
   "b2f489c8-8b5d-474f-a883-7f594ba21aeb": {
     "name": "Extravagant Pride Fan",
-    "count": 297
+    "count": 298
   },
   "928fcfa4-adb3-49d1-864c-203bd03a294c": {
     "name": "MEGABLASTER XTREME 1000",
@@ -213,7 +213,7 @@
   },
   "3a4a5f57-5c2a-4c47-a0e9-17fb243ec8b5": {
     "name": "Reference Cube Companion",
-    "count": 173
+    "count": 175
   },
   "d61bea79-c8b5-4f91-897b-2dc4175f8c5f": {
     "name": "Tanabata Fukinagashi",
@@ -237,22 +237,26 @@
   },
   "383b6548-0364-4765-914b-7bb738d7427e": {
     "name": "Trampoline",
-    "count": 291
+    "count": 322
   },
   "e96c8fcc-b65e-42bd-867b-fa2d393c69ea": {
     "name": "VDJ-8000",
-    "count": 32
+    "count": 38
   },
   "d2286859-7fcd-46b9-a9f4-6dd4945bb5e5": {
     "name": "Glowstick",
-    "count": 29
+    "count": 32
   },
   "c4c45b34-6e84-4130-a668-0439a72b6a04": {
     "name": "227 Series Train Plushie",
-    "count": 8
+    "count": 13
   },
   "6f03d224-2001-4974-ae4e-fb9881b66fdf": {
     "name": "Multiple Companion Cube",
-    "count": 3
+    "count": 27
+  },
+  "269d2b17-24fb-44aa-be4b-33245df85c75": {
+    "name": "Moonchaser Penlight",
+    "count": 21
   }
 }
