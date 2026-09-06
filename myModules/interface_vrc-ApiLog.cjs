@@ -1220,6 +1220,11 @@ oscEmitter.on('osc', (addr, value) => {
 				break
 			case 2:
 				inviteJoinableInstanceQueue(); break;
+			// case 3 in use
+			// case 4 in use
+			// case 5 in use
+			// case 6 in use
+			// case 7 in use
 			default: break;
 		}
 	}
@@ -2039,7 +2044,7 @@ function applyGroupLogo(gID) {
 	 7 - 0111 - El Alba
  
 	 8 - 1000 - Party Animals
-	 9 - 1001 - Club Sova
+	 9 - 1001 -
 	10 - 1010 - DegenTechINC
 	11 - 1011 - KemonoTherapy
 	
@@ -2073,8 +2078,8 @@ function applyGroupLogo(gID) {
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, true)
 			break;
-		case 'grp_65121a00-ea58-49f2-8ca4-797e52a11798':
-			// Club Sova
+		case 'grp_easyfail':
+			// 
 			// 1001 - 9
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, true)
 			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
@@ -3035,7 +3040,24 @@ async function eventPlayerJoin(logOutputLine) {
 				InstanceHistory = InstanceHistory.filter((ih, index) => ih.leave_timestamp + 3600_000 > Date.now() || index <= 1)
 			}
 
+			// Group World tagging
+			const exploreGroups = [
+				'grp_c24efb98-3234-4060-94f1-7729523e9689',
+				'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad',
+				'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',
+				'grp_ed3b8660-adb6-4abf-b3ab-b4c974e72144'
+			]
+			if (exploreGroups.includes(InstanceHistory[0].groupID)) {
+				let gotWorld = await limiter.reqCached('world', InstanceHistory[0].worldID).catch(async () => {
+					return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': InstanceHistory[0].worldID } }), 'world')
+				})
+				var isAndroid = gotWorld.data.unityPackages.find(p => p.platform == 'android') != undefined ? ` <:OS_Android:1479897785796006120>` : ``
+				var worldNameInHoppers = `- [${gotWorld.data.name}](<https://vrchat.com/home/world/${InstanceHistory[0].worldID}>)${isAndroid}`
+				if (!worldHoppers['worlds'].includes(worldNameInHoppers)) { worldHoppers['worlds'].push(worldNameInHoppers) }
+			}
+
 		}
+
 
 		// Group Member tagging
 		async function markUserAsMember(I_memberStatus, I_groupName = 'GroupMember', I_addToWorldHop = false) {
@@ -3048,14 +3070,6 @@ async function eventPlayerJoin(logOutputLine) {
 				playersInstanceObject.push({ 'name': playerDisplayName, 'id': playerID, 'isGroupMember': I_memberStatus })
 			} finally {
 				if (I_addToWorldHop) {
-
-					let gotWorld = await limiter.reqCached('world', InstanceHistory[0].worldID).catch(async () => {
-						return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': InstanceHistory[0].worldID } }), 'world')
-					})
-					var isAndroid = gotWorld.data.unityPackages.find(p => p.platform == 'android') != undefined ? ` <:OS_Android:1479897785796006120>` : ``
-					var worldNameInHoppers = `- [${gotWorld.data.name}](<https://vrchat.com/home/world/${InstanceHistory[0].worldID}>)${isAndroid}`
-					if (!worldHoppers['worlds'].includes(worldNameInHoppers)) { worldHoppers['worlds'].push(worldNameInHoppers) }
-
 					try {
 						var whindex = worldHoppers['users'].findIndex(f => f.name == playerDisplayName)
 						worldHoppers['users'][whindex]["joinTime"] = Date.now()
@@ -3095,16 +3109,6 @@ async function eventPlayerJoin(logOutputLine) {
 			if ((gotUserGroups?.data || []).find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
 				markUserAsMember(false, 'CommunityMeetup', true)
 			} else { markUserAsMember(true, 'CommunityMeetup', true) }
-
-		} else if (InstanceHistory[0].groupID == 'grp_65121a00-ea58-49f2-8ca4-797e52a11798') {
-
-			var gotUserGroups = await limiter.reqCached('userGroups', playerID).catch(async () => {
-				return await limiter.req(vrchat.getUserGroups({ 'path': { 'userId': playerID } }), 'userGroups', playerID)
-			})
-
-			if ((gotUserGroups?.data || []).find(g => g.groupId == InstanceHistory[0].groupID) == undefined) {
-				markUserAsMember(false, 'ClubSova', true)
-			} else { markUserAsMember(true, 'ClubSova', true) }
 
 		} else if (InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 
@@ -3240,7 +3244,6 @@ function eventPlayerLeft(logOutputLine) {
 
 		// worldhop Tracker
 		const exploreGroups = [
-			'grp_65121a00-ea58-49f2-8ca4-797e52a11798',
 			'grp_c24efb98-3234-4060-94f1-7729523e9689',
 			'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad',
 			'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce',

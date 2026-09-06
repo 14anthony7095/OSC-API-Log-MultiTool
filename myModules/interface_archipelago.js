@@ -4,7 +4,7 @@
 const { Client } = require('archipelago.js')
 
 
-main('wss://archipelago.gg:51557', '14aPVZ', 'Plants vs. Zombies')
+main('wss://archipelago.gg:38769', '14aMarioWorld', 'Super Mario World')
 
 async function main(I_url, I_slot, I_game) {
     const apClient = new Client()

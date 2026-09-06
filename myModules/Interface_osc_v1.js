@@ -389,6 +389,18 @@ udpPort.on("message", function (msg, rinfo) {
 	var address = msg['address']
 	var value = msg['args'][0]
 
+	if (address == vrcap + 'api/favWorld' && value != 0) {
+		switch (value) {
+			// case 1 in use
+			// case 2 in use
+			case 3: oscSend('/avatar/eyeheight', 1.5549639463424683); break
+			case 4: oscSend('/avatar/eyeheight', Math.max(0.01, oscCache['eyeheight'] * 0.5)); break;
+			case 5: oscSend('/avatar/eyeheight', Math.min(10000, oscCache['eyeheight'] * 2)); break;
+			case 6: oscSend('/avatar/eyeheight', Math.max(0.01, oscCache['eyeheight'] - oscCache['eyeheight'] * 0.1)); break;
+			case 7: oscSend('/avatar/eyeheight', Math.min(10000, oscCache['eyeheight'] + oscCache['eyeheight'] * 0.1)); break;
+			default: break;
+		}
+	}
 
 	// 83% of ceiling height
 	if (address == vrcap + 'findUp_Distance') { oscCache['findUp_Distance'] = value }
