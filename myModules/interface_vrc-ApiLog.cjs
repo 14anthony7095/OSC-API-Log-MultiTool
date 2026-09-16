@@ -300,7 +300,7 @@ async function main() {
 		authToken = auth.token
 		socket_VRC_API_Connect()
 	}
-	var currentProfile = await limiter.req(manualCall('profile/' + currentUser.data.id, 'GET'))
+	var currentProfile = await vrchat.getPublicProfile({ 'path': { 'userId': currentUser.data.id } })
 
 	vrcUserStatusText = currentUser.data.statusDescription
 	console.log(`${loglv.info}${selflogA} User status: ${vrcUserStatusText}`)
@@ -2360,9 +2360,7 @@ async function updateBioWorldQueue() {
 			console.log(`${loglv.hey}${selflogA} Preping Bio for world queue update`)
 			if (localQueueList.length != 0) {
 				console.log(`${loglv.info}${selflogA} Fetching current Bio`)
-				// let mybio = await limiter.req(vrchat.getUser({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' } }))
-				let { data: gotProfile } = await limiter.req(manualCall('profile/usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752', 'GET'))
-
+				let { data: gotProfile } = await limiter.req(await vrchat.getPrivateProfile({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' } }))
 				if (gotProfile == undefined) { setTimeout(() => { resolve(true) }, 2000) }
 
 				if (gotProfile.bio.match(/Worlds in queue (\d{1,6})/) != null) {
@@ -2370,8 +2368,7 @@ async function updateBioWorldQueue() {
 						console.log(`${loglv.info}${selflogA} Updating Bio queue count: ${gotProfile.bio.match(/Worlds in queue (\d{1,6})/)[1]} -> ${localQueueList.length}`)
 						// console.log(`${loglv.debug}${selflog} ${mybio.bio}`)
 						let mybioUpdated = gotProfile.bio.replace(/Worlds in queue \d{1,6}/, 'Worlds in queue ' + localQueueList.length)
-						await limiter.req(manualCall('profile/usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752', 'PUT', { 'bio': mybioUpdated }))
-						// await limiter.req(vrchat.updateUser({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' }, 'body': { 'bio': mybioUpdated } }))
+						await limiter.req(vrchat.updateProfile({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' }, 'body': { 'bio': mybioUpdated } }))
 
 						// console.log(`${loglv.debug}${selflog} ${mybioUpdated}`)
 						setTimeout(() => { resolve(true) }, 2000)
@@ -2449,7 +2446,7 @@ function scanaudit(logoutput, groupID) {
 				var userBadgeYearNum = 0
 				if (l.actorId != null) {
 					let { data: profileData } = await limiter.reqCached('profile', l.actorId).catch(async () => {
-						return await limiter.req(manualCall('profile/' + l.actorId, 'GET'), 'profile')
+						return await limiter.req(vrchat.getPublicProfile({ 'path': { 'userId': l.actorId } }))
 					})
 					let { data: userData } = await limiter.reqCached('user', l.actorId).catch(async () => {
 						return await limiter.req(vrchat.getUser({ 'path': { 'userId': l.actorId } }), 'user')
@@ -2472,11 +2469,11 @@ function scanaudit(logoutput, groupID) {
 					userBadgeYearNum = findHighestBadage.length > 0 ? parseInt(findHighestBadage[0].badgeName.substring(0, 2).trim()) : 0
 					if (userBadgeYearNum == 0) {
 						console.log(`No year badge found? Falling back on Date Joined`)
-						userBadgeYearNum = parseInt(new Date(Date.now() - userData.date_joined.getTime()).toISOString().substring(0, 4) - 1970)
+						userBadgeYearNum = parseInt(new Date(Date.now() - new Date(userData.date_joined).getTime()).toISOString().substring(0, 4) - 1970)
 					}
 
 					userPlatform = userData.last_platform
-					userJoinDate = userData.date_joined.toISOString().split('T')[0]
+					userJoinDate = new Date(userData.date_joined).toISOString().split('T')[0]
 					if (profileData.ageVerified == true) { userAgeVerified = profileData.ageVerificationStatus } else { userAgeVerified = 'False' }
 					if (profileData.trustTags.includes('system_trust_veteran')) {
 						userTrust = 'Trusted User'
@@ -2498,7 +2495,7 @@ function scanaudit(logoutput, groupID) {
 					})
 
 					targetUserPlatform = userData.last_platform
-					targetUserJoinDate = userData.date_joined.toISOString().split('T')[0]
+					targetUserJoinDate = new Date(userData.date_joined).toISOString().split('T')[0]
 					if (userData.ageVerified == true) { targetUserAgeVerified = userData.ageVerificationStatus } else { targetUserAgeVerified = 'False' }
 					if (userData.tags.includes('system_trust_veteran')) {
 						targetUserTrust = 'Trusted User'
