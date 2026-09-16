@@ -2370,7 +2370,8 @@ async function updateBioWorldQueue() {
 						console.log(`${loglv.info}${selflogA} Updating Bio queue count: ${gotProfile.bio.match(/Worlds in queue (\d{1,6})/)[1]} -> ${localQueueList.length}`)
 						// console.log(`${loglv.debug}${selflog} ${mybio.bio}`)
 						let mybioUpdated = gotProfile.bio.replace(/Worlds in queue \d{1,6}/, 'Worlds in queue ' + localQueueList.length)
-						await limiter.req(vrchat.updateUser({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' }, 'body': { 'bio': mybioUpdated } }))
+						await limiter.req(manualCall('profile/usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752', 'PUT', { 'bio': mybioUpdated }))
+						// await limiter.req(vrchat.updateUser({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' }, 'body': { 'bio': mybioUpdated } }))
 
 						// console.log(`${loglv.debug}${selflog} ${mybioUpdated}`)
 						setTimeout(() => { resolve(true) }, 2000)

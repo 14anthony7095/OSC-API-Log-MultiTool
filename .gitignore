@@ -163,3 +163,5 @@ vite.config.ts.timestamp-*
 /extra scripts/worldlist.txt
 /extra scripts/output.txt
 /extra scripts/gameWorldDatabase
+/output-members.json
+/output_props.json

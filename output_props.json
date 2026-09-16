@@ -2866,15 +2866,12 @@
             },
             "name": "227 Series Train Plushie",
             "productId": "prod_20ac6349-2944-43a5-a70e-92db1a448685",
-            "publishedListings": [
-                "prod_50c37a52-3d4d-4e2d-a390-b33afe6392dc",
-                "prod_0641bb46-be2b-41a4-9f54-8b3e1e5415b1"
-            ],
+            "publishedListings": [],
             "tags": [
                 "prop",
                 "included_in_product"
             ],
-            "updated_at": "2026-08-28T20:11:48.879Z",
+            "updated_at": "2026-09-14T09:00:07.946Z",
             "validateUserAttributes": false
         },
         "kind": 0,
@@ -3167,5 +3164,218 @@
         "version": 128,
         "visibilityType": "everyone",
         "worldPlacementMask": 1
+    },
+    {
+        "_created_at": "2026-08-11T20:35:51.956Z",
+        "_updated_at": "2026-09-02T22:43:13.161Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "Original Costume Design：RinYuu © Crypton Future Media, INC. www.piapro.net",
+        "id": "prop_4b0f2f3d-92ee-4d06-84b2-a6cfae347291",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_e762a720-1fa0-48d2-b666-1ff4aa9f5eba/1/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "Gugenka",
+                    "userId": "usr_90f4067a-a70f-4099-9c7d-0d90ebd7fe62"
+                },
+                "publisher": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                }
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-08-11T20:35:51.927Z",
+            "defaultAttributes": {},
+            "description": "Original Costume Design：RinYuu © Crypton Future Media, INC. www.piapro.net",
+            "dropStatus": "draft",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_ded5eae5-fe03-4f60-a5cf-83d6e15630c0",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_8b1b80db-64ae-42fb-8a60-a7d8da10f2e9/1/256",
+            "initialToggleState": false,
+            "itemType": "prop",
+            "itemTypeLabel": "Prop",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_8b1b80db-64ae-42fb-8a60-a7d8da10f2e9",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_8b1b80db-64ae-42fb-8a60-a7d8da10f2e9/1/file",
+                "propId": "prop_4b0f2f3d-92ee-4d06-84b2-a6cfae347291",
+                "propKind": 0
+            },
+            "name": "Crystal Heart Lightstick",
+            "productId": "prod_d3ba6c09-652f-4770-bf54-b4555a1366b0",
+            "publishedListings": [
+                "prod_26c25de1-cba0-458c-a1c8-39bc743aa0fa",
+                "prod_aaceb491-8e96-4695-a75d-6b7f68d997a0"
+            ],
+            "tags": [
+                "prop",
+                "included_in_product"
+            ],
+            "updated_at": "2026-09-04T00:00:46.844Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "Crystal Heart Lightstick",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_e762a720-1fa0-48d2-b666-1ff4aa9f5eba/1/256",
+        "unityPackages": [],
+        "version": 38,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    {
+        "_created_at": "2026-08-11T17:38:56.619Z",
+        "_updated_at": "2026-09-02T22:59:16.385Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "Original Costume Design：RinYuu © Crypton Future Media, INC. www.piapro.net",
+        "id": "prop_95f002a5-37b7-4293-8c5d-340fd74af4a8",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_6c522df6-eb8e-48e8-a762-e0ce5868a7ef/1/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "Gugenka",
+                    "userId": "usr_90f4067a-a70f-4099-9c7d-0d90ebd7fe62"
+                },
+                "publisher": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                }
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-08-11T17:38:56.582Z",
+            "defaultAttributes": {},
+            "description": "Original Costume Design：RinYuu © Crypton Future Media, INC. www.piapro.net",
+            "dropStatus": "draft",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_8bb533db-678a-4b50-be8b-a6390aa3a9cc",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_6cc7769d-a02d-455c-a04a-e48424f5a4d8/1/256",
+            "initialToggleState": false,
+            "itemType": "prop",
+            "itemTypeLabel": "Prop",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_6cc7769d-a02d-455c-a04a-e48424f5a4d8",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_6cc7769d-a02d-455c-a04a-e48424f5a4d8/1/file",
+                "propId": "prop_95f002a5-37b7-4293-8c5d-340fd74af4a8",
+                "propKind": 0
+            },
+            "name": "Special Mi-Crepe",
+            "productId": "prod_ab996f22-05c2-41bb-97a0-be01276fd792",
+            "publishedListings": [
+                "prod_91c6e969-0219-43b0-9022-e75e0cc6b3f6",
+                "prod_aaceb491-8e96-4695-a75d-6b7f68d997a0"
+            ],
+            "tags": [
+                "prop",
+                "included_in_product"
+            ],
+            "updated_at": "2026-09-04T00:00:46.844Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "Special Mi-Crepe",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_6c522df6-eb8e-48e8-a762-e0ce5868a7ef/1/256",
+        "unityPackages": [],
+        "version": 32,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    {
+        "_created_at": "2026-08-11T21:18:34.398Z",
+        "_updated_at": "2026-09-02T22:54:13.494Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "Art by non / Original Costume Design：RinYuu © Crypton Future Media, INC. www.piapro.net",
+        "id": "prop_58fe19ad-a136-4925-b6a8-0413a0c1dbed",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_00f8fd50-1b7d-4b68-8c6d-bf95a2576b43/1/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "Gugenka",
+                    "userId": "usr_90f4067a-a70f-4099-9c7d-0d90ebd7fe62"
+                },
+                "publisher": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                }
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-08-11T21:18:34.373Z",
+            "defaultAttributes": {},
+            "description": "Art by non / Original Costume Design：RinYuu © Crypton Future Media, INC. www.piapro.net",
+            "dropStatus": "draft",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_21db4901-e3e5-4c53-8d69-abeb83882a69",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_cb651977-e86a-4bee-8997-0535189fa24d/1/256",
+            "initialToggleState": false,
+            "itemType": "prop",
+            "itemTypeLabel": "Prop",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_cb651977-e86a-4bee-8997-0535189fa24d",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_cb651977-e86a-4bee-8997-0535189fa24d/1/file",
+                "propId": "prop_58fe19ad-a136-4925-b6a8-0413a0c1dbed",
+                "propKind": 0
+            },
+            "name": "Memorial Sparkler",
+            "productId": "prod_03cfdd6b-2d9d-408c-bfc6-32d14aaea7b9",
+            "publishedListings": [
+                "prod_0c54100f-da6e-4500-8cae-adf8252d7549",
+                "prod_aaceb491-8e96-4695-a75d-6b7f68d997a0"
+            ],
+            "tags": [
+                "prop",
+                "included_in_product"
+            ],
+            "updated_at": "2026-09-04T00:00:46.844Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "Memorial Sparkler",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_00f8fd50-1b7d-4b68-8c6d-bf95a2576b43/1/256",
+        "unityPackages": [],
+        "version": 43,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
     }
 ]
