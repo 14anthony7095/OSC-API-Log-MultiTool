@@ -2360,7 +2360,7 @@ async function updateBioWorldQueue() {
 			console.log(`${loglv.hey}${selflogA} Preping Bio for world queue update`)
 			if (localQueueList.length != 0) {
 				console.log(`${loglv.info}${selflogA} Fetching current Bio`)
-				let { data: gotProfile } = await limiter.req(await vrchat.getPrivateProfile({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' } }))
+				let { data: gotProfile } = await limiter.req(await vrchat.getPublicProfile({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' } }))
 				if (gotProfile == undefined) { setTimeout(() => { resolve(true) }, 2000) }
 
 				if (gotProfile.bio.match(/Worlds in queue (\d{1,6})/) != null) {
