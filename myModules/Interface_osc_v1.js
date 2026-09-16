@@ -45,7 +45,6 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	}
 	if (cmd == 'osc' && args[0] == 'in') { logOscIn = JSON.parse(args[1]) }
 	if (cmd == 'osc' && args[0] == 'out') { logOscOut = JSON.parse(args[1]) }
-	if (cmd == 'osc' && args[0] == 'avatars') { avatarRoulette() }
 	if (cmd == 'osc' && args[0] == 'db') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2])) }
 	if (cmd == 'osc' && args[0] == 'db2') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2]), parseFloat(args[3])) }
 	if (cmd == 'osc' && args[0] == 'db3') { OSCDataBurst(parseInt(args[1]), parseFloat(args[2]), parseFloat(args[3]), parseFloat(args[4])) }
@@ -54,6 +53,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 		oscChatBoxV2(raw.slice(8).toString().replace(/\\v/g, '\v'), undefined, false, false, false, true)
 	}
 	if (cmd == 'osc' && args[0] == 'send') { oscSend('/avatar/parameters/' + args[1], JSON.parse(args[2])) }
+	if (cmd == 'osc' && args[0] == 'sendraw') { oscSend(args[1], JSON.parse(args[2])) }
 	// if( cmd == 'cctv' ){
 	// 	if( args[0] == 'stop' ){
 	// 		clearInterval(nanaPartyCCTVtimer)
@@ -384,7 +384,11 @@ try {
 	})
 } catch (error) { }
 udpPort.on("message", function (msg, rinfo) {
-	if (logOscIn == true) { console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args']) }
+	if (logOscIn == true) { 
+		if( msg['address'].includes('oscAdd') ){return}
+		if( msg['address'].includes('oscData') ){return}
+		console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args'])
+	}
 	oscEmitter.emit('osc', msg['address'], msg['args'][0]);
 	var address = msg['address']
 	var value = msg['args'][0]
@@ -490,7 +494,7 @@ udpPort.on("message", function (msg, rinfo) {
 
 		oscSend(vrcap + `VF100_SecurityLockSync`, true)
 		oscSend(vrcap + "   locked", false)
-		oscSend(vrcap + `14a/osc/14anthony7095`, true)
+		oscSend(vrcap + '14a/exit/\\u0313\\u0461\\u06e7\\u0468\\u06f6\\u1d00\\u0373', true)
 		oscSend(vrcap + `Unlock`, true)
 	}
 

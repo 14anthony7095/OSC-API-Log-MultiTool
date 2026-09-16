@@ -19,6 +19,7 @@ class ratelimitHandler {
 		'avatars': { 'pause_exp': 1, 'isLimiting': false },
 		'users': { 'pause_exp': 1, 'isLimiting': false },
 		'user': { 'pause_exp': 1, 'isLimiting': false },
+		'profile': { 'pause_exp': 1, 'isLimiting': false },
 		'calendar': { 'pause_exp': 1, 'isLimiting': false },
 		'economy': { 'pause_exp': 1, 'isLimiting': false },
 		'favorite': { 'pause_exp': 1, 'isLimiting': false },
@@ -103,21 +104,21 @@ class ratelimitHandler {
 			}
 			async function attemptRequest() {
 				var res = await I_request
-				var endpoint = res.request.url.slice(31).split('/')[0]
+				// var endpoint = res.request.url.slice(31).split('/')[0]
 				// endpointLimits[endpoint]
 				// console.log(`[Endpoint] ${endpoint}`)
 
-				if (res.error?.statusCode == 429 || res.error?.response.status == 429) {
+				if (res.error?.statusCode == 429 || res.error?.response?.status == 429) {
 					self.isLimiting = true
 					// console.error('429')
 					await self.backoff()
 					if (self.pause_exp >= I_maxAttempts) { self.isLimiting = false; resolve(res) } else { attemptRequest() }
-				} else if (res.error?.statusCode == 503 || res.error?.response.status == 503) {
+				} else if (res.error?.statusCode == 503 || res.error?.response?.status == 503) {
 					self.isLimiting = true
 					console.error('503')
 					await self.backoff(0.2)
 					if (self.pause_exp >= I_maxAttempts) { self.isLimiting = false; resolve(res) } else { attemptRequest() }
-				} else if (res.error?.statusCode == 500 || res.error?.response.status == 500) {
+				} else if (res.error?.statusCode == 500 || res.error?.response?.status == 500) {
 					self.isLimiting = true
 					console.error('500')
 					await self.backoff(0.2)

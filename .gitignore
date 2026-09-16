@@ -159,3 +159,7 @@ vite.config.ts.timestamp-*
 /assets/obs-worldImage.html
 /assets/obs-world-queue-count.txt
 /datasets/private-worlds.csv
+/extra scripts/worldListFormatter.cjs
+/extra scripts/worldlist.txt
+/extra scripts/output.txt
+/extra scripts/gameWorldDatabase
