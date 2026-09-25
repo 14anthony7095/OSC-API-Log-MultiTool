@@ -39,7 +39,6 @@ let selflogL = `\x1b[0m[\x1b[32mVRC_Log\x1b[0m]`
 let selflogA = `\x1b[0m[\x1b[33mVRC_API\x1b[0m]`
 let selflogWS = `\x1b[0m[\x1b[33mVRC_WebSocket\x1b[0m]`
 var path = 'C:/Users/14anthony7095/AppData/LocalLow/VRChat/VRChat/'
-var verboseAvatarStatLogging = true
 var tarFile = 'nothing'
 var tarFileSize = 0
 var tarFilePath = 'nothing'
@@ -57,18 +56,21 @@ var playersInstanceObject = [{
 var playerHardLimit = 99
 var playerRatio = 0.5
 var memberRatio = 0.5
+
 var G_autoNextWorldHop = false
 var worldHoppers = { 'worlds': [], 'users': [] }
-var vrchatDiscord; fs.readFile('datasets/vrc-X-dis.json', 'utf8', (err, data) => { vrchatDiscord = JSON.parse(data) })
-var lastFetchGroupLogs;
-var currentUser;
-var userAutoAcceptWhiteList = []
 var worldsSeenDB = new Set()
 var worldQueueTxt = './datasets/worldQueue.txt'
 var explorePrivacyLevel = 'groupPlus'
 var G_exploreInviteMode = false // Self: false - Friends: true
 var G_exploreAutoClose = true
+var G_exploreSkipLargeDownload = false
 var G_autoRandomizeApparel = false
+
+var vrchatDiscord; fs.readFile('datasets/vrc-X-dis.json', 'utf8', (err, data) => { vrchatDiscord = JSON.parse(data) })
+var lastFetchGroupLogs;
+var currentUser;
+var userAutoAcceptWhiteList = []
 var authToken = null
 var isApiErrorSkip = false
 var socket_VRC_API
@@ -112,12 +114,7 @@ var vrchatRunning = false
 var vrchatFoundThisSession = false
 var loadingAvatarTimer;
 var watcher;
-var lastChecked = 0
-var previousLength = 0
-var currentLength = 0
-var cooldownLogRead = false
 var urlType = 'none'
-var logCooldown = 0.001 // secs
 
 // Restore saved into Scope
 fs.readFile('./lastFetchGroupLogs.txt', 'utf8', (err, data) => {
@@ -223,6 +220,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 
 	if (cmd == 'pruneseen') { pruneLocalQueue() }
 	if (cmd == 'preload') { worldAutoPreloadQueue(args[0].split(',')) }
+	if (cmd == 'preloadperf') { worldAutoPreloadQueue(args[0].split(','), true) }
 	if (cmd == 'addworlds') { addSearchToLocalQueue(raw.slice(10)).then(() => { console.log('✅') }) }
 	if (cmd == 'explore' && args[0] == 'prefill') { addLabWorldsToLocalQueue() }
 	if (cmd == 'explore' && args[0] == 'autonext') { G_autoNextWorldHop = JSON.parse(args[1]) }
@@ -519,7 +517,7 @@ function socket_VRC_API_Connect() {
 				// console.log(wsContent)
 
 				if (userAutoAcceptWhiteList.includes(wsContent.user.displayName)) {
-					sayQueue(`Tracked user, ${wsContent.user.displayName}, is now Online.`, 2)
+					sayQueue(`white listed, online, ${wsContent.user.displayName}`, 2)
 				}
 
 				if (wsContent.location != 'private' || wsContent.travelingToLocation != 'private') {
@@ -549,7 +547,7 @@ function socket_VRC_API_Connect() {
 				console.log(`${loglv.info}${selflogWS} [GPS] ${wsContent.user.displayName} - Active on Web`);
 
 				if (userAutoAcceptWhiteList.includes(wsContent.user.displayName)) {
-					sayQueue(`Tracked user, ${wsContent.user.displayName}, is now Active on web.`, 2)
+					sayQueue(`white listed, active, ${wsContent.user.displayName}`, 2)
 				}
 
 				break;
@@ -1144,7 +1142,7 @@ function fitChars(I_line = '', lineCount = 1) {
 	return I_line.slice(0, limitLength != 0 ? limitLength : I_line.length)
 }
 
-async function worldAutoPreloadQueue(worldList = []) {
+async function worldAutoPreloadQueue(worldList = [], benchmarkMode = false) {
 	console.log(`${loglv.info}${selflogA} [Auto World Preload] Starting, have ${worldList.length} worlds to go through`)
 	setUserStatus('Preloading worlds')
 	for (const wrd in worldList) {
@@ -1177,7 +1175,7 @@ async function worldAutoPreloadQueue(worldList = []) {
 				if (world == worldId) {
 					setTimeout(() => {
 						resolve(true);
-					}, 10000)
+					}, benchmarkMode == false ? 10000 : 70000)
 				}
 			})
 		})
@@ -1211,6 +1209,7 @@ oscEmitter.on('osc', (addr, value) => {
 	if (addr == vrcap + `api/explore/privacy` && value == 3) { explorePrivacyLevel = 'friendsPlus' }
 	if (addr == vrcap + `api/explore/inviteMode`) { G_exploreInviteMode = value }
 	if (addr == vrcap + `api/explore/autoClose`) { G_exploreAutoClose = value }
+	if (addr == vrcap + `api/explore/skipLarge`) { G_exploreSkipLargeDownload = JSON.parse(value) }
 	if (addr == vrcap + `toggle/autoRandomizeApparel`) { G_autoRandomizeApparel = value }
 	if (addr == vrcap + `api/requestall` && value == true) { requestAllOnlineFriends(currentUser) }
 	if (addr == vrcap + 'api/favWorld' && value != 0) {
@@ -1588,7 +1587,7 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 			InstanceHistory[0].worldHopNoticeSent = true
 			manualCall(`instances/${InstanceHistory[0].location}/announce`, 'POST', {
 				"title": 'Explorer Notice',
-				"message": 'Genarating portal to the next world.\nRespawn if you are lost.',
+				"message": 'Generating portal to the next world.\nRespawn if you are lost.',
 				"imageId": 'file_072c4481-1642-4226-91b8-01bbb61444d9',
 				"imageVersion": 1
 			}).catch(c => { console.error(c) })
@@ -1633,7 +1632,7 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 			setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
 			return
 		}
-		var filter_worldPC = gotWorld.data.unityPackages.find(p => p.platform == 'standalonewindows')
+		var filter_worldPC = gotWorld.data.unityPackages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).find(f => f.platform == 'standalonewindows' && f.variant == undefined)
 		if (filter_worldPC == undefined) {
 			console.log(`${loglv.hey}${selflogA} World is not PC compatible. Retrying..`);
 			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
@@ -1646,6 +1645,27 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 		}
 		isWorldUnlisted(world_id, '14anthony7095')
 
+		if (G_exploreSkipLargeDownload == true) {
+			var urlArgs = filter_worldPC.assetUrl.match(/(file_[0-z]{8}-(?:[0-z]{4}-){3}[0-z]{12})\/(\d+)/)
+			var gotAnalysis = await vrchat.getFileAnalysis({ 'path': { 'fileId': urlArgs[1], 'versionId': urlArgs[2] } })
+			console.log(gotAnalysis?.data)
+			if ((gotAnalysis?.data?.fileSize ?? 0) > 104857600) {
+				oscSend(vrcap + `api/explore/next`, false)
+				console.log(`${loglv.hey}${selflogA} World is over 100 MB. Retrying..`);
+				sayQueue(`World is confirmed over 100 mega bytes, Try another.`, 1)
+				// setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
+				return
+			}
+			var gotAnalysis2 = await vrchat.getFileAnalysisSecurity({ 'path': { 'fileId': urlArgs[1], 'versionId': urlArgs[2] } })
+			console.log(gotAnalysis2?.data)
+			if ((gotAnalysis2?.data?.fileSize ?? 0) > 104857600) {
+				oscSend(vrcap + `api/explore/next`, false)
+				console.log(`${loglv.hey}${selflogA} World is over 100 MB. Retrying..`);
+				sayQueue(`World is confirmed over 100 mega bytes, Try another.`, 1)
+				// setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
+				return
+			}
+		}
 
 		var filter_UserAndroid = playersInstanceObject.find(u => u.platform == 'android')
 		var filter_worldAndroid = gotWorld.data.unityPackages.find(p => p.platform == 'android')
