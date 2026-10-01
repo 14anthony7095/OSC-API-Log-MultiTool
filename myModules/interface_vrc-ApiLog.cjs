@@ -1422,29 +1422,29 @@ async function addFavWorlds(I_friendID) {
 }
 async function addSearchToLocalQueue(i_searchString) {
 	return new Promise(async (resolve, reject) => {
-		var query1Body = { 'n': 100, 'order': 'descending', 'tag': 'system_labs', 'sort': 'labsPublicationDate' }
-		var query2Body = { 'n': 100, 'order': 'descending', 'notag': 'system_labs' }
+		var queryBody_labs = { 'n': 100, 'order': 'descending', 'tag': 'system_labs', 'sort': 'labsPublicationDate' }
+		var queryBody_published = { 'n': 100, 'order': 'descending', 'notag': 'system_labs', 'sort': '_updated_at' }
 
 		if (i_searchString.match(/usr_[0-z]{8}(?:-[0-z]{4}){3}-[0-z]{12}/) != null) {
 			console.log(`${loglv.info}${selflogA} Adding User ${i_searchString}'s Favorite Worlds to queue`)
 			await addFavWorlds(i_searchString)
 			console.log(`${loglv.info}${selflogA} Adding User ${i_searchString}'s Uploaded Worlds to queue`)
-			query1Body['userId'] = i_searchString
-			query2Body['userId'] = i_searchString
+			queryBody_labs['userId'] = i_searchString
+			queryBody_published['userId'] = i_searchString
 		} else if (i_searchString.match(/usr_[0-z]{10}/) != null) {
 			console.log(`${loglv.info}${selflogA} Adding Legacy User ${i_searchString.slice(4)}'s Favorite Worlds to queue`)
 			await addFavWorlds(i_searchString.slice(4))
 			console.log(`${loglv.info}${selflogA} Adding Legacy User ${i_searchString.slice(4)}'s Uploaded Worlds to queue`)
-			query1Body['userId'] = i_searchString.slice(4)
-			query2Body['userId'] = i_searchString.slice(4)
+			queryBody_labs['userId'] = i_searchString.slice(4)
+			queryBody_published['userId'] = i_searchString.slice(4)
 		} else {
 			console.log(`${loglv.info}${selflogA} Adding Searched worlds to queue`)
-			query1Body['search'] = i_searchString
-			query2Body['search'] = i_searchString
+			queryBody_labs['search'] = i_searchString
+			queryBody_published['search'] = i_searchString
 		}
 
-		let worldData = await limiter.req(vrchat.searchWorlds({ query: query1Body }))
-		let worldData2 = await limiter.req(vrchat.searchWorlds({ query: query2Body }))
+		let worldData_labs = await limiter.req(vrchat.searchWorlds({ query: queryBody_labs }))
+		let worldData_published = await limiter.req(vrchat.searchWorlds({ query: queryBody_published }))
 		fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
 			let localQueueList = data.split(`\r\n`)
 			let lastInQueue = localQueueList[localQueueList.length - 2]
@@ -1453,8 +1453,8 @@ async function addSearchToLocalQueue(i_searchString) {
 			let worldlist = ''
 			var worldlist_addcount = 0
 			let skipAdd = false
-			if (worldData.data != undefined) {
-				worldData.data.forEach((w, index, arr) => {
+			if (worldData_labs.data != undefined) {
+				worldData_labs.data.forEach((w, index, arr) => {
 					if (!worldsSeenDB.has(w.id)) {
 						console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
 						worldlist_addcount++
@@ -1465,8 +1465,8 @@ async function addSearchToLocalQueue(i_searchString) {
 					}
 				})
 			}
-			if (worldData2.data != undefined) {
-				worldData2.data.forEach((w, index, arr) => {
+			if (worldData_published.data != undefined) {
+				worldData_published.data.forEach((w, index, arr) => {
 					if (!worldsSeenDB.has(w.id)) {
 						console.log(`${loglv.info}${selflogA} (${index + 1}/${arr.length}) Added ${w.name} to queue`)
 						worldlist_addcount++
@@ -3086,7 +3086,10 @@ async function eventPlayerJoin(logOutputLine) {
 				let gotWorld = await limiter.reqCached('world', InstanceHistory[0].worldID).catch(async () => {
 					return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': InstanceHistory[0].worldID } }), 'world')
 				})
-				var isAndroid = gotWorld.data.unityPackages.find(p => p.platform == 'android') != undefined ? ` <:OS_Android:1479897785796006120>` : ``
+				// var isAndroid = gotWorld.data.unityPackages.find(p => p.platform == 'android') != undefined ? ` <:OS_Android:1479897785796006120>` : ``
+
+				// No Discord Nitro
+				var isAndroid = gotWorld.data.unityPackages.find(p => p.platform == 'android') != undefined ? ` 🟢` : ``
 				var worldNameInHoppers = `- [${gotWorld.data.name}](<https://vrchat.com/home/world/${InstanceHistory[0].worldID}>)${isAndroid}`
 				if (!worldHoppers['worlds'].includes(worldNameInHoppers)) { worldHoppers['worlds'].push(worldNameInHoppers) }
 			}
