@@ -34,13 +34,21 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 -	osc in [true/false]
 -	osc out [true/false]
 -	osc say ["Message"]
+-	osc saystop
 -	osc morse ["Message"]
 -	osc avatars
 -	osc chat [tall/fat]
 -	osc kat [Clear: True/False | Color: 0-7 | "Message"]
 -	osc db [ID] [DATA]
--	osc db [ID] [DATA] [DATA2]
--	osc db [ID] [DATA] [DATA2] [DATA3]
+-	osc db2 [ID] [DATA] [DATA2]
+-	osc db3 [ID] [DATA] [DATA2] [DATA3]
+-	osc send [/avatar/parameters/<INPUT>] [VALUE]
+-	osc sendraw [/full/osc/endpoint/] [VALUE]
+-	osc kat ["STRING"]
+-	osc serial [BINARY]
+-	osc serialx2 [BINARY]
+-	osc serialx4 [BINARY]
+-	osc scale [FLOAT]
 -	path [JSONdataObject OR .json File path]`)
 	}
 	if (cmd == 'osc' && args[0] == 'in') { logOscIn = JSON.parse(args[1]) }
@@ -54,31 +62,6 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	}
 	if (cmd == 'osc' && args[0] == 'send') { oscSend('/avatar/parameters/' + args[1], JSON.parse(args[2])) }
 	if (cmd == 'osc' && args[0] == 'sendraw') { oscSend(args[1], JSON.parse(args[2])) }
-	// if( cmd == 'cctv' ){
-	// 	if( args[0] == 'stop' ){
-	// 		clearInterval(nanaPartyCCTVtimer)
-	// 		oscSend('/dolly/Play',1==0)
-	// 		return
-	// 	}
-	// 	[`partyhouseSet1`,`partyhouseSet2`,`partyhouseSet3`,`partyhouseSet4`,`partyhouseSet5`].forEach((fname,index,arr)=>{
-	// 		setTimeout(()=>{
-	// 			oscSend('/dolly/Play',1==0)
-	// 			oscSend('/dolly/Import', `C:\\Users\\14Anthony7095\\Documents\\VRChat\\CameraPaths\\${fname}.json`);
-	// 			oscSend('/dolly/Play',1==1)
-	// 			// setTimeout(() => { oscSend('/dolly/Play',1==1) }, 100);
-	// 		},10_000*index)
-	// 	})
-	// 	nanaPartyCCTVtimer = setInterval(()=>{
-	// 		[`partyhouseSet1`,`partyhouseSet2`,`partyhouseSet3`,`partyhouseSet4`,`partyhouseSet5`].forEach((fname,index,arr)=>{
-	// 			setTimeout(()=>{
-	// 				oscSend('/dolly/Play',1==0)
-	// 				oscSend('/dolly/Import', `C:\\Users\\14Anthony7095\\Documents\\VRChat\\CameraPaths\\${fname}.json`);
-	// 				oscSend('/dolly/Play',1==1)
-	// 				// setTimeout(() => { oscSend('/dolly/Play',1==1) }, 100);
-	// 			},10_000*index)
-	// 		})
-	// 	},60_000)
-	// }
 	if (cmd == 'osc' && args[0] == 'kat') { oscSendKATmsg(sendStringKAT = raw.slice(8 + ((args[1] || "false").length + 1) + ((args[2] || "3").length + 1)).toString() + ' ', clearBefore = JSON.parse(args[1] || "false"), displayColor = parseInt(args[2] || "3")) }
 	if (cmd == 'osc' && args[0] == 'serial') { OSCBinaryBurst(args[1], 200, 400) }
 	if (cmd == 'osc' && args[0] == 'serialx2') { OSCBinaryBurst(args[1], 100, 200) }
@@ -495,6 +478,7 @@ udpPort.on("message", function (msg, rinfo) {
 		oscSend(vrcap + `VF100_SecurityLockSync`, true)
 		oscSend(vrcap + "   locked", false)
 		oscSend(vrcap + '14a/exit/\\u0313\\u0461\\u06e7\\u0468\\u06f6\\u1d00\\u0373', true)
+		oscSend(vrcap + `14a/osc/14anthony7095`, true)
 		oscSend(vrcap + `Unlock`, true)
 	}
 
