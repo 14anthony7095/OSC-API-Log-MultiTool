@@ -2720,15 +2720,12 @@
             },
             "name": "VDJ-8000",
             "productId": "prod_cb3a2ca1-167c-41b7-b7d8-c5fc8af520ba",
-            "publishedListings": [
-                "prod_41b386db-d887-46ad-84a0-bc7d59115aed",
-                "prod_403d0e7b-94db-4646-b7f4-0cfa2a91331b"
-            ],
+            "publishedListings": [],
             "tags": [
                 "prop",
                 "included_in_product"
             ],
-            "updated_at": "2026-08-12T22:14:33.166Z",
+            "updated_at": "2026-10-14T22:46:33.079Z",
             "validateUserAttributes": false
         },
         "kind": 0,
@@ -2795,15 +2792,12 @@
             },
             "name": "Glowstick",
             "productId": "prod_c630102c-b7f8-4d43-9938-7f67836242bf",
-            "publishedListings": [
-                "prod_41b386db-d887-46ad-84a0-bc7d59115aed",
-                "prod_cc626627-3d07-4dfe-b7b6-612807c98c0e"
-            ],
+            "publishedListings": [],
             "tags": [
                 "prop",
                 "included_in_product"
             ],
-            "updated_at": "2026-08-07T20:59:00.653Z",
+            "updated_at": "2026-10-14T22:46:39.936Z",
             "validateUserAttributes": false
         },
         "kind": 0,
@@ -3385,6 +3379,68 @@
         "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_5fdd400a-ee05-4d5f-8658-1befc4be8b78/1/256",
         "unityPackages": [],
         "version": 14,
+        "visibilityType": "everyone",
+        "worldPlacementMask": 0
+    },
+    {
+        "_created_at": "2026-09-14T22:26:35.242Z",
+        "_updated_at": "2026-10-15T16:53:06.269Z",
+        "abilities": [],
+        "authorId": "8JoV9XEdpo",
+        "authorName": "VRChat",
+        "description": "That’s a dramatic name for water.",
+        "id": "prop_4af73acc-d850-4eaa-af35-977ba0594700",
+        "imageUrl": "https://api.vrchat.cloud/api/1/file/file_f1d88161-41da-4b63-8cbe-c078e62973ba/2/file",
+        "itemTemplate": {
+            "attribution": {
+                "collaborationId": null,
+                "creator": {
+                    "customName": "VRChat",
+                    "userId": "8JoV9XEdpo"
+                },
+                "publisher": null
+            },
+            "authorId": "8JoV9XEdpo",
+            "collections": [],
+            "created_at": "2026-09-14T22:26:35.159Z",
+            "defaultAttributes": {},
+            "description": "That’s a dramatic name for water.",
+            "dropStatus": "draft",
+            "equipSlots": [],
+            "flags": [
+                "instantiatable",
+                "archivable",
+                "unique"
+            ],
+            "id": "invt_c4369e02-2bb7-426c-a93e-0d77a193d232",
+            "imageUrl": "https://api.vrchat.cloud/api/1/image/file_4bc51a25-5134-47a4-9783-8c0b7d5eea10/1/256",
+            "initialToggleState": false,
+            "itemType": "prop",
+            "itemTypeLabel": "Prop",
+            "metadata": {
+                "animated": false,
+                "fileId": "file_4bc51a25-5134-47a4-9783-8c0b7d5eea10",
+                "imageUrl": "https://api.vrchat.cloud/api/1/file/file_4bc51a25-5134-47a4-9783-8c0b7d5eea10/1/file",
+                "propId": "prop_4af73acc-d850-4eaa-af35-977ba0594700",
+                "propKind": 0
+            },
+            "name": "Thirst Killer",
+            "tags": [
+                "prop"
+            ],
+            "updated_at": "2026-10-15T17:03:17.344Z",
+            "validateUserAttributes": false
+        },
+        "kind": 0,
+        "maxCountPerUser": 1,
+        "name": "Thirst Killer",
+        "releaseStatus": "private",
+        "scaleWithAvatar": true,
+        "spawnType": 1,
+        "tags": [],
+        "thumbnailImageUrl": "https://api.vrchat.cloud/api/1/image/file_f1d88161-41da-4b63-8cbe-c078e62973ba/2/256",
+        "unityPackages": [],
+        "version": 87,
         "visibilityType": "everyone",
         "worldPlacementMask": 0
     }

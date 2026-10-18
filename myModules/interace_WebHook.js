@@ -160,7 +160,7 @@ Region: ${instanceRegion}`)
 	hookSelector(groupID, embed)
 }
 exports.groupInstanceCreate = groupInstanceCreate;
-// instanceCreate(`2025-02-02T15:18:17.000Z`,process.env["VRC_ACC_NAME_1"],'https://cdn.discordapp.com/avatars/111238505824342016/754f691b9711ae9e568f0000338c8446.webp?size=128',`wrld_64c391dc-d1bd-448e-a869-95f10f506eaa`,`12345`,`Group+`,`US West`)
+// instanceCreate(`2025-02-02T15:18:17.000Z`,process.env["VRCNAME_1"],'https://cdn.discordapp.com/avatars/111238505824342016/754f691b9711ae9e568f0000338c8446.webp?size=128',`wrld_64c391dc-d1bd-448e-a869-95f10f506eaa`,`12345`,`Group+`,`US West`)
 
 function groupInstanceClose(groupID, logtime, actorName, actorImageURL, worldID, instanceID, instanceType, instanceRegion, worldName, worldImage, worldPlatformSupport = [false, false, false]) {
 	var wpsTex = ''
@@ -182,7 +182,7 @@ Region: ${instanceRegion}`)
 	hookSelector(groupID, embed)
 }
 exports.groupInstanceClose = groupInstanceClose;
-// instanceClose(`2025-02-02T15:18:17.000Z`,process.env["VRC_ACC_NAME_1"],'https://cdn.discordapp.com/avatars/111238505824342016/754f691b9711ae9e568f0000338c8446.webp?size=128',`wrld_64c391dc-d1bd-448e-a869-95f10f506eaa`,`12345`,`Group+`,`US West`)
+// instanceClose(`2025-02-02T15:18:17.000Z`,process.env["VRCNAME_1"],'https://cdn.discordapp.com/avatars/111238505824342016/754f691b9711ae9e568f0000338c8446.webp?size=128',`wrld_64c391dc-d1bd-448e-a869-95f10f506eaa`,`12345`,`Group+`,`US West`)
 
 function groupMemberJoin(groupID, logtime, actorName, actorImageURL, actorID, userPlatform, userTrustRank, ageVerifyStat, userJoinDate, userProfilePicURL) {
 	var displayPlatform = `???`

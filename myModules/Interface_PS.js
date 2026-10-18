@@ -11,7 +11,7 @@ function PiShock(intensity = 1, duration = 1, deviceNum = 1) {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
-			Username: process.env["VRC_ACC_NAME_1"],
+			Username: process.env["VRCNAME_1"],
 			Apikey: process.env["PISHOCK_APIKEY"],
 			Code: deviceCodes[deviceNum],
 			Name: '14aOSC',

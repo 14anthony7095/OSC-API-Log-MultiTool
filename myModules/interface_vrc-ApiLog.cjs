@@ -163,9 +163,9 @@ var vrchat = new VRChat({
 	},
 	authentication: {
 		credentials: {
-			username: process.env["VRC_ACC_LOGIN_1"],
-			password: process.env["VRC_ACC_PASSWORD_1"],
-			totpSecret: process.env["VRC_ACC_TOTPSECRET_1"]
+			username: process.env["VRCLOGIN_1"],
+			password: process.env["VRCPASS_1"],
+			totpSecret: process.env["VRC2FA_1"]
 		}
 	},
 	keyv: new KeyvFile({ filename: "./datasets/vrcA.json" })
@@ -855,7 +855,7 @@ function processLogLine(line) {
 	if (line.includes('[Behaviour] Destination set: wrld_')) { eventHeadingToWorld(line) }
 	if (line.includes('[Behaviour] Joining wrld_')) { eventJoiningWorld() }
 	if (line.includes('Instance closed: ')) { eventInstanceClosed() }
-	if (line.includes(`Shocked: `) && line.includes(process.env["VRC_ACC_NAME_1"])) { PiShockAll(30, 1) }
+	if (line.includes(`Shocked: `) && line.includes(process.env["VRCNAME_1"])) { PiShockAll(30, 1) }
 	if (line.includes('[Behaviour] Hard max is ')) {
 		playerHardLimit = parseInt(line.slice(58))
 		oscSend('/avatar/parameters/log/player_max', playerHardLimit > 80 ? 80 : playerHardLimit)
@@ -1161,7 +1161,7 @@ async function worldAutoPreloadQueue(worldList = [], benchmarkMode = false) {
 				'worldId': world,
 				'type': 'hidden',
 				'region': 'use',
-				'ownerId': process.env["VRC_ACC_ID_1"]
+				'ownerId': process.env["VRCUUID_1"]
 			}
 			if (vrcUserHasVRCplus == true) { instanceBody['displayName'] = 'Preloading Worlds' }
 			vrchat.createInstance({
@@ -1582,7 +1582,7 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 		}
 
 		var playersInQueue = 0
-		if (playersInInstance.length >= 2 && currentAccountInUse.id == process.env['VRC_ACC_ID_1'] && InstanceHistory[0].worldHopNoticeSent != true && InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
+		if (playersInInstance.length >= 2 && currentAccountInUse.id == process.env['VRCUUID_1'] && InstanceHistory[0].worldHopNoticeSent != true && InstanceHistory[0].groupID == 'grp_c4754b89-80f3-45f6-ac8f-ec9db953adce') {
 			console.log(`${loglv.debug}[InstanceHistory] Appending WorldHop Notice Sent`)
 			InstanceHistory[0].worldHopNoticeSent = true
 			manualCall(`instances/${InstanceHistory[0].location}/announce`, 'POST', {
@@ -1716,17 +1716,17 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 				break;
 			case 'private':
 				instanceBody['type'] = 'private'
-				instanceBody['ownerId'] = process.env["VRC_ACC_ID_1"]
+				instanceBody['ownerId'] = process.env["VRCUUID_1"]
 				instanceBody['canRequestInvite'] = true
 				break;
 			case 'friendsPlus':
 				instanceBody['type'] = 'hidden'
-				instanceBody['ownerId'] = process.env["VRC_ACC_ID_1"]
+				instanceBody['ownerId'] = process.env["VRCUUID_1"]
 				break;
 
 			default:
 				instanceBody['type'] = 'hidden'
-				instanceBody['ownerId'] = process.env["VRC_ACC_ID_1"]
+				instanceBody['ownerId'] = process.env["VRCUUID_1"]
 				break;
 		}
 
@@ -1770,7 +1770,7 @@ function setUserStatus(I_statusText = '', I_status) {
 		var bodyJson = { 'statusDescription': I_statusText.slice(0, 32) }
 		if (I_status != undefined) { bodyJson['status'] = I_status }
 
-		vrchat.updateUser({ 'path': { 'userId': process.env["VRC_ACC_ID_1"] }, 'body': bodyJson })
+		vrchat.updateUser({ 'path': { 'userId': process.env["VRCUUID_1"] }, 'body': bodyJson })
 
 		console.log(`${loglv.hey}${selflogA} Status Updated: ${I_statusText.slice(0, 32)}`)
 		vrcUserStatusText = I_statusText.slice(0, 32)
@@ -2025,7 +2025,7 @@ async function findJoinableInstances() {
 
 		// Joinable Group Instances
 		// Fetching active Group Instances from api
-		var gotUserGroupInstances = await limiter.req(vrchat.getUserGroupInstances({ 'path': { 'userId': process.env['VRC_ACC_ID_1'] } }))
+		var gotUserGroupInstances = await limiter.req(vrchat.getUserGroupInstances({ 'path': { 'userId': process.env['VRCUUID_1'] } }))
 		if (gotUserGroupInstances.data != undefined) {
 			// Filtering out Full instances without queue enabled
 			gotUserGroupInstances.data.instances
@@ -2210,7 +2210,7 @@ function eventGameClose() {
 	}
 
 	console.log(`${loglv.info}${selflogL}${ttvFetchFrom == 1 && urlType == 'twitch' ? ` Resetting Twitch target channel${lastVideoURL != '' ? ` &` : ''}` : ''}${lastVideoURL != '' ? ` Clearing Video-URL history` : ''}`)
-	switchChannel(process.env["VRC_ACC_NAME_1"])
+	switchChannel(process.env["VRCNAME_1"])
 
 	G_InstanceClosed = false
 	G_Instance10min = false
@@ -2959,7 +2959,7 @@ function eventJoiningWorld() {
 
 }
 
-var currentAccountInUse = { name: process.env["VRC_ACC_NAME_1"], id: process.env["VRC_ACC_ID_1"], Agroup: true }
+var currentAccountInUse = { name: process.env["VRCNAME_1"], id: process.env["VRCUUID_1"], Agroup: true }
 async function eventPlayerInitialized(logOutputLine) {
 	var playerDisplayName = logOutputLine.split('[Behaviour] Initialized player ')[1]
 
@@ -2984,37 +2984,41 @@ async function eventPlayerInitialized(logOutputLine) {
 		if (Date.now() > (InstanceHistory[0].join_timestamp + 30000)) { queueInstanceDataBurst() }
 
 		switch (playerDisplayName) {
-			case process.env["VRC_ACC_NAME_6"]:
+			case process.env["VRCNAME_6"]:
 				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv.hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-				currentAccountInUse = { name: process.env["VRC_ACC_NAME_6"], id: process.env["VRC_ACC_ID_6"], Agroup: false }
+				currentAccountInUse = { name: process.env["VRCNAME_6"], id: process.env["VRCUUID_6"], Agroup: false }
 				break;
-			case process.env["VRC_ACC_NAME_4"]:
+			case process.env["VRCNAME_4"]:
 				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv.hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-				currentAccountInUse = { name: process.env["VRC_ACC_NAME_4"], id: process.env["VRC_ACC_ID_4"], Agroup: true }
+				currentAccountInUse = { name: process.env["VRCNAME_4"], id: process.env["VRCUUID_4"], Agroup: true }
 				break;
-			case process.env["VRC_ACC_NAME_7"]:
+			case process.env["VRCNAME_7"]:
 				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv.hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-				currentAccountInUse = { name: process.env["VRC_ACC_NAME_7"], id: process.env["VRC_ACC_ID_7"], Agroup: false }
+				currentAccountInUse = { name: process.env["VRCNAME_7"], id: process.env["VRCUUID_7"], Agroup: false }
 				break;
-			case process.env["VRC_ACC_NAME_3"]:
+			case process.env["VRCNAME_3"]:
 				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv.hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-				currentAccountInUse = { name: process.env["VRC_ACC_NAME_3"], id: process.env["VRC_ACC_ID_3"], Agroup: true }
+				currentAccountInUse = { name: process.env["VRCNAME_3"], id: process.env["VRCUUID_3"], Agroup: true }
 				break;
-			case process.env["VRC_ACC_NAME_5"]:
+			case process.env["VRCNAME_5"]:
 				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv.hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-				currentAccountInUse = { name: process.env["VRC_ACC_NAME_5"], id: process.env["VRC_ACC_ID_5"], Agroup: false }
+				currentAccountInUse = { name: process.env["VRCNAME_5"], id: process.env["VRCUUID_5"], Agroup: false }
 				break;
-			case process.env["VRC_ACC_NAME_2"]:
+			case process.env["VRCNAME_2"]:
 				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv.hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-				currentAccountInUse = { name: process.env["VRC_ACC_NAME_2"], id: process.env["VRC_ACC_ID_2"], Agroup: true }
+				currentAccountInUse = { name: process.env["VRCNAME_2"], id: process.env["VRCUUID_2"], Agroup: true }
 				break;
-			case process.env["VRC_ACC_NAME_1"]:
+			case process.env["VRCNAME_1"]:
 				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv.hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-				currentAccountInUse = { name: process.env["VRC_ACC_NAME_1"], id: process.env["VRC_ACC_ID_1"], Agroup: true }
+				currentAccountInUse = { name: process.env["VRCNAME_1"], id: process.env["VRCUUID_1"], Agroup: true }
 				break;
-			case process.env["VRC_ACC_NAME_8"]:
+			case process.env["VRCNAME_8"]:
 				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv.hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
-				currentAccountInUse = { name: process.env["VRC_ACC_NAME_8"], id: process.env['VRC_ACC_ID_1'], Agroup: false }
+				currentAccountInUse = { name: process.env["VRCNAME_8"], id: process.env['VRCUUID_8'], Agroup: false }
+				break;
+			case process.env["VRCNAME_9"]:
+				if (currentAccountInUse.name != playerDisplayName) { console.log(`${loglv.hey}${selflogL} Switching InviteUser target to ${playerDisplayName}`) }
+				currentAccountInUse = { name: process.env["VRCNAME_9"], id: process.env['VRCUUID_9'], Agroup: true }
 				break;
 			default:
 				break;
@@ -3320,7 +3324,7 @@ function eventPlayerLeft(logOutputLine) {
 			let buildLog = `${loglv.info}${selflogL}`
 			if (ttvFetchFrom == 1 && urlType == 'twitch') {
 				buildLog += ` Resetting Twitch target channel`
-				switchChannel(process.env["VRC_ACC_NAME_1"])
+				switchChannel(process.env["VRCNAME_1"])
 				if (lastVideoURL != '') { buildLog += ` &` }
 			}
 			if (lastVideoURL != '') {
@@ -3487,7 +3491,7 @@ function videoUrlResolver(videourl) {
 		if (urlType != 'youtube') {
 			console.log(`${loglv.info}${selflogL} Video URL Type set to "Youtube"`)
 			urlType = 'youtube'
-			if (ttvFetchFrom == 1) { switchChannel(process.env["VRC_ACC_NAME_1"]) }
+			if (ttvFetchFrom == 1) { switchChannel(process.env["VRCNAME_1"]) }
 		}
 		ytdl.getBasicInfo(videourl)
 			.then((data) => {
