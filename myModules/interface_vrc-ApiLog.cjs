@@ -221,7 +221,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'pruneseen') { pruneLocalQueue() }
 	if (cmd == 'preload') { worldAutoPreloadQueue(args[0].split(',')) }
 	if (cmd == 'preloadperf') { worldAutoPreloadQueue(args[0].split(','), true) }
-	if (cmd == 'addworlds') { addSearchToLocalQueue(raw.slice(10)).then(() => { console.log('✅') }) }
+	if (cmd == 'addworlds') { addSearchToLocalQueue(raw.slice(10).split(' ')[0], JSON.parse(raw.slice(10).split(' ')[1] || false)).then(() => { console.log('✅') }) }
 	if (cmd == 'explore' && args[0] == 'prefill') { addLabWorldsToLocalQueue() }
 	if (cmd == 'explore' && args[0] == 'autonext') { G_autoNextWorldHop = JSON.parse(args[1]) }
 
@@ -1239,7 +1239,8 @@ oscEmitter.on('avatar', async (avtrID) => {
 		`avtr_5c866609-f49a-4867-ac74-5dab03d5d713`,
 		`avtr_75c670ca-4614-4db2-a687-e27994acb0ac`,
 		'avtr_6b25124e-e141-4df4-ad27-22766608e5dc',
-		'avtr_88f7fc7e-25a2-4a61-bc06-42202ad7805d'
+		'avtr_88f7fc7e-25a2-4a61-bc06-42202ad7805d',
+		'avtr_ab824380-a0f8-478f-a18d-12b80dba3270'
 	].includes(avtrID)) {
 		queueInstanceDataBurst()
 		oscSend(vrcap + 'log/instance_closed', G_InstanceClosed)
@@ -1420,20 +1421,24 @@ async function addFavWorlds(I_friendID) {
 		resolve(true)
 	})
 }
-async function addSearchToLocalQueue(i_searchString) {
+async function addSearchToLocalQueue(i_searchString, i_skipFavs = false) {
 	return new Promise(async (resolve, reject) => {
 		var queryBody_labs = { 'n': 100, 'order': 'descending', 'tag': 'system_labs', 'sort': 'labsPublicationDate' }
 		var queryBody_published = { 'n': 100, 'order': 'descending', 'notag': 'system_labs', 'sort': '_updated_at' }
 
 		if (i_searchString.match(/usr_[0-z]{8}(?:-[0-z]{4}){3}-[0-z]{12}/) != null) {
-			console.log(`${loglv.info}${selflogA} Adding User ${i_searchString}'s Favorite Worlds to queue`)
-			await addFavWorlds(i_searchString)
+			if (i_skipFavs == false) {
+				console.log(`${loglv.info}${selflogA} Adding User ${i_searchString}'s Favorite Worlds to queue`)
+				await addFavWorlds(i_searchString)
+			}
 			console.log(`${loglv.info}${selflogA} Adding User ${i_searchString}'s Uploaded Worlds to queue`)
 			queryBody_labs['userId'] = i_searchString
 			queryBody_published['userId'] = i_searchString
 		} else if (i_searchString.match(/usr_[0-z]{10}/) != null) {
-			console.log(`${loglv.info}${selflogA} Adding Legacy User ${i_searchString.slice(4)}'s Favorite Worlds to queue`)
-			await addFavWorlds(i_searchString.slice(4))
+			if (i_skipFavs == false) {
+				console.log(`${loglv.info}${selflogA} Adding Legacy User ${i_searchString.slice(4)}'s Favorite Worlds to queue`)
+				await addFavWorlds(i_searchString.slice(4))
+			}
 			console.log(`${loglv.info}${selflogA} Adding Legacy User ${i_searchString.slice(4)}'s Uploaded Worlds to queue`)
 			queryBody_labs['userId'] = i_searchString.slice(4)
 			queryBody_published['userId'] = i_searchString.slice(4)
@@ -3495,10 +3500,15 @@ function videoUrlResolver(videourl) {
 		}
 		ytdl.getBasicInfo(videourl)
 			.then((data) => {
-				setTimeout(() => {
-					console.log(`${loglv.info}${selflogL} Video Title: ${data.videoDetails.title}`)
-					if (ChatVideoTitle == true && currentAccountInUse['Agroup'] == true) { oscChatBoxV2(`~VideoTitle:\v${fitChars(data.videoDetails.title, 3)}`, 2000, true, true) }
-				}, 2000)
+				console.log(`${loglv.info}${selflogL} Video Title: ${data.videoDetails.title}`)
+				if (currentAccountInUse['Agroup'] == true) {
+					if (data.videoDetails.title.toLocaleLowerCase().includes('ocean man')) {
+						oscChatBoxV2(`~Ocean Man is nearby`, 5000, true, true, false, true)
+						sayQueue('ocean man is nearby', 0)
+					} else if (ChatVideoTitle == true) {
+						oscChatBoxV2(`~VideoTitle:\v${fitChars(data.videoDetails.title, 3)}`, 2000, true, true)
+					}
+				}
 			})
 			.catch((err) => {
 				console.log(`${loglv.warn}${selflogL} Youtube-dl: ${err}`)

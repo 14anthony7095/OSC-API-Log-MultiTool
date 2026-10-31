@@ -17,7 +17,7 @@ fs.watchFile(cmdInputFile, (current, previous) => {
 					let cmd = c.split(' ')[0].trim()
 					console.log(`${loglv.info}${selflog} (${index + 1}/${arr.length}) Command recieved ${cmd} ${c.slice(cmd.length + 1)}`)
 					cmdEmitter.emit('cmd', cmd, c.slice(c.split(' ')[0].trim().length + 1).split(' '), c)
-				}, 10_000 * index);
+				}, (c.startsWith('addworlds ') ? 50 : 1) * 200 * index);
 			})
 			fs.writeFile(cmdInputFile, '', { encoding: 'utf8' }, () => { })
 		}

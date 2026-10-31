@@ -27,6 +27,7 @@ console.log(`${loglv.info}${selflog} Loaded -> ${loglv.bool(logOscIn)}Input${log
 console.log(`${loglv.info}${selflog} Connected to ${deviceIP}`)
 
 var nanaPartyCCTVtimer;
+var ftJawOpen;
 const vrcap = '/avatar/parameters/'
 cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'help') {
@@ -61,7 +62,58 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 		oscChatBoxV2(raw.slice(8).toString().replace(/\\v/g, '\v'), undefined, false, false, false, true)
 	}
 	if (cmd == 'osc' && args[0] == 'send') { oscSend('/avatar/parameters/' + args[1], JSON.parse(args[2])) }
+	if (cmd == 'osc' && args[0] == 'cameraPose') {
+		oscSend('/usercamera/Pose', [0, 10, 100, 90, 43, 0])
+	}
 	if (cmd == 'osc' && args[0] == 'sendraw') { oscSend(args[1], JSON.parse(args[2])) }
+	if (cmd == 'osc' && args[0] == 'face-test') {
+
+		const trackerPoint = [
+			'EyeLookOutRight', 'EyeLookInRight', 'EyeLookUpRight', 'EyeLookDownRight', 'EyeLookOutLeft', 'EyeLookInLeft', 'EyeLookUpLeft', 'EyeLookDownLeft', 'EyeClosedRight', 'EyeClosedLeft', 'EyeDilationRight', 'EyeDilationLeft', 'EyeConstrictRight', 'EyeConstrictLeft', 'EyeSquintRight', 'EyeSquintLeft', 'EyeWideRight', 'EyeWideLeft',
+			'BrowPinchRight', 'BrowPinchLeft', 'BrowLowererRight', 'BrowLowererLeft', 'BrowInnerUpRight', 'BrowInnerUpLeft', 'BrowOuterUpRight', 'BrowOuterUpLeft',
+			'NasalDilationRight', 'NasalDilationLeft', 'NasalConstrictRight', 'NasalConstrictLeft',
+			'CheekSquintRight', 'CheekSquintLeft', 'CheekPuffRight', 'CheekPuffLeft', 'CheekSuckRight', 'CheekSuckLeft',
+			'JawOpen', 'JawRight', 'JawLeft', 'JawForward', 'JawBackward', 'JawClench', 'JawMandibleRaise', 'MouthClosed',
+			'LipSuckUpperRight', 'LipSuckUpperLeft', 'LipSuckLowerRight', 'LipSuckLowerLeft', 'LipSuckCornerRight', 'LipSuckCornerLeft', 'LipFunnelUpperRight', 'LipFunnelUpperLeft', 'LipFunnelLowerRight', 'LipFunnelLowerLeft', 'LipPuckerUpperRight', 'LipPuckerUpperLeft', 'LipPuckerLowerRight', 'LipPuckerLowerLeft',
+			'MouthUpperUpRight', 'MouthUpperUpLeft', 'MouthUpperDeepenRight', 'MouthUpperDeepenLeft',
+			'NoseSneerRight', 'NoseSneerLeft',
+			'MouthLowerDownRight', 'MouthLowerDownLeft', 'MouthUpperRight', 'MouthUpperLeft', 'MouthLowerRight', 'MouthLowerLeft', 'MouthCornerPullRight', 'MouthCornerPullLeft', 'MouthCornerSlantRight', 'MouthCornerSlantLeft', 'MouthFrownRight', 'MouthFrownLeft', 'MouthStretchRight', 'MouthStretchLeft', 'MouthDimpleRight', 'MouthDimpleLeft', 'MouthRaiserUpper', 'MouthRaiserLower', 'MouthPressRight', 'MouthPressLeft', 'MouthTightenerRight', 'MouthTightenerLeft',
+			'TongueOut', 'TongueUp', 'TongueDown', 'TongueRight', 'TongueLeft', 'TongueRoll', 'TongueBendDown', 'TongueCurlUp', 'TongueSquish', 'TongueFlat', 'TongueTwistRight', 'TongueTwistLeft',
+			'SoftPalateClose', 'ThroatSwallow', 'NeckFlexRight', 'NeckFlexLeft'
+		]
+		var ranData = new Array(102).fill(0)
+		oscSendBlob(ranData)
+		for (let index = 0; index < ranData.length; index++) {
+			setTimeout(() => {
+				if (index == 0) { ranData[0] = 255 }
+				ranData.unshift(0)
+				ranData.pop()
+
+				if (index >= 85 && index < 97) { ranData[36] = 255 }
+				console.log(`[Face Tracking Test]: ${index + 1 != undefined ? trackerPoint[index + 1] : ' - Finished - '}`)
+				oscSendBlob(ranData)
+				if (index >= 85 && index < 97) { ranData[36] = 0 }
+
+			}, (args[1] == 'fast' ? 200 : 1000) * index)
+		}
+	}
+	if (cmd == 'osc' && args[0] == 'face') { oscSendBlob(args[1].split(',')) }
+	if (cmd == 'osc' && args[0] == 'face-random') {
+		var ranData = new Array(102).fill(0)
+		for (const i in ranData) {
+			ranData[i] = Math.floor(Math.random() * 255)
+		}
+		oscSendBlob(ranData)
+	}
+	if (cmd == 'osc' && args[0] == 'face-jaw-open') {
+		var ranData = new Array(102).fill(0)
+		ranData[36] = 244
+		ftJawOpen = setInterval(() => { oscSendBlob(ranData) }, 500);
+	}
+	if (cmd == 'osc' && args[0] == 'face-jaw-close') {
+		clearInterval(ftJawOpen)
+		ftJawOpen = null
+	}
 	if (cmd == 'osc' && args[0] == 'kat') { oscSendKATmsg(sendStringKAT = raw.slice(8 + ((args[1] || "false").length + 1) + ((args[2] || "3").length + 1)).toString() + ' ', clearBefore = JSON.parse(args[1] || "false"), displayColor = parseInt(args[2] || "3")) }
 	if (cmd == 'osc' && args[0] == 'serial') { OSCBinaryBurst(args[1], 200, 400) }
 	if (cmd == 'osc' && args[0] == 'serialx2') { OSCBinaryBurst(args[1], 100, 200) }
@@ -193,6 +245,20 @@ function oscSend(a = '', v) {
 	if (logOscOut == true) { console.log(`\x1b[33m<- ${selflog} \x1b[33m${a}\x1b[0m: ${v}`) }
 }
 exports.oscSend = oscSend;
+
+function oscSendBlob(v) {
+	udpPort.send({
+		address: '/tracking/face/v1',
+		args: [
+			{
+				type: 'b',
+				value: new Uint8Array(v)
+			}
+		]
+	}, deviceIP, remotePort);
+
+	if (logOscOut == true) { console.log(`\x1b[33m<- ${selflog} \x1b[33m/tracking/face/v1\x1b[0m: ${v}`) }
+}
 
 var dataBurst = []
 var binaryBurstQueue = []
@@ -347,7 +413,13 @@ var oscCache = {
 	'eyeheightscalingallowed': 0,
 	'eyeheight_RateLimit': 0,
 	'doAutoJump': false,
-	'earsDown': false
+	'earsDown': false,
+	'ropePull_Stretch': 0,
+	'ropePull_IsGrabbed': 0,
+	'beingPulled': false,
+	'pullZone_Distance': 0,
+	'pullZone_SenderLocalPositionX': 0,
+	'pullZone_SenderLocalPositionZ': 0
 }
 function remapValueRange(i_value, oldMin, oldMax, newMin, newMax) {
 	return newMin + (i_value - oldMin) * (newMax - newMin) / (oldMax - oldMin)
@@ -366,10 +438,17 @@ try {
 		}
 	})
 } catch (error) { }
+
+
+oscSend('/input/Vertical', 0)
+oscSend('/input/Horizontal', 0)
+oscSend('/input/LookHorizontal', 0)
+oscSend('/input/Run', false)
+
 udpPort.on("message", function (msg, rinfo) {
-	if (logOscIn == true) { 
-		if( msg['address'].includes('oscAdd') ){return}
-		if( msg['address'].includes('oscData') ){return}
+	if (logOscIn == true) {
+		if (msg['address'].includes('oscAdd')) { return }
+		if (msg['address'].includes('oscData')) { return }
 		console.log(`\x1b[36m->> ${selflog} \x1b[36m` + msg['address'] + `\x1b[0m: ` + msg['args'])
 	}
 	oscEmitter.emit('osc', msg['address'], msg['args'][0]);
@@ -389,6 +468,46 @@ udpPort.on("message", function (msg, rinfo) {
 		}
 	}
 
+
+	// Pull System + Follow Me
+	if (address == vrcap + 'pullZone_SenderLocalPositionX') { oscCache['pullZone_SenderLocalPositionX'] = value }
+	if (address == vrcap + 'pullZone_SenderLocalPositionZ') { oscCache['pullZone_SenderLocalPositionZ'] = value }
+	if (address == vrcap + 'pullZone') { oscCache['pullZone_Distance'] = value }
+	if (address == vrcap + 'ropePull_Stretch') { oscCache['ropePull_Stretch'] = value }
+	if (address == vrcap + 'ropePull_IsGrabbed') { oscCache['ropePull_IsGrabbed'] = value }
+
+	if (oscCache['ropePull_Stretch'] > 0.05 && oscCache['ropePull_IsGrabbed'] == true) {
+		oscCache['beingPulled'] = true
+		oscSend('/input/Vertical', (oscCache['pullZone_SenderLocalPositionZ'] || 0))
+		oscSend('/input/Horizontal', (oscCache['pullZone_SenderLocalPositionX'] || 0))
+
+		if (oscCache['ropePull_Stretch'] > 0.25 || oscCache['pullZone_Distance'] < 0.8) {
+			var direction = Math.sign(oscCache['pullZone_SenderLocalPositionX'])
+			var turn180 = Math.sign(oscCache['pullZone_SenderLocalPositionZ']) < 0 ? 1 : 0
+			var multi = Math.abs(oscCache['pullZone_SenderLocalPositionX']) + turn180
+			oscSend('/input/LookHorizontal', Math.min(multi * direction, 1))
+
+			if (oscCache['ropePull_Stretch'] > 0.9) {
+				oscSend('/input/Run', true)
+			} else {
+				oscSend('/input/Run', false)
+			}
+
+		} else {
+			oscSend('/input/LookHorizontal', 0)
+		}
+
+	} else {
+		if (oscCache['beingPulled'] == true) {
+			oscCache['beingPulled'] = false
+			oscSend('/input/Vertical', 0)
+			oscSend('/input/Horizontal', 0)
+			oscSend('/input/LookHorizontal', 0)
+			oscSend('/input/Run', false)
+		}
+	}
+
+
 	// 83% of ceiling height
 	if (address == vrcap + 'findUp_Distance') { oscCache['findUp_Distance'] = value }
 	if (address == vrcap + 'findUp_Hit') { oscCache['findUp_Hit'] = value }
@@ -397,6 +516,7 @@ udpPort.on("message", function (msg, rinfo) {
 
 	if (oscCache['roomScaleRay'] == true && oscCache['findUp_Hit'] == true && oscCache['findUp_Distance'] < 1000 && oscCache['eyeheight_RateLimit'] < Date.now()) {
 		var scaleToHeight = parseFloat(oscCache['findUp_Distance'] * parseFloat(oscCache['earsDown'] == true ? 0.83 : 0.7))
+		if (scaleToHeight == 0) { return }
 		if (Math.round(oscCache['eyeheight'] * 100) / 100 != Math.round(scaleToHeight * 100) / 100) {
 			oscSend('/avatar/eyeheight', scaleToHeight)
 		}
