@@ -12,7 +12,7 @@ let selflog = `\x1b[0m[INPUT\x1b[0m]`
 fs.watchFile(cmdInputFile, (current, previous) => {
 	fs.readFile(cmdInputFile, 'utf8', (err, data) => {
 		if (data != '') {
-			data.split('\r\n').forEach((c, index, arr) => {
+			data.split(/\r?\n|\r|\n/).forEach((c, index, arr) => {
 				setTimeout(() => {
 					let cmd = c.split(' ')[0].trim()
 					console.log(`${loglv.info}${selflog} (${index + 1}/${arr.length}) Command recieved ${cmd} ${c.slice(cmd.length + 1)}`)

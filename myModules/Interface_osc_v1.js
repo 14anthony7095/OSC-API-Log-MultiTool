@@ -266,17 +266,6 @@ var dataBurstmKAT = []
 const katChars = [` `, `!`, `"`, `#`, `$`, `%`, `&`, `'`, `(`, `)`, `*`, `+`, `,`, `-`, `.`, `/`, `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`, `:`, `;`, `<`, `=`, `>`, `?`, `@`, `A`, `B`, `C`, `D`, `E`, `F`, `G`, `H`, `I`, `J`, `K`, `L`, `M`, `N`, `O`, `P`, `Q`, `R`, `S`, `T`, `U`, `V`, `W`, `X`, `Y`, `Z`, `[`, `\\`, `]`, `^`, `_`, `\``, `a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, `j`, `k`, `l`, `m`, `n`, `o`, `p`, `q`, `r`, `s`, `t`, `u`, `v`, `w`, `x`, `y`, `z`, `{`, `|`, `}`, `~`]
 //function remapKat(value) { return -1 + value * 2 / 254/ 127.0 }
 
-
-/*
-setInterval(()=>{
-	oscSend('/avatar/parameters/ping', true )
-	setTimeout(()=>{
-		oscSend('/avatar/parameters/ping', false )
-	},1000)
-},2000)
-*/
-
-
 async function OSCBinaryBurst(serializedBinary = 11111111, pulseClkActive = 200, pulseClkGap = 400, isLoop = false) {
 	/* 
 	Usage Chart

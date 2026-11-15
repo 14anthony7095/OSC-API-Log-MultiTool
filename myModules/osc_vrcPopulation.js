@@ -57,7 +57,7 @@ apiEmitter.on('exploreQueue', (data, type) => {
 	if (data == undefined) {
 		useOnlinePlayerCount()
 
-	// Switch to Explore Queue
+		// Switch to Explore Queue
 	} else if (data >= 0) {
 		displayValue = data
 		if (displayMode != 'worlds') {
@@ -81,7 +81,15 @@ logEmitter.on('gameclose', () => {
 	}, 60000);
 })
 
-
+function base128encode(input) {
+	var out3 = input % 128;
+	var out2 = Math.floor(input / 128) % 128;
+	var out1 = Math.floor(input / 16384) % 128;
+	return [out1, out2, out3]
+}
+function base128decode(inA, inB, inC) {
+	return (inA * 16384) + (inB * 128) + inC
+}
 
 async function workload(playerCount) {
 	// BUFFER COST 6

@@ -242,7 +242,7 @@ function saySpeak() {
 			//oscChatBox('~')
 		}
 		chatBuffer.shift()
-		if (msgVerbose == 3) { console.log(`${loglv.debug}${selflog} Messages Left in Buffer: ${chatBuffer.length}`) }
+		// if (msgVerbose == 3) { console.log(`${loglv.debug}${selflog} Messages Left in Buffer: ${chatBuffer.length}`) }
 		oscSend('/avatar/parameters/ttvIsTalking', false)
 		oscSend('/avatar/parameters/ToN_ColorR', parseFloat(0.392156))
 		oscSend('/avatar/parameters/ToN_ColorG', parseFloat(0.254901))
