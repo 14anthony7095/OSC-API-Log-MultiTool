@@ -221,7 +221,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'purgefriends') { purgeFriendsByNotes() }
 
 	if (cmd == 'pruneseen') { pruneLocalQueue() }
-	if (cmd == 'filterquest') { scanLocalQueue_Android() }
+	if (cmd == 'filterquest') { sortLocalQueue_Android() }
 	if (cmd == 'preload') { worldAutoPreloadQueue(args[0].split(',')) }
 	if (cmd == 'preloadperf') { worldAutoPreloadQueue(args[0].split(','), true) }
 	if (cmd == 'addworlds') { addSearchToLocalQueue(raw.slice(10)).then(() => { console.log('✅') }) }
@@ -1545,6 +1545,7 @@ async function pruneLocalQueue() {
 	})
 }
 
+
 function inviteHubQueue(returnHubID = false) {
 	const exploreHubWorld = 'wrld_bd33cefd-84e0-40d9-9904-cf42b3a8e103'
 	if (returnHubID) { return exploreHubWorld }
@@ -1589,7 +1590,7 @@ async function checkAndDeleteWorld(I_worldid, I_targetAmount = 100, I_targetType
 }
 
 
-async function scanLocalQueue_Android() {
+async function sortLocalQueue_Android() {
 	return new Promise((resolve, reject) => {
 		fs.readFile(worldQueueTxt, 'utf8', async (err, fsReadFile) => {
 			let localQueueList = fsReadFile.split(`\r\n`).slice(0, 100)
@@ -1787,7 +1788,7 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 			missCount_worldAndroid++
 			if (missCount_worldAndroid >= 3) {
 				sayQueue(`Reached miss threshold, Scanning first 100 world entries for quest users. Please wait.`, 1)
-				await scanLocalQueue_Android()
+				await sortLocalQueue_Android()
 				sayQueue(`Scanning complete, can try next world fetch again.`, 1)
 			} else {
 				sayQueue(`World is not Quest compatible. Try another.`, 1)
