@@ -121,6 +121,14 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 	if (cmd == 'osc' && args[0] == 'scale') {
 		oscSend('/avatar/eyeheight', parseFloat(args[1]))
 	}
+
+	if (cmd == 'osc' && args[0] == 'walkstop') {
+		walkPathClear()
+	}
+	if (cmd == 'osc' && args[0] == 'walkto') {
+		walkPathAdd(parseFloat(args[1].split(',')[0]), parseFloat(args[1].split(',')[1]), parseFloat(args[1].split(',')[2]))
+	}
+
 	if (cmd == 'osc' && args[0] == 'chat') {
 		if (args[1] == 'tall') {
 			oscChatBoxV2(`0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0\v0`)
@@ -403,6 +411,8 @@ var oscCache = {
 	'eyeheight_RateLimit': 0,
 	'doAutoJump': false,
 	'earsDown': false,
+	'autowalk_Distance': 0,
+	'autowalk_active': false,
 	'ropePull_Stretch': 0,
 	'ropePull_IsGrabbed': 0,
 	'beingPulled': false,
@@ -434,6 +444,48 @@ oscSend('/input/Horizontal', 0)
 oscSend('/input/LookHorizontal', 0)
 oscSend('/input/Run', false)
 
+function sleep(time) {
+	return new Promise((resolve, reject) => {
+		setTimeout(() => {
+			resolve(true)
+		}, time)
+	})
+}
+
+var walkPathQueue = []
+async function walkPathAdd(x, y, z, loop = false) {
+	if (loop == false) {
+		walkPathQueue.push({ "x": x, "y": y, "z": z })
+	}
+	if (loop == true || walkPathQueue.length <= 1) {
+		oscSend(vrcap + 'autowalk_active', true)
+		await walkTo(walkPathQueue[0].x, walkPathQueue[0].y, walkPathQueue[0].z)
+		walkPathQueue.shift()
+		if (walkPathQueue.length == 0) {
+			oscSend(vrcap + 'autowalk_active', false)
+		} else {
+			walkPathAdd(undefined, undefined, undefined, true)
+		}
+	} else {
+		console.log(`${loglv.debug}${selflog} [\x1b[33m/autoWalk/queue\x1b[0m] Busy: Adding to Queue`)
+	}
+}
+exports.walkPathAdd = walkPathAdd
+async function walkTo(xw, yw, zw) {
+	return new Promise(async (resolve, reject) => {
+		oscSend(vrcap + 'autowalk_waypoint_x', parseFloat(xw))
+		oscSend(vrcap + 'autowalk_waypoint_y', parseFloat(yw))
+		oscSend(vrcap + 'autowalk_waypoint_z', parseFloat(zw))
+		await sleep(500)
+		oscEmitter.once('autowalk_stop_and_clear', () => { resolve(true) })
+		oscEmitter.once('autowalk_waypoint_arrived', () => { resolve(true) })
+	})
+}
+function walkPathClear() {
+	walkPathQueue = []
+	oscEmitter.emit('autowalk_stop_and_clear', true)
+}
+
 udpPort.on("message", function (msg, rinfo) {
 	if (logOscIn == true) {
 		if (msg['address'].includes('oscAdd')) { return }
@@ -462,21 +514,30 @@ udpPort.on("message", function (msg, rinfo) {
 	if (address == vrcap + 'pullZone_SenderLocalPositionX') { oscCache['pullZone_SenderLocalPositionX'] = value }
 	if (address == vrcap + 'pullZone_SenderLocalPositionZ') { oscCache['pullZone_SenderLocalPositionZ'] = value }
 	if (address == vrcap + 'pullZone') { oscCache['pullZone_Distance'] = value }
+	if (address == vrcap + 'autowalk') { oscCache['autowalk_Distance'] = value }
+	if (address == vrcap + 'autowalk_active') { oscCache['autowalk_active'] = value }
 	if (address == vrcap + 'ropePull_Stretch') { oscCache['ropePull_Stretch'] = value }
 	if (address == vrcap + 'ropePull_IsGrabbed') { oscCache['ropePull_IsGrabbed'] = value }
 
-	if (oscCache['ropePull_Stretch'] > 0.05 && oscCache['ropePull_IsGrabbed'] == true) {
+	if (oscCache['autowalk_Distance'] >= 1) {
+		oscEmitter.emit('autowalk_waypoint_arrived', true)
+		// out of waypoints
+		// oscSend(vrcap+'autowalk_active',false) // Don't use here.. Will be stuck on a loop of being disabled
+	}
+
+	if ((oscCache['ropePull_Stretch'] > 0.05 && oscCache['ropePull_IsGrabbed'] == true)
+		|| (oscCache['autowalk_Distance'] < 1 && oscCache['autowalk_active'] == true)) {
 		oscCache['beingPulled'] = true
 		oscSend('/input/Vertical', (oscCache['pullZone_SenderLocalPositionZ'] || 0))
 		oscSend('/input/Horizontal', (oscCache['pullZone_SenderLocalPositionX'] || 0))
 
-		if (oscCache['ropePull_Stretch'] > 0.25 || oscCache['pullZone_Distance'] < 0.8) {
+		if (oscCache['ropePull_Stretch'] > 0.25 || oscCache['pullZone_Distance'] < 0.6) {
 			var direction = Math.sign(oscCache['pullZone_SenderLocalPositionX'])
 			var turn180 = Math.sign(oscCache['pullZone_SenderLocalPositionZ']) < 0 ? 1 : 0
 			var multi = Math.abs(oscCache['pullZone_SenderLocalPositionX']) + turn180
 			oscSend('/input/LookHorizontal', Math.min(multi * direction, 1))
 
-			if (oscCache['ropePull_Stretch'] > 0.9) {
+			if (oscCache['ropePull_Stretch'] > 0.9 || (oscCache['autowalk_active'] == true && oscCache['pullZone_Distance'] < 0.8)) {
 				oscSend('/input/Run', true)
 			} else {
 				oscSend('/input/Run', false)

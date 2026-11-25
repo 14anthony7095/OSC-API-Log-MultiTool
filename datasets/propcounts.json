@@ -5,7 +5,7 @@
   },
   "829ba6f6-b837-49d9-b9a9-056b82103b58": {
     "name": "THE REFERENCE CUBE",
-    "count": 1781
+    "count": 1783
   },
   "5c54ccdb-cafb-461b-b07f-91d189fc7b72": {
     "name": "Bubble Blaster",
@@ -17,11 +17,11 @@
   },
   "49fec698-f0cb-475c-9bc3-8f24e1bcc4eb": {
     "name": "Campfire",
-    "count": 1047
+    "count": 1055
   },
   "fb4e6b9e-ddd2-464c-8e44-cdba7f77eb5d": {
     "name": "Marshmallow on a Stick",
-    "count": 920
+    "count": 926
   },
   "213156fd-eb54-4c2c-8e12-cc840581ec73": {
     "name": "Candy Codex",
@@ -33,7 +33,7 @@
   },
   "57484479-1f1b-4a9c-986b-b0c86e1c0dda": {
     "name": "Kath",
-    "count": 193
+    "count": 203
   },
   "dae2be6b-9c3b-4783-948b-4ff46d3a14e5": {
     "name": "Bigscreen Beyond 2e: VRChat Edition",
@@ -109,11 +109,11 @@
   },
   "036389b7-3c9d-4e0d-96d1-f23cb195e76b": {
     "name": "Snow Blaster",
-    "count": 671
+    "count": 672
   },
   "25a95ca1-bba4-48d0-8a31-249bbc3af78e": {
     "name": "MAGFest26 Coin",
-    "count": 24
+    "count": 25
   },
   "ee4d580d-358c-49d7-87a6-1d191e295ef9": {
     "name": "WIP Daisy",
@@ -173,7 +173,7 @@
   },
   "d411089d-dfad-4a2a-81a2-30a2ad1a4867": {
     "name": "Portable Cherry Tree",
-    "count": 197
+    "count": 198
   },
   "f63b77ac-977a-40dc-8410-453e937a627d": {
     "name": "TwitchCon25 Coin",
@@ -185,11 +185,11 @@
   },
   "553569e8-a6ce-4718-9637-c298466af705": {
     "name": "SC-4N Reader",
-    "count": 134
+    "count": 135
   },
   "f75d9413-6fb7-44a6-9862-ed33aa76c268": {
     "name": "Photonic Slicer",
-    "count": 168
+    "count": 170
   },
   "9a2cbd89-52e1-4715-b339-2ea6ad143291": {
     "name": "Christopher Cloud",
@@ -197,15 +197,15 @@
   },
   "b2f489c8-8b5d-474f-a883-7f594ba21aeb": {
     "name": "Extravagant Pride Fan",
-    "count": 312
+    "count": 313
   },
   "928fcfa4-adb3-49d1-864c-203bd03a294c": {
     "name": "MEGABLASTER XTREME 1000",
-    "count": 286
+    "count": 289
   },
   "54016ed9-161b-45b8-92a5-e1981633858d": {
     "name": "Inflatable Pool",
-    "count": 176
+    "count": 179
   },
   "4b3b61d3-6ed1-41bc-83d9-345f2b705927": {
     "name": "TwitchConEU26 Coin",
@@ -237,11 +237,11 @@
   },
   "383b6548-0364-4765-914b-7bb738d7427e": {
     "name": "Trampoline",
-    "count": 421
+    "count": 425
   },
   "e96c8fcc-b65e-42bd-867b-fa2d393c69ea": {
     "name": "VDJ-8000",
-    "count": 48
+    "count": 50
   },
   "d2286859-7fcd-46b9-a9f4-6dd4945bb5e5": {
     "name": "Glowstick",
@@ -249,11 +249,11 @@
   },
   "c4c45b34-6e84-4130-a668-0439a72b6a04": {
     "name": "227 Series Train Plushie",
-    "count": 18
+    "count": 19
   },
   "6f03d224-2001-4974-ae4e-fb9881b66fdf": {
     "name": "Multiple Companion Cube",
-    "count": 94
+    "count": 99
   },
   "269d2b17-24fb-44aa-be4b-33245df85c75": {
     "name": "Moonchaser Penlight",
@@ -261,7 +261,7 @@
   },
   "187d802a-a165-483c-a63d-c376db35bc08": {
     "name": "Hatsune Miku (Mikudayo)",
-    "count": 78
+    "count": 80
   },
   "8bb07c8d-4153-4bed-9b20-906d399eae55": {
     "name": "Starlight Rowboat",
@@ -285,11 +285,11 @@
   },
   "4af73acc-d850-4eaa-af35-977ba0594700": {
     "name": "Thirst Killer",
-    "count": 52
+    "count": 54
   },
   "53f902c9-5be8-448f-84b9-0f73b88068ef": {
     "name": "Ghost",
-    "count": 113
+    "count": 117
   },
   "891bd586-5e04-4fc0-8da0-67672428eaca": {
     "name": "Playful Machete",
@@ -297,10 +297,14 @@
   },
   "92a6341d-0ed9-412d-8784-6c460f813fd4": {
     "name": "METAFES Rock Paper Scissors Stick",
-    "count": 54
+    "count": 60
   },
   "ad47fd6c-9ada-4f6e-b5c3-f29ea9b32ab9": {
     "name": "Innocent Music Box",
     "count": 7
+  },
+  "ad1412dd-0ebf-4f04-a870-e3fe4519de34": {
+    "name": "Treats - Makeship Edition",
+    "count": 2
   }
 }

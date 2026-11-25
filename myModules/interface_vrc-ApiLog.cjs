@@ -222,6 +222,7 @@ cmdEmitter.on('cmd', (cmd, args, raw) => {
 
 	if (cmd == 'pruneseen') { pruneLocalQueue() }
 	if (cmd == 'filterquest') { sortLocalQueue_Android() }
+	if (cmd == 'filterpublic') { sortLocalQueue_Public() }
 	if (cmd == 'preload') { worldAutoPreloadQueue(args[0].split(',')) }
 	if (cmd == 'preloadperf') { worldAutoPreloadQueue(args[0].split(','), true) }
 	if (cmd == 'addworlds') { addSearchToLocalQueue(raw.slice(10)).then(() => { console.log('✅') }) }
@@ -783,7 +784,7 @@ fetchLogFile()
 
 
 
-oscSend('/avatar/parameters/log/instance_closed', false)
+oscSend(vrcap+'log/instance_closed', false)
 
 function getVrchatRunning() { return vrchatRunning }
 exports.getVrchatRunning = getVrchatRunning;
@@ -871,7 +872,7 @@ function processLogLine(line) {
 	if (line.includes(`Shocked: `) && line.includes(process.env["VRCNAME_1"])) { PiShockAll(30, 1) }
 	if (line.includes('[Behaviour] Hard max is ')) {
 		playerHardLimit = parseInt(line.slice(58))
-		oscSend('/avatar/parameters/log/player_max', playerHardLimit > 80 ? 80 : playerHardLimit)
+		oscSend(vrcap+'log/player_max', playerHardLimit > 80 ? 80 : playerHardLimit)
 	}
 	if (line.includes('[Behaviour] Initialized player')) { eventPlayerInitialized(line) }
 	if (line.includes('[Behaviour] OnPlayerJoined')) { eventPlayerJoin(line) }
@@ -890,6 +891,14 @@ function processLogLine(line) {
 	// [Behaviour] Could not enter room because: If the instance exists‚ you're not allowed to access it․ (You are not allowed to travel to that location. If the instance exists‚ you're not allowed to access it․ (Code: 403))
 	if (line.includes(`[Behaviour] Could not enter room because: ` && line.includes('You are not allowed to travel to that location'))) {
 		logEmitter.emit('notAllowedToTravel')
+	}
+
+	if (lineC.startsWith('Error Downloading or Instantiating Custom Scene')) {
+		console.log(`${loglv.warn}${selflogA} Error Downloading world: ${InstanceHistory[0].worldID}. Removing from Queue`)
+		sayQueue('Error Downloading world, Removing from Queue')
+		fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
+			fs.writeFile(worldQueueTxt, data.replaceAll(`${InstanceHistory[0].worldID}\r\n`, ''), (err) => { if (err) { console.log(err) } })
+		})
 	}
 
 
@@ -929,7 +938,7 @@ function processLogLine(line) {
 					case 'RoundStart':
 						tonbrRoundData['roundactive'] = true;
 						tonbrRoundData['alive'] = true;
-						oscSend('/avatar/parameters/ToN_IsStarted', true)
+						oscSend(vrcap+'ToN_IsStarted', true)
 
 						console.log(`${loglv.info}${selflogL} [ToNBR] Round-Active: ${tonbrRoundData['roundactive']}`);
 						break;
@@ -946,8 +955,8 @@ function processLogLine(line) {
 						tonbrRoundData['terrorlist'] = [];
 						tonbrRoundData['alive'] = true;
 						tonbrRoundData['location'] = '';
-						oscSend('/avatar/parameters/osc/doAutoJump', false);
-						oscSend('/avatar/parameters/ToN_IsStarted', false)
+						oscSend(vrcap+'osc/doAutoJump', false);
+						oscSend(vrcap+'ToN_IsStarted', false)
 
 						console.log(`${loglv.info}${selflogL} [ToNBR] Round-Active: ${tonbrRoundData['roundactive']}`);
 						break;
@@ -973,7 +982,7 @@ function processLogLine(line) {
 
 					case 'UserDeath':
 						tonbrRoundData['alive'] = false;
-						oscSend('/avatar/parameters/osc/doAutoJump', false);
+						oscSend(vrcap+'osc/doAutoJump', false);
 
 						console.log(`${loglv.info}${selflogL} [ToNBR] User-Death`);
 						break;
@@ -1039,7 +1048,7 @@ function processLogLine(line) {
 			}
 		}
 		if (lineC == 'RoundOver' || lineC == 'You died.') {
-			oscSend('/avatar/parameters/osc/doAutoJump', false)
+			oscSend(vrcap+'osc/doAutoJump', false)
 			oscSend(vrcap + 'menu/glowEyes', 0)
 		}
 	}
@@ -1324,52 +1333,52 @@ async function addFavWorlds(I_friendID) {
 		console.log(`${loglv.debug}${selflogA} Fetching ${I_friendID}'s fav worlds`)
 		var userFavList_adding = []
 		console.log(`${loglv.debug}${selflogA} Switching to worlds1`)
-		var { data: gotUserFavList1 } = await limiter.req(manualCall('favorites/groups/world/worlds1', 'GET', 'ownerId=' + I_friendID))
-		if (gotUserFavList1?.favorites?.length > 0) {
-			for (const w in gotUserFavList1.favorites) {
-				if (!userFavList_adding.includes(gotUserFavList1.favorites[w].world.id) &&
-					!worldsSeenDB.has(gotUserFavList1.favorites[w].world.id)) {
-					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavList1.favorites.length}) Added ${gotUserFavList1.favorites[w].world.name} to queue`)
-					userFavList_adding.push(gotUserFavList1.favorites[w].world.id)
+		var gotUserFavList1 = await limiter.req(manualCall('favorites/groups/world/worlds1', 'GET', 'ownerId=' + I_friendID))
+		if (gotUserFavList1.data?.favorites?.length > 0) {
+			for (const w in gotUserFavList1.data.favorites) {
+				if (!userFavList_adding.includes(gotUserFavList1.data.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavList1.data.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavList1.data.favorites.length}) Added ${gotUserFavList1.data.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavList1.data.favorites[w].world.id)
 				} else {
 					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList1.favorites.length}) Skipped ${gotUserFavList1.favorites[w].world.name} to queue`)
 				}
 			}
 		}
 		console.log(`${loglv.debug}${selflogA} Switching to worlds2`)
-		var { data: gotUserFavList2 } = await limiter.req(manualCall('favorites/groups/world/worlds2', 'GET', 'ownerId=' + I_friendID))
-		if (gotUserFavList2?.favorites?.length > 0) {
-			for (const w in gotUserFavList2.favorites) {
-				if (!userFavList_adding.includes(gotUserFavList2.favorites[w].world.id) &&
-					!worldsSeenDB.has(gotUserFavList2.favorites[w].world.id)) {
-					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavList2.favorites.length}) Added ${gotUserFavList2.favorites[w].world.name} to queue`)
-					userFavList_adding.push(gotUserFavList2.favorites[w].world.id)
+		var gotUserFavList2 = await limiter.req(manualCall('favorites/groups/world/worlds2', 'GET', 'ownerId=' + I_friendID))
+		if (gotUserFavList2.data?.favorites?.length > 0) {
+			for (const w in gotUserFavList2.data.favorites) {
+				if (!userFavList_adding.includes(gotUserFavList2.data.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavList2.data.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavList2.data.favorites.length}) Added ${gotUserFavList2.data.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavList2.data.favorites[w].world.id)
 				} else {
 					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList2.favorites.length}) Skipped ${gotUserFavList2.favorites[w].world.name} to queue`)
 				}
 			}
 		}
 		console.log(`${loglv.debug}${selflogA} Switching to worlds3`)
-		var { data: gotUserFavList3 } = await limiter.req(manualCall('favorites/groups/world/worlds3', 'GET', 'ownerId=' + I_friendID))
-		if (gotUserFavList3?.favorites?.length > 0) {
-			for (const w in gotUserFavList3.favorites) {
-				if (!userFavList_adding.includes(gotUserFavList3.favorites[w].world.id) &&
-					!worldsSeenDB.has(gotUserFavList3.favorites[w].world.id)) {
-					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavList3.favorites.length}) Added ${gotUserFavList3.favorites[w].world.name} to queue`)
-					userFavList_adding.push(gotUserFavList3.favorites[w].world.id)
+		var gotUserFavList3 = await limiter.req(manualCall('favorites/groups/world/worlds3', 'GET', 'ownerId=' + I_friendID))
+		if (gotUserFavList3.data?.favorites?.length > 0) {
+			for (const w in gotUserFavList3.data.favorites) {
+				if (!userFavList_adding.includes(gotUserFavList3.data.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavList3.data.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavList3.data.favorites.length}) Added ${gotUserFavList3.data.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavList3.data.favorites[w].world.id)
 				} else {
 					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList3.favorites.length}) Skipped ${gotUserFavList3.favorites[w].world.name} to queue`)
 				}
 			}
 		}
 		console.log(`${loglv.debug}${selflogA} Switching to worlds4`)
-		var { data: gotUserFavList4 } = await limiter.req(manualCall('favorites/groups/world/worlds4', 'GET', 'ownerId=' + I_friendID))
-		if (gotUserFavList4?.favorites?.length > 0) {
-			for (const w in gotUserFavList4.favorites) {
-				if (!userFavList_adding.includes(gotUserFavList4.favorites[w].world.id) &&
-					!worldsSeenDB.has(gotUserFavList4.favorites[w].world.id)) {
-					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavList4.favorites.length}) Added ${gotUserFavList4.favorites[w].world.name} to queue`)
-					userFavList_adding.push(gotUserFavList4.favorites[w].world.id)
+		var gotUserFavList4 = await limiter.req(manualCall('favorites/groups/world/worlds4', 'GET', 'ownerId=' + I_friendID))
+		if (gotUserFavList4.data?.favorites?.length > 0) {
+			for (const w in gotUserFavList4.data.favorites) {
+				if (!userFavList_adding.includes(gotUserFavList4.data.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavList4.data.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavList4.data.favorites.length}) Added ${gotUserFavList4.data.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavList4.data.favorites[w].world.id)
 				} else {
 					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList4.favorites.length}) Skipped ${gotUserFavList4.favorites[w].world.name} to queue`)
 				}
@@ -1377,52 +1386,52 @@ async function addFavWorlds(I_friendID) {
 		}
 
 		console.log(`${loglv.debug}${selflogA} Switching to vrcPlusWorlds1`)
-		var { data: gotUserFavVRC1 } = await limiter.req(manualCall('favorites/groups/vrcPlusWorld/vrcPlusWorlds1', 'GET', 'ownerId=' + I_friendID))
-		if (gotUserFavVRC1?.favorites?.length > 0) {
-			for (const w in gotUserFavVRC1.favorites) {
-				if (!userFavList_adding.includes(gotUserFavVRC1.favorites[w].world.id) &&
-					!worldsSeenDB.has(gotUserFavVRC1.favorites[w].world.id)) {
-					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavVRC1.favorites.length}) Added ${gotUserFavVRC1.favorites[w].world.name} to queue`)
-					userFavList_adding.push(gotUserFavVRC1.favorites[w].world.id)
+		var gotUserFavVRC1 = await limiter.req(manualCall('favorites/groups/vrcPlusWorld/vrcPlusWorlds1', 'GET', 'ownerId=' + I_friendID))
+		if (gotUserFavVRC1.data?.favorites?.length > 0) {
+			for (const w in gotUserFavVRC1.data.favorites) {
+				if (!userFavList_adding.includes(gotUserFavVRC1.data.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavVRC1.data.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavVRC1.data.favorites.length}) Added ${gotUserFavVRC1.data.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavVRC1.data.favorites[w].world.id)
 				} else {
 					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList4.favorites.length}) Skipped ${gotUserFavList4.favorites[w].world.name} to queue`)
 				}
 			}
 		}
 		console.log(`${loglv.debug}${selflogA} Switching to vrcPlusWorlds2`)
-		var { data: gotUserFavVRC2 } = await limiter.req(manualCall('favorites/groups/vrcPlusWorld/vrcPlusWorlds2', 'GET', 'ownerId=' + I_friendID))
-		if (gotUserFavVRC2?.favorites?.length > 0) {
-			for (const w in gotUserFavVRC2.favorites) {
-				if (!userFavList_adding.includes(gotUserFavVRC2.favorites[w].world.id) &&
-					!worldsSeenDB.has(gotUserFavVRC2.favorites[w].world.id)) {
-					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavVRC2.favorites.length}) Added ${gotUserFavVRC2.favorites[w].world.name} to queue`)
-					userFavList_adding.push(gotUserFavVRC2.favorites[w].world.id)
+		var gotUserFavVRC2 = await limiter.req(manualCall('favorites/groups/vrcPlusWorld/vrcPlusWorlds2', 'GET', 'ownerId=' + I_friendID))
+		if (gotUserFavVRC2.data?.favorites?.length > 0) {
+			for (const w in gotUserFavVRC2.data.favorites) {
+				if (!userFavList_adding.includes(gotUserFavVRC2.data.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavVRC2.data.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavVRC2.data.favorites.length}) Added ${gotUserFavVRC2.data.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavVRC2.data.favorites[w].world.id)
 				} else {
 					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList4.favorites.length}) Skipped ${gotUserFavList4.favorites[w].world.name} to queue`)
 				}
 			}
 		}
 		console.log(`${loglv.debug}${selflogA} Switching to vrcPlusWorlds3`)
-		var { data: gotUserFavVRC3 } = await limiter.req(manualCall('favorites/groups/vrcPlusWorld/vrcPlusWorlds3', 'GET', 'ownerId=' + I_friendID))
-		if (gotUserFavVRC3?.favorites?.length > 0) {
-			for (const w in gotUserFavVRC3.favorites) {
-				if (!userFavList_adding.includes(gotUserFavVRC3.favorites[w].world.id) &&
-					!worldsSeenDB.has(gotUserFavVRC3.favorites[w].world.id)) {
-					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavVRC3.favorites.length}) Added ${gotUserFavVRC3.favorites[w].world.name} to queue`)
-					userFavList_adding.push(gotUserFavVRC3.favorites[w].world.id)
+		var gotUserFavVRC3 = await limiter.req(manualCall('favorites/groups/vrcPlusWorld/vrcPlusWorlds3', 'GET', 'ownerId=' + I_friendID))
+		if (gotUserFavVRC3.data?.favorites?.length > 0) {
+			for (const w in gotUserFavVRC3.data.favorites) {
+				if (!userFavList_adding.includes(gotUserFavVRC3.data.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavVRC3.data.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavVRC3.data.favorites.length}) Added ${gotUserFavVRC3.data.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavVRC3.data.favorites[w].world.id)
 				} else {
 					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList4.favorites.length}) Skipped ${gotUserFavList4.favorites[w].world.name} to queue`)
 				}
 			}
 		}
 		console.log(`${loglv.debug}${selflogA} Switching to vrcPlusWorlds4`)
-		var { data: gotUserFavVRC4 } = await limiter.req(manualCall('favorites/groups/vrcPlusWorld/vrcPlusWorlds4', 'GET', 'ownerId=' + I_friendID))
-		if (gotUserFavVRC4?.favorites?.length > 0) {
-			for (const w in gotUserFavVRC4.favorites) {
-				if (!userFavList_adding.includes(gotUserFavVRC4.favorites[w].world.id) &&
-					!worldsSeenDB.has(gotUserFavVRC4.favorites[w].world.id)) {
-					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavVRC4.favorites.length}) Added ${gotUserFavVRC4.favorites[w].world.name} to queue`)
-					userFavList_adding.push(gotUserFavVRC4.favorites[w].world.id)
+		var gotUserFavVRC4 = await limiter.req(manualCall('favorites/groups/vrcPlusWorld/vrcPlusWorlds4', 'GET', 'ownerId=' + I_friendID))
+		if (gotUserFavVRC4.data?.favorites?.length > 0) {
+			for (const w in gotUserFavVRC4.data.favorites) {
+				if (!userFavList_adding.includes(gotUserFavVRC4.data.favorites[w].world.id) &&
+					!worldsSeenDB.has(gotUserFavVRC4.data.favorites[w].world.id)) {
+					console.log(`${loglv.info}${selflogA} (${parseInt(w) + 1}/${gotUserFavVRC4.data.favorites.length}) Added ${gotUserFavVRC4.data.favorites[w].world.name} to queue`)
+					userFavList_adding.push(gotUserFavVRC4.data.favorites[w].world.id)
 				} else {
 					// console.log(`${loglv.info}${selflogA} (${parseInt(w)+1}/${gotUserFavList4.favorites.length}) Skipped ${gotUserFavList4.favorites[w].world.name} to queue`)
 				}
@@ -1507,7 +1516,7 @@ async function addSearchToLocalQueue(i_searchString) {
 					var gotUser = await limiter.reqCached('user', searchIsLegacyUser == true ? i_searchString.slice(4) : i_searchString).catch(() => {
 						return limiter.req(vrchat.getUser({ 'path': { 'userId': searchIsLegacyUser == true ? i_searchString.slice(4) : i_searchString } }), 'user')
 					})
-					listAs = gotUser.data.displayName + `'s Worlds`
+					listAs = gotUser.data?.displayName + `'s Worlds`
 				}
 
 				fs.appendFile(worldQueueTxt, `\r\n===\r\nNext: ${listAs}\r\n===\r\n` + worldlist, { 'encoding': 'utf8' }, (err) => { if (err) { console.log(err) }; resolve(true) })
@@ -1609,8 +1618,8 @@ async function sortLocalQueue_Android() {
 				if (gotWorld.data == undefined) { continue }
 
 				// Quest Build
-				var filter_worldAndroid = gotWorld.data.unityPackages.find(p => p.platform == 'android')
-				if (filter_worldAndroid != undefined) {
+				var filter_worldAndroid = gotWorld.data.supportedPlatforms.includes('android')
+				if (filter_worldAndroid != false) {
 					console.log(`${loglv.info}${selflogA} World is Quest compatible. Moving to top`)
 					questWorlds += `${questWorlds == '' ? '' : '\r\n'}${localQueueList[worldid]}`
 				}
@@ -1628,6 +1637,44 @@ async function sortLocalQueue_Android() {
 	})
 }
 
+async function sortLocalQueue_Public() {
+	return new Promise((resolve, reject) => {
+		fs.readFile(worldQueueTxt, 'utf8', async (err, fsReadFile) => {
+			let localQueueList = fsReadFile.split(`\r\n`).slice(0, 100)
+			var publishedWorlds = ''
+			var checkedworlds = []
+
+			for (const worldid in localQueueList) {
+				if (checkedworlds.includes(localQueueList[worldid])) { continue }
+				console.log(localQueueList[worldid])
+
+				let gotWorld = await limiter.reqCached('world', localQueueList[worldid]).catch(async () => {
+					return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': localQueueList[worldid] } }), 'world')
+				})
+				checkedworlds.push(localQueueList[worldid])
+
+				if (gotWorld.data == undefined) { continue }
+
+				// Published
+				if (gotWorld.data.releaseStatus == 'public') {
+					console.log(`${loglv.info}${selflogA} World is uploaded Publicly. Moving to top`)
+					publishedWorlds += `${publishedWorlds == '' ? '' : '\r\n'}${localQueueList[worldid]}`
+				}
+			}
+
+			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
+				fs.writeFile(worldQueueTxt, publishedWorlds + '\r\n===\r\n' + data, (err) => {
+					if (err) { console.log(err) };
+					console.log(`${loglv.hey}${selflogA} World Filter Complete`)
+					resolve('done')
+				})
+			})
+
+		})
+	})
+}
+
+var missCount_worldPublic = 0
 var missCount_worldAndroid = 0
 function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 	fs.readFile(worldQueueTxt, 'utf8', async (err, fsReadFile) => {
@@ -1745,6 +1792,16 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 			setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
 			return
 		}
+		if (filter_worldPC.assetUrl.endsWith('.vrcw')) {
+			console.log(`${loglv.hey}${selflogA} World can't be downloaded. Retrying..`);
+			fs.readFile(worldQueueTxt, 'utf8', (err, data) => {
+				if (data.includes(world_id)) {
+					fs.writeFile(worldQueueTxt, data.replaceAll(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
+				}
+			})
+			setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
+			return
+		}
 		isWorldUnlisted(world_id, '14anthony7095')
 
 		if (G_exploreSkipLargeDownload == true) {
@@ -1772,16 +1829,16 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 
 		// Quest user check
 		var filter_UserAndroid = playersInstanceObject.find(u => u.platform == 'android')
-		var filter_worldAndroid = gotWorld.data.unityPackages.find(p => p.platform == 'android')
+		var filter_worldAndroid = gotWorld.data.supportedPlatforms.includes('android')
 		var filter_UserIOS = playersInstanceObject.find(u => u.platform == 'iso')
-		var filter_worldIOS = gotWorld.data.unityPackages.find(p => p.platform == 'iso')
+		var filter_worldIOS = gotWorld.data.supportedPlatforms.includes('iso')
 
 		if (gotWorld.data.capacity < Math.min(playersInInstance.length + playersInQueue, 80)) {
 			console.log(`${loglv.hey}${selflogA} World can not fit everyone. Retrying..`);
 			// oscChatBoxV2(`~World can not fit everyone.\vRetrying.\v${playersInInstance.length + playersInQueue} > ${gotWorld.data.capacity}`, 5000, true, true, false, false, false)
 			setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
 			return
-		} else if (filter_UserAndroid != undefined && filter_worldAndroid == undefined) {
+		} else if (filter_UserAndroid != undefined && filter_worldAndroid == false) {
 			oscSend(vrcap + `api/explore/next`, false)
 			console.log(`${loglv.hey}${selflogA} World is not Quest compatible. Try another.. ${filter_UserAndroid.name} wouldn't be able to join.`);
 			// oscChatBoxV2(`~World is not Quest compatible.\vTry another.\v${filter_UserAndroid.name} wouldn't be able to join.`, 5000, true, true, false, false, false)
@@ -1795,7 +1852,7 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 			}
 			// setTimeout(() => { inviteLocalQueue(I_autoNext, G_exploreInviteMode) }, 2000)
 			return
-		} else if (filter_UserIOS != undefined && filter_worldIOS == undefined) {
+		} else if (filter_UserIOS != undefined && filter_worldIOS == false) {
 			oscSend(vrcap + `api/explore/next`, false)
 			console.log(`${loglv.hey}${selflogA} World is not iOS compatible. Try another..`);
 			sayQueue(`World is not iOS compatible. Try another.`, 1)
@@ -1864,7 +1921,7 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 			'categoryId': betaTagId.instanceCategoryId.Explore,
 			'vibeIds': [betaTagId.instanceVibeIds.WorldHop, betaTagId.instanceVibeIds.Casual, betaTagId.instanceVibeIds.Adventure]
 		}
-		if (G_exploreAutoClose == true) { instanceBody['closedAt'] = new Date(new Date().getTime() + 3600_000).toISOString() }
+		if (G_exploreAutoClose == true) { instanceBody['closedAt'] = new Date(new Date().getTime() + 900_000).toISOString() }
 		if (vrcUserHasVRCplus == true) { instanceBody['displayName'] = 'World Hop' }
 		switch (explorePrivacyLevel) {
 			case 'groupPublic':
@@ -1902,6 +1959,7 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 		if (created_instance.data != undefined) {
 			startvrc(created_instance.data.location, I_autoNext)
 			oscSend(vrcap + `api/explore/next`, false)
+			missCount_worldPublic = 0
 
 			if (I_InviteEveryoneToNext == true || G_exploreInviteMode == true) {
 				for (const ply in playersInstanceObject) {
@@ -1922,6 +1980,14 @@ function inviteLocalQueue(I_autoNext = false, I_InviteEveryoneToNext = false) {
 			oscSend(vrcap + `api/explore/next`, false)
 			if (fsReadFile.includes(world_id)) {
 				fs.writeFile(worldQueueTxt, fsReadFile.replaceAll(`${world_id}\r\n`, ''), (err) => { if (err) { console.log(err) } })
+			}
+			if (created_instance.error.message == "You're not allowed to create this instance․") {
+				missCount_worldPublic++
+				if (missCount_worldPublic >= 3) {
+					sayQueue(`Reached miss threshold, Scanning first 100 entries for Published worlds. Please wait.`, 1)
+					await sortLocalQueue_Public()
+					sayQueue(`Scanning complete, can try next world fetch again.`, 1)
+				}
 			}
 			if (I_autoNext == true) { setTimeout(() => { inviteLocalQueue(true, G_exploreInviteMode) }, 5000) }
 		}
@@ -1947,7 +2013,7 @@ function setUserStatus(I_statusText = '', I_status) {
 
 
 var highestCount = 0
-fs.readFile('./datasets/vrcMaxPop.txt', 'utf-8', (err, data) => { highestCount = data })
+fs.readFile('./datasets/vrchat_peak_playercount.txt', 'utf-8', (err, data) => { highestCount = data })
 function getVisitsCount() {
 	return new Promise(async (resolve, reject) => {
 		if (isApiErrorSkip == true) { resolve(0) } else {
@@ -1957,7 +2023,7 @@ function getVisitsCount() {
 			if (visitsCount > highestCount) {
 				highestCount = visitsCount
 				console.log(`${loglv.hey}\x1b[0m[\x1b[36mCounter\x1b[0m] New Highest Population reached: ${visitsCount}`)
-				fs.writeFile('./datasets/vrcMaxPop.txt', visitsCount.toString(), 'utf-8', (err) => { if (err) { console.log(err) } })
+				fs.writeFile('./datasets/vrchat_peak_playercount.txt', visitsCount.toString(), 'utf-8', (err) => { if (err) { console.log(err) } })
 			}
 		}
 	})
@@ -2280,106 +2346,67 @@ function applyGroupLogo(gID) {
 		case 'grp_f0e5ca11-8254-48c5-8fa4-9660cfcf2472':
 			// Say 5
 			// 1100 - 12
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, true)
+			oscSend(vrcap+`14a/menuSync/groupLogo`, 12)
 			break;
 		case 'grp_b684ee43-f983-425a-9f2c-ed9eb643e609':
 			// KemonoTherapy
 			// 1011 - 11
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, true)
+			oscSend(vrcap+`14a/menuSync/groupLogo`, 11)
 			break;
 		case 'grp_b2a19685-c53e-4c5a-9503-744a5373bf2c':
 			// DegenTechINC
 			// 1010 - 10
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, true)
+			oscSend(vrcap+`14a/menuSync/groupLogo`, 10)
 			break;
 		case 'grp_easyfail':
 			// 
 			// 1001 - 9
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, true)
+			oscSend(vrcap+`14a/menuSync/groupLogo`, 9)
 			break;
 		case 'grp_b8cac373-7cbb-4cd2-b56a-b621edbfef17':
 			// Party Animals
 			// 1000 - 8
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, true)
+			oscSend(vrcap+`14a/menuSync/groupLogo`, 8)
 			break;
 		case 'grp_6f6744c5-4ca0-44a4-8a91-1cb4e5d167ad':
 			// El Alba
 			// 0111 - 7
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
+			oscSend(vrcap+`14a/menuSync/groupLogo`, 7)
 			break;
 		case 'grp_d960be54-cfc2-44cb-863d-6d624d8975c1':
 			// VR Dance
 			// 0110 - 6
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
+			oscSend(vrcap+`14a/menuSync/groupLogo`, 6)
 			break;
 		case `grp_a8f9e8f8-6ccb-410e-b96e-8977bd3a094f`:
 			// Furry Argentina VR
 			// 0101 - 5
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
+			oscSend(vrcap+`14a/menuSync/groupLogo`, 5)
 			break;
 		case `grp_f018a0ac-2ec6-4176-aa47-a0fd2b7ea817`:
 			// The Lunar Howl
 			// 0100 - 4
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
+			oscSend(vrcap+`14a/menuSync/groupLogo`, 4)
 			break;
 		case `grp_693ddad7-3e90-46c6-bd38-04ccb1734420`:
 			// No Friends Friends Club
 			// 0011 - 3	
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
+			oscSend(vrcap+`14a/menuSync/groupLogo`, 3)
 			break;
 		case `grp_3473d54b-8e10-4752-9548-d77a092051a4`:
 			// Nanachi's hollow inn
 			// 0010 - 2
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
+			oscSend(vrcap+`14a/menuSync/groupLogo`, 2)
 			break;
 		case `grp_c24efb98-3234-4060-94f1-7729523e9689`:
 			// Community Events
 			// 0001 - 1
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, true)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
+			oscSend(vrcap+`14a/menuSync/groupLogo`, 1)
 			break;
 		default:
 			// CORE Default
 			// 0000 - 0
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX1`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX2`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX4`, false)
-			oscSend(`/avatar/parameters/14a/menuSync/groupLogoX8`, false)
+			oscSend(vrcap+`14a/menuSync/groupLogo`, 0)
 			break;
 	}
 }
@@ -2576,11 +2603,11 @@ async function updateBioWorldQueue() {
 				let { data: gotProfile } = await limiter.req(await vrchat.getPublicProfile({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' } }))
 				if (gotProfile == undefined) { setTimeout(() => { resolve(true) }, 2000) }
 
-				if (gotProfile.bio.match(/Worlds in queue (\d{1,6})/) != null) {
-					if (parseInt(gotProfile.bio.match(/Worlds in queue (\d{1,6})/)[1]) != localQueueList.length) {
-						console.log(`${loglv.info}${selflogA} Updating Bio queue count: ${gotProfile.bio.match(/Worlds in queue (\d{1,6})/)[1]} -> ${localQueueList.length}`)
+				if (gotProfile.bio.match(/Worlds in queue (\d{1,7})/) != null) {
+					if (parseInt(gotProfile.bio.match(/Worlds in queue (\d{1,7})/)[1]) != localQueueList.length) {
+						console.log(`${loglv.info}${selflogA} Updating Bio queue count: ${gotProfile.bio.match(/Worlds in queue (\d{1,7})/)[1]} -> ${localQueueList.length}`)
 						// console.log(`${loglv.debug}${selflog} ${mybio.bio}`)
-						let mybioUpdated = gotProfile.bio.replace(/Worlds in queue \d{1,6}/, 'Worlds in queue ' + localQueueList.length)
+						let mybioUpdated = gotProfile.bio.replace(/Worlds in queue \d{1,7}/, 'Worlds in queue ' + localQueueList.length)
 						await limiter.req(vrchat.updateProfile({ 'path': { 'userId': 'usr_e4c0f8e7-e07f-437f-bdaf-f7ab7d34a752' }, 'body': { 'bio': mybioUpdated } }))
 
 						// console.log(`${loglv.debug}${selflog} ${mybioUpdated}`)
@@ -2753,9 +2780,9 @@ function scanaudit(logoutput, groupID) {
 							return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': locationWorldID } }), 'world')
 						})
 						isWorldUnlisted(locationWorldID, '14anthony7095')
-						hasWindowsVersion = (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'standalonewindows') != undefined)
-						hasAndroidVersion = (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'android') != undefined)
-						hasIOSVersion = (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'ios') != undefined)
+						hasWindowsVersion = worldData.supportedPlatforms.includes('standalonewindows')
+						hasAndroidVersion = worldData.supportedPlatforms.includes('android')
+						hasIOSVersion = worldData.supportedPlatforms.includes('ios')
 						locationName = worldData.name
 						locationImageURL = worldData.imageUrl
 					}
@@ -2771,9 +2798,9 @@ function scanaudit(logoutput, groupID) {
 							return await limiter.req(vrchat.getWorld({ 'path': { 'worldId': locationWorldID } }), 'world')
 						})
 						isWorldUnlisted(locationWorldID, '14anthony7095')
-						hasWindowsVersion = (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'standalonewindows') != undefined)
-						hasAndroidVersion = (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'android') != undefined)
-						hasIOSVersion = (worldData.unityPackages.find(unityPackages => unityPackages.platform == 'ios') != undefined)
+						hasWindowsVersion = worldData.supportedPlatforms.includes('standalonewindows')
+						hasAndroidVersion = worldData.supportedPlatforms.includes('android')
+						hasIOSVersion = worldData.supportedPlatforms.includes('ios')
 						console.log(worldData)
 						locationName = worldData.name
 						locationImageURL = worldData.imageUrl
@@ -3097,7 +3124,7 @@ var playerRetention = {
 function eventJoiningWorld() {
 	worldHopTimeout = setTimeout(() => {
 		sayQueue(`Been in world for too long. Proceed to next in queue`, 0)
-		oscSend('/avatar/parameters/log/instance_10min', true); G_Instance10min = true
+		oscSend(vrcap+'log/instance_10min', true); G_Instance10min = true
 	}, 600_000)
 	worldHopTimeoutHour = setTimeout(() => {
 		sayQueue(`Been in world for over an hour. Find a new world`, 0)
@@ -3286,7 +3313,7 @@ async function eventPlayerJoin(logOutputLine) {
 				// var isAndroid = gotWorld.data.unityPackages.find(p => p.platform == 'android') != undefined ? ` <:OS_Android:1479897785796006120>` : ``
 
 				// No Discord Nitro
-				var isAndroid = gotWorld.data.unityPackages.find(p => p.platform == 'android') != undefined ? ` 🟢` : ``
+				var isAndroid = gotWorld.data.supportedPlatforms.includes('android') != false ? ` 🟢` : ``
 				var worldNameInHoppers = `- [${gotWorld.data.name}](<https://vrchat.com/home/world/${InstanceHistory[0].worldID}>)${isAndroid}`
 				if (!worldHoppers['worlds'].includes(worldNameInHoppers)) { worldHoppers['worlds'].push(worldNameInHoppers) }
 			}
@@ -3511,8 +3538,8 @@ function eventPlayerLeft(logOutputLine) {
 			G_Instance10min = false
 			G_InstanceClosed = false
 
-			oscSend('/avatar/parameters/log/instance_closed', false)
-			oscSend('/avatar/parameters/log/instance_10min', false) // G_Instance10min
+			oscSend(vrcap+'log/instance_closed', false)
+			oscSend(vrcap+'log/instance_10min', false) // G_Instance10min
 			tonAvgStartWait = []
 			let buildLog = `${loglv.info}${selflogL}`
 			if (ttvFetchFrom == 1 && urlType == 'twitch') {
@@ -3536,7 +3563,7 @@ function eventInstanceClosed() {
 	}
 
 	G_InstanceClosed = true
-	oscSend('/avatar/parameters/log/instance_closed', true)
+	oscSend(vrcap+'log/instance_closed', true)
 }
 
 function eventReceivedNotification(line) {
@@ -3545,7 +3572,7 @@ function eventReceivedNotification(line) {
 
 	switch (notifType) {
 		case 'invite':
-			oscSend('/avatar/parameters/log/inviteNotif', true)
+			oscSend(vrcap+'log/inviteNotif', true)
 			break;
 		case 'localNotifs':
 			if (senderUserID == '8JoV9XEdpo') {
@@ -3554,7 +3581,7 @@ function eventReceivedNotification(line) {
 					vrcUserStatusText = `Instance Reset in ${remainingTime}`
 					setUserStatus(`Instance Reset in ${remainingTime}`)
 					G_InstanceClosed = true
-					oscSend('/avatar/parameters/log/instance_closed', true)
+					oscSend(vrcap+'log/instance_closed', true)
 				}
 			}
 			break;
@@ -3659,7 +3686,7 @@ function videoUrlResolver(videourl) {
 
 	//	---	Twitch Channel URL Resolver	---
 	if (videourl.includes('twitch.tv/') && !videourl.includes('twitch.tv/videos')) {
-		//oscSend('/avatar/parameters/ttvEnabled', 1 )
+		//oscSend(vrcap+'ttvEnabled', 1 )
 		if (ttvFetchFrom == 1) { switchChannel(videourl.split('twitch.tv/')[1]) }
 		if (urlType != 'twitch') {
 			console.log(`${loglv.info}${selflogL} Video URL Type set to "Twitch"`)
@@ -3679,7 +3706,7 @@ function videoUrlResolver(videourl) {
 	//console.log(`${loglv.debug}${selflog} yt-dl is validate url? ${isValidateYTurl}`)
 
 	if (isValidateYTurl == true) {
-		//if( ttvAlwaysRun == false ){ oscSend('/avatar/parameters/ttvEnabled', 0 ) }
+		//if( ttvAlwaysRun == false ){ oscSend(vrcap+'ttvEnabled', 0 ) }
 
 		if (urlType != 'youtube') {
 			console.log(`${loglv.info}${selflogL} Video URL Type set to "Youtube"`)
